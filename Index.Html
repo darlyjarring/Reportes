@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro de Asignación de Equipos y Bloques</title>
+  <style>
+    :root {
+      --navy-header: #002060;
+      --blue-section: #5b9bd5;
+      --border-color: #000000;
+      --bg-light: #f4f7f9;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: var(--bg-light);
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+    }
+
+    .form-container {
+      flex: 1;
+      min-width: 320px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    button.btn-add {
+      background-color: #28a745;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button.btn-add:hover {
+      background-color: #218838;
+    }
+
+    button.btn-clear {
+      background-color: #dc3545;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button.btn-clear:hover {
+      background-color: #c82333;
+    }
+
+    .preview-container {
+      flex: 1;
+      min-width: 350px;
+    }
+
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid var(--border-color);
+      background-color: white;
+      font-size: 13px;
+    }
+
+    .custom-table th {
+      background-color: var(--navy-header);
+      color: white;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 8px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .custom-table td {
+      border: 1px solid var(--border-color);
+      text-align: center;
+      padding: 6px;
+      font-weight: bold;
+    }
+
+    .section-header {
+      background-color: var(--blue-section);
+      color: black;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .tech-name {
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .highlight-pink {
+      background-color: #fce4d6;
+    }
+
+    .actions-cell {
+      width: 30px;
+    }
+
+    .btn-delete {
+      background: none;
+      border: none;
+      color: red;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Registro de Técnicos, Radio y Tablet por Bloque</h1>
+
+  <div class="container">
+    <!-- FORMULARIO DE INGRESO -->
+    <div class="form-container">
+      <h2>Ingresar Registro</h2>
+      <form id="recordForm">
+        <div class="form-group">
+          <label for="bloque">Bloque / Zona:</label>
+          <input type="text" id="bloque" placeholder="Ej: 1F, 1D, AFOROS, BUQ" required>
+        </div>
+
+        <div class="form-group">
+          <label for="tecnicos">Técnico(s) (Separados por coma):</label>
+          <input type="text" id="tecnicos" placeholder="Ej: TOCTO, TORRES" required>
+        </div>
+
+        <div class="form-group">
+          <label for="radio">Radio(s) (Separadas por coma o una sola):</label>
+          <input type="text" id="radio" placeholder="Ej: 4028, 1018 o solo 4012">
+        </div>
+
+        <div class="form-group">
+          <label for="tablets">Tablet(s) por Técnico (Separadas por coma):</label>
+          <input type="text" id="tablets" placeholder="Ej: 1, 11 (coincidente con cada técnico)">
+        </div>
+
+        <button type="submit" class="btn-add">Añadir Registro</button>
+        <button type="button" class="btn-clear" onclick="limpiarTodo()">Borrar Todos los Datos</button>
+      </form>
+    </div>
+
+    <!-- VISTA PREVIA FORMATO TABLA -->
+    <div class="preview-container">
+      <h2>Vista del Reporte</h2>
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th style="width: 45%;">BLOQUES</th>
+            <th style="width: 25%;">RADIO</th>
+            <th style="width: 20%;">TABBLE</th>
+            <th class="actions-cell"></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Datos insertados dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", renderTable);
+
+    const form = document.getElementById("recordForm");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const bloque = document.getElementById("bloque").value.trim();
+      const tecnicosStr = document.getElementById("tecnicos").value.trim();
+      const radioStr = document.getElementById("radio").value.trim();
+      const tabletsStr = document.getElementById("tablets").value.trim();
+
+      const tecnicos = tecnicosStr.split(',').map(t => t.trim()).filter(t => t !== "");
+      const radios = radioStr ? radioStr.split(',').map(r => r.trim()) : [];
+      const tablets = tabletsStr ? tabletsStr.split(',').map(t => t.trim()) : [];
+
+      if (tecnicos.length === 0) return;
+
+      const newEntry = {
+        id: Date.now(),
+        bloque: bloque.toUpperCase(),
+        tecnicos: tecnicos,
+        radios: radios,
+        tablets: tablets
+      };
+
+      saveEntry(newEntry);
+      form.reset();
+      renderTable();
+    });
+
+    function getStoredData() {
+      const data = localStorage.getItem("registros_bloques");
+      return data ? JSON.parse(data) : getInitialData();
+    }
+
+    function saveEntry(entry) {
+      const currentData = getStoredData();
+      currentData.push(entry);
+      localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+    }
+
+    function deleteEntry(id) {
+      let currentData = getStoredData();
+      currentData = currentData.filter(item => item.id !== id);
+      localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+      renderTable();
+    }
+
+    function limpiarTodo() {
+      if (confirm("¿Está seguro de borrar todos los registros almacenados?")) {
+        localStorage.removeItem("registros_bloques");
+        renderTable();
+      }
+    }
+
+    function getInitialData() {
+      return [
+        { id: 1, bloque: "1D", tecnicos: ["TOMALA", "CHONILLO"], radios: ["4012"], tablets: ["5", "6"] },
+        { id: 2, bloque: "1E", tecnicos: ["SOLANO", "MESA"], radios: ["4029"], tablets: ["9", "7"] },
+        { id: 3, bloque: "1F", tecnicos: ["TOCTO", "TORRES"], radios: ["4028", "1018"], tablets: ["1", "11"] },
+        { id: 4, bloque: "1G", tecnicos: ["TARIFEÑO", "PAREDES"], radios: ["LP"], tablets: ["13", "8"] },
+        { id: 5, bloque: "1H", tecnicos: ["PACHAY", "TENORIO"], radios: ["4025"], tablets: ["10", "4"] },
+        { id: 6, bloque: "1I", tecnicos: ["MINA", "SANCHEZ"], radios: ["4078"], tablets: ["12", "3"] },
+        { id: 7, bloque: "AFOROS", tecnicos: ["FAJARDO"], radios: ["4071"], tablets: [""] },
+        { id: 8, bloque: "BUQ", tecnicos: ["CEDEÑO", "GERRERO", "PIBAQUE"], radios: ["4015"], tablets: ["", "", ""] }
+      ];
+    }
+
+    function renderTable() {
+      const data = getStoredData();
+      const tbody = document.getElementById("tableBody");
+      tbody.innerHTML = "";
+
+      data.forEach(group => {
+        const rowCount = group.tecnicos.length;
+        // Evalúa si las radios vienen por técnico (múltiples separadas por coma)
+        const hasMultipleRadios = Array.isArray(group.radios) && group.radios.length > 1;
+
+        // Fila del encabezado de Bloque
+        const headerRow = document.createElement("tr");
+        headerRow.innerHTML = `<td colspan="4" class="section-header">${group.bloque}</td>`;
+        tbody.appendChild(headerRow);
+
+        // Filas de técnicos
+        group.tecnicos.forEach((tecnico, index) => {
+          const row = document.createElement("tr");
+
+          const isPink = group.bloque === "BUQ" && index < 2;
+          const bgClass = isPink ? "highlight-pink" : "";
+
+          let html = `<td class="tech-name ${bgClass}">${tecnico}</td>`;
+
+          // Manejo dinámico del campo RADIO
+          if (hasMultipleRadios) {
+            // Si pusiste comas en las radios, genera una celda independiente por fila
+            const radVal = group.radios[index] !== undefined ? group.radios[index] : "";
+            html += `<td>${radVal}</td>`;
+          } else {
+            // Si solo pusiste una radio, agrupa la celda verticalmente (rowspan)
+            if (index === 0) {
+              const radVal = Array.isArray(group.radios) ? (group.radios[0] || "") : group.radios;
+              html += `<td rowspan="${rowCount}" style="vertical-align: middle;">${radVal}</td>`;
+            }
+          }
+
+          // Celda de TABLET individual
+          const tabVal = group.tablets[index] !== undefined ? group.tablets[index] : "";
+          html += `<td>${tabVal}</td>`;
+
+          // Botón Eliminar
+          if (index === 0) {
+            html += `<td rowspan="${rowCount}" class="actions-cell" style="vertical-align: middle;">
+                      <button class="btn-delete" onclick="deleteEntry(${group.id})" title="Eliminar grupo">✕</button>
+                    </td>`;
+          }
+
+          row.innerHTML = html;
+          tbody.appendChild(row);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
