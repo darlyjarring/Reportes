@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Programación Diaria Reefer - Equipo de Trabajo</title>
+  <!-- Librería para descargar el reporte como imagen PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --header-blue: #5b9bd5;
+      --navy-blue: #002060;
+      --border-color: #000000;
+      --bg-light: #f4f7f9;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 15px;
+      background-color: var(--bg-light);
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #333;
+      margin-top: 5px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .form-container {
+      flex: 1;
+      min-width: 300px;
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button.btn-add {
+      background-color: #28a745;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.btn-cancel {
+      background-color: #6c757d;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.btn-clear {
+      background-color: #dc3545;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .action-buttons-container {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    button.btn-report {
+      background-color: var(--navy-blue);
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      padding: 12px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      flex: 1;
+      max-width: 250px;
+    }
+
+    button.btn-download {
+      background-color: #17a2b8;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      padding: 12px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      flex: 1;
+      max-width: 250px;
+    }
+
+    .preview-container {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    /* Tabla con estética idéntica a la imagen */
+    .reefer-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid var(--border-color);
+      background-color: white;
+      font-size: 13px;
+    }
+
+    .reefer-table th.main-title {
+      background-color: var(--header-blue);
+      color: black;
+      font-size: 15px;
+      font-weight: bold;
+      text-align: center;
+      padding: 8px;
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+    }
+
+    .reefer-table td.header-label {
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 5px 8px;
+      width: 30%;
+    }
+
+    .reefer-table td.header-val {
+      font-weight: bold;
+      padding: 5px 8px;
+    }
+
+    .reefer-table th.col-header {
+      background-color: var(--header-blue);
+      color: black;
+      font-weight: bold;
+      text-align: center;
+      padding: 6px;
+      border: 1px solid var(--border-color);
+    }
+
+    .reefer-table td {
+      border: 1px solid var(--border-color);
+      padding: 6px;
+    }
+
+    .reefer-table td.personal-col {
+      font-weight: bold;
+      text-align: left;
+    }
+
+    .reefer-table td.num-col {
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .reefer-table tr.total-row td {
+      background-color: var(--header-blue);
+      font-weight: bold;
+      color: black;
+    }
+
+    .actions-cell { width: 45px; text-align: center; }
+
+    .btn-action {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 2px;
+    }
+
+    .btn-edit { color: #0056b3; }
+    .btn-delete { color: red; }
+
+    /* MODO REPORTE PANTALLA COMPLETA */
+    .fullscreen-report {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      z-index: 9999;
+      overflow-y: auto;
+      padding: 15px;
+      box-sizing: border-box;
+      touch-action: manipulation;
+    }
+
+    .fullscreen-report .reefer-table {
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .fullscreen-hint {
+      text-align: center;
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 8px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Programación Diaria Reefer</h1>
+
+  <div class="action-buttons-container">
+    <button class="btn-report" onclick="mostrarReporteCaptura()">📱 Modo Captura (Pantalla Completa)</button>
+    <button class="btn-download" onclick="descargarImagen()">📥 Descargar Reporte (PNG)</button>
+  </div>
+
+  <div class="container" id="mainLayout">
+    <!-- FORMULARIO DE EDICIÓN / REGISTRO -->
+    <div class="form-container" id="formContainer">
+      <h2 id="formTitle">Configuración & Registro</h2>
+      
+      <!-- ENCABEZADO DE REPORTE -->
+      <div class="form-group">
+        <label for="fecha">Fecha:</label>
+        <input type="text" id="fecha" value="5/9/2026">
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:1;">
+          <label for="turno">Turno:</label>
+          <input type="text" id="turno" value="1">
+        </div>
+        <div class="form-group" style="flex:2;">
+          <label for="team">Team / Grupo:</label>
+          <input type="text" id="team" value="HALCONES">
+        </div>
+      </div>
+
+      <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ccc;">
+
+      <h3 style="font-size:15px; margin-top:0;">Agregar / Editar Personal</h3>
+      <form id="recordForm">
+        <input type="hidden" id="editId" value="">
+
+        <div class="form-group">
+          <label for="personal">Categoría Personal:</label>
+          <input type="text" id="personal" placeholder="Ej: DPW Ec, Perú (12 hrs), Gate" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label for="pedido">Pedido:</label>
+            <input type="number" id="pedido" min="0" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="asistieron">Asistieron:</label>
+            <input type="number" id="asistieron" min="0" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="observaciones">Observaciones:</label>
+          <input type="text" id="observaciones" placeholder="Opcional">
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn-add" id="btnSubmit">Añadir / Actualizar Filas</button>
+          <button type="button" class="btn-cancel" id="btnCancel" style="display:none;" onclick="cancelarEdicion()">Cancelar</button>
+        </div>
+        <button type="button" class="btn-clear" onclick="limpiarTodo()">Borrar Todos los Datos</button>
+      </form>
+    </div>
+
+    <!-- PANEL DE EDICIÓN Y VISTA PREVIA -->
+    <div class="preview-container">
+      <h2>Panel de Edición</h2>
+      <div id="tablePreviewContainer"></div>
+    </div>
+  </div>
+
+  <!-- VISTA EXCLUSIVA PARA CAPTURA DE PANTALLA -->
+  <div class="fullscreen-report" id="fullscreenReport" ondblclick="cerrarReporteCaptura()">
+    <div class="fullscreen-hint">💡 Toca dos veces rápidas en la pantalla para regresar</div>
+    <div id="captureTarget" style="background: white; padding: 5px;">
+      <div id="tableCaptureContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Sincronizar cambios de metadatos (Fecha, Turno, Team)
+      document.getElementById("fecha").addEventListener("input", renderAll);
+      document.getElementById("turno").addEventListener("input", renderAll);
+      document.getElementById("team").addEventListener("input", renderAll);
+      
+      renderAll();
+    });
+
+    const form = document.getElementById("recordForm");
+
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const editId = document.getElementById("editId").value;
+      const personal = document.getElementById("personal").value.trim();
+      const pedido = parseInt(document.getElementById("pedido").value) || 0;
+      const asistieron = parseInt(document.getElementById("asistieron").value) || 0;
+      const observaciones = document.getElementById("observaciones").value.trim();
+
+      let currentData = getStoredData();
+
+      if (editId) {
+        currentData = currentData.map(item => {
+          if (item.id == editId) {
+            return { id: Number(editId), personal, pedido, asistieron, observaciones };
+          }
+          return item;
+        });
+        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
+        cancelarEdicion();
+      } else {
+        const newEntry = {
+          id: Date.now(),
+          personal,
+          pedido,
+          asistieron,
+          observaciones
+        };
+        currentData.push(newEntry);
+        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
+        form.reset();
+      }
+
+      renderAll();
+    });
+
+    function getStoredData() {
+      const data = localStorage.getItem("reefer_team_data");
+      return data ? JSON.parse(data) : getInitialData();
+    }
+
+    function getInitialData() {
+      return [
+        { id: 1, personal: "DPW Ec", pedido: 7, asistieron: 7, observaciones: "" },
+        { id: 2, personal: "Perú (12 hrs)", pedido: 2, asistieron: 2, observaciones: "" },
+        { id: 3, personal: "Personal Coestibas", pedido: 5, asistieron: 5, observaciones: "" },
+        { id: 4, personal: "Gate", pedido: 2, asistieron: 2, observaciones: "" },
+        { id: 5, personal: "Proyecto", pedido: 2, asistieron: 2, observaciones: "" }
+      ];
+    }
+
+    function cargarEdicion(id) {
+      const data = getStoredData();
+      const item = data.find(i => i.id == id);
+      if (!item) return;
+
+      document.getElementById("editId").value = item.id;
+      const inputPersonal = document.getElementById("personal");
+      inputPersonal.value = item.personal;
+      document.getElementById("pedido").value = item.pedido;
+      document.getElementById("asistieron").value = item.asistieron;
+      document.getElementById("observaciones").value = item.observaciones;
+
+      document.getElementById("formTitle").innerText = "Editar Registro";
+      document.getElementById("btnSubmit").innerText = "Guardar Cambios";
+      document.getElementById("btnCancel").style.display = "inline-block";
+
+      // Autoscroll suave hacia el formulario en celulares
+      document.getElementById("formContainer").scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+
+      // Foco inmediato en el textbox
+      setTimeout(() => {
+        inputPersonal.focus();
+        inputPersonal.select();
+      }, 300);
+    }
+
+    function cancelarEdicion() {
+      document.getElementById("editId").value = "";
+      form.reset();
+      document.getElementById("formTitle").innerText = "Configuración & Registro";
+      document.getElementById("btnSubmit").innerText = "Añadir / Actualizar Filas";
+      document.getElementById("btnCancel").style.display = "none";
+    }
+
+    function deleteEntry(id) {
+      if (confirm("¿Desea eliminar esta fila?")) {
+        let currentData = getStoredData();
+        currentData = currentData.filter(item => item.id !== id);
+        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
+        if (document.getElementById("editId").value == id) cancelarEdicion();
+        renderAll();
+      }
+    }
+
+    function limpiarTodo() {
+      if (confirm("¿Está seguro de borrar todos los registros de la tabla?")) {
+        localStorage.removeItem("reefer_team_data");
+        cancelarEdicion();
+        renderAll();
+      }
+    }
+
+    // Genera el HTML dinámico de la tabla
+    function generateTableHTML(isCaptureMode = false) {
+      const data = getStoredData();
+      const fecha = document.getElementById("fecha").value;
+      const turno = document.getElementById("turno").value;
+      const team = document.getElementById("team").value;
+
+      let totalPedido = 0;
+      let totalAsistieron = 0;
+
+      const colSpanMain = isCaptureMode ? 4 : 5;
+
+      let html = `<table class="reefer-table">
+        <thead>
+          <tr>
+            <th colspan="${colSpanMain}" class="main-title">PROGRAMACION DIARIA REEFER</th>
+          </tr>
+          <tr>
+            <td class="header-label">FECHA:</td>
+            <td class="header-val" colspan="${colSpanMain - 1}">${fecha}</td>
+          </tr>
+          <tr>
+            <td class="header-label">TURNO:</td>
+            <td class="header-val" colspan="${colSpanMain - 1}">${turno}</td>
+          </tr>
+          <tr>
+            <td class="header-label">TEAM:</td>
+            <td class="header-val" colspan="${colSpanMain - 1}">${team}</td>
+          </tr>
+          <tr>
+            <th class="col-header" style="width: 40%;">PERSONAL</th>
+            <th class="col-header" style="width: 20%;">PEDIDO</th>
+            <th class="col-header" style="width: 20%;">ASISTIERON</th>
+            <th class="col-header" style="width: 20%;">Observaciones</th>
+            ${!isCaptureMode ? '<th class="col-header actions-cell">Acción</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>`;
+
+      data.forEach(item => {
+        totalPedido += Number(item.pedido);
+        totalAsistieron += Number(item.asistieron);
+
+        html += `<tr>
+          <td class="personal-col">${item.personal}</td>
+          <td class="num-col">${item.pedido}</td>
+          <td class="num-col">${item.asistieron}</td>
+          <td>${item.observaciones}</td>
+          ${!isCaptureMode ? `
+            <td class="actions-cell">
+              <button class="btn-action btn-edit" onclick="cargarEdicion(${item.id})">✏️</button>
+              <button class="btn-action btn-delete" onclick="deleteEntry(${item.id})">✕</button>
+            </td>
+          ` : ''}
+        </tr>`;
+      });
+
+      html += `<tr class="total-row">
+        <td class="personal-col">TOTAL</td>
+        <td class="num-col">${totalPedido}</td>
+        <td class="num-col">${totalAsistieron}</td>
+        <td></td>
+        ${!isCaptureMode ? '<td></td>' : ''}
+      </tr>
+      </tbody>
+      </table>`;
+
+      return html;
+    }
+
+    function renderAll() {
+      document.getElementById("tablePreviewContainer").innerHTML = generateTableHTML(false);
+    }
+
+    function mostrarReporteCaptura() {
+      document.getElementById("tableCaptureContainer").innerHTML = generateTableHTML(true);
+      document.getElementById("fullscreenReport").style.display = "block";
+    }
+
+    function cerrarReporteCaptura() {
+      document.getElementById("fullscreenReport").style.display = "none";
+    }
+
+    function descargarImagen() {
+      document.getElementById("tableCaptureContainer").innerHTML = generateTableHTML(true);
+      const container = document.getElementById("captureTarget");
+      
+      const reportDiv = document.getElementById("fullscreenReport");
+      const wasHidden = reportDiv.style.display === "none" || reportDiv.style.display === "";
+      if (wasHidden) {
+        reportDiv.style.display = "block";
+        reportDiv.style.opacity = "0";
+      }
+
+      html2canvas(container, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Programacion_Reefer_${document.getElementById("fecha").value.replace(/\//g, '-')}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        if (wasHidden) {
+          reportDiv.style.display = "none";
+          reportDiv.style.opacity = "1";
+        }
+      });
+    }
+  </script>
+</body>
+</html>
