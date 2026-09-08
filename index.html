@@ -188,7 +188,7 @@
     .btn-edit { color: #0056b3; }
     .btn-delete { color: red; }
 
-    /* MODO REPORTE PANTALLA COMPLETA (Para Captura Móvil) */
+    /* MODO REPORTE PANTALLA COMPLETA */
     .fullscreen-report {
       display: none;
       position: fixed;
@@ -229,7 +229,7 @@
 
   <div class="container" id="mainLayout">
     <!-- FORMULARIO DE INGRESO -->
-    <div class="form-container">
+    <div class="form-container" id="formContainer">
       <h2 id="formTitle">Ingresar Registro</h2>
       <form id="recordForm">
         <input type="hidden" id="editId" value="">
@@ -279,7 +279,7 @@
     </div>
   </div>
 
-  <!-- VISTA EXCLUSIVA PARA CAPTURA (SÓLO LA TABLA FINAL) -->
+  <!-- VISTA EXCLUSIVA PARA CAPTURA -->
   <div class="fullscreen-report" id="fullscreenReport" ondblclick="cerrarReporteCaptura()">
     <div class="fullscreen-hint">💡 Toca dos veces rápidas en la pantalla para regresar</div>
     <div id="captureTarget">
@@ -359,8 +359,10 @@
       const item = data.find(i => i.id == id);
       if (!item) return;
 
+      // Cargar los valores en el formulario
       document.getElementById("editId").value = item.id;
-      document.getElementById("bloque").value = item.bloque;
+      const inputBloque = document.getElementById("bloque");
+      inputBloque.value = item.bloque;
       document.getElementById("tecnicos").value = item.tecnicos.join(", ");
       document.getElementById("radio").value = item.radios.join(", ");
       document.getElementById("tablets").value = item.tablets.join(", ");
@@ -368,6 +370,18 @@
       document.getElementById("formTitle").innerText = "Editar Registro";
       document.getElementById("btnSubmit").innerText = "Guardar Cambios";
       document.getElementById("btnCancel").style.display = "inline-block";
+
+      // 1. Desplazamiento suave (Scroll) hacia el formulario
+      document.getElementById("formContainer").scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+
+      // 2. Colocar el cursor (foco) en el campo Bloque de inmediato
+      setTimeout(() => {
+        inputBloque.focus();
+        inputBloque.select(); // Selecciona el texto para escribir encima si se requiere
+      }, 300);
     }
 
     function cancelarEdicion() {
@@ -455,7 +469,6 @@
       });
     }
 
-    // Renderiza la tabla limpia para la captura
     function buildCleanReport() {
       const data = getStoredData();
       const tbody = document.getElementById("captureReportBody");
@@ -504,12 +517,10 @@
       document.getElementById("fullscreenReport").style.display = "none";
     }
 
-    // Descargar el reporte como imagen PNG directamente
     function descargarImagen() {
       buildCleanReport();
       const container = document.getElementById("captureTarget");
       
-      // Mostrar temporalmente fuera de pantalla para renderizarlo
       const reportDiv = document.getElementById("fullscreenReport");
       const wasHidden = reportDiv.style.display === "none" || reportDiv.style.display === "";
       if (wasHidden) {
