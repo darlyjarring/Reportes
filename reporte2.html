@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestión de Asignación de Equipos y Bloques</title>
+  <!-- Librería para descargar la tabla como imagen PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
       --navy-header: #002060;
@@ -14,13 +16,14 @@
 
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      margin: 15px;
       background-color: var(--bg-light);
     }
 
     h1, h2 {
       text-align: center;
       color: #333;
+      margin-top: 5px;
     }
 
     .container {
@@ -28,27 +31,27 @@
       margin: 0 auto;
       display: flex;
       flex-wrap: wrap;
-      gap: 30px;
+      gap: 20px;
     }
 
     .form-container {
       flex: 1;
-      min-width: 320px;
+      min-width: 300px;
       background: #ffffff;
-      padding: 20px;
+      padding: 15px;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
     .form-group {
-      margin-bottom: 15px;
+      margin-bottom: 12px;
     }
 
     label {
       display: block;
       font-weight: bold;
       margin-bottom: 5px;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     input, select, button {
@@ -74,8 +77,6 @@
       cursor: pointer;
     }
 
-    button.btn-add:hover { background-color: #218838; }
-
     button.btn-cancel {
       background-color: #6c757d;
       color: white;
@@ -93,34 +94,52 @@
       margin-top: 10px;
     }
 
+    .action-buttons-container {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
     button.btn-report {
       background-color: #002060;
       color: white;
       font-weight: bold;
       border: none;
       cursor: pointer;
-      padding: 12px 20px;
-      margin: 0 auto 20px auto;
-      display: block;
-      width: auto;
+      padding: 12px 15px;
       border-radius: 5px;
-      font-size: 15px;
+      font-size: 14px;
+      flex: 1;
+      max-width: 250px;
     }
 
-    button.btn-report:hover { background-color: #001030; }
+    button.btn-download {
+      background-color: #17a2b8;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      padding: 12px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      flex: 1;
+      max-width: 250px;
+    }
 
     .preview-container {
       flex: 1;
-      min-width: 350px;
+      min-width: 300px;
     }
 
-    /* Formato idéntico a la imagen original */
+    /* Tablas */
     .custom-table {
       width: 100%;
       border-collapse: collapse;
       border: 2px solid var(--border-color);
       background-color: white;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .custom-table th {
@@ -128,7 +147,7 @@
       color: white;
       font-weight: bold;
       text-transform: uppercase;
-      padding: 8px;
+      padding: 6px;
       border: 1px solid var(--border-color);
       text-align: center;
     }
@@ -136,7 +155,7 @@
     .custom-table td {
       border: 1px solid var(--border-color);
       text-align: center;
-      padding: 6px;
+      padding: 5px;
       font-weight: bold;
     }
 
@@ -156,88 +175,61 @@
       background-color: #fce4d6;
     }
 
-    .actions-cell { width: 50px; }
+    .actions-cell { width: 45px; }
 
     .btn-action {
       background: none;
       border: none;
       cursor: pointer;
-      font-size: 13px;
-      margin: 0 1px;
+      font-size: 12px;
+      padding: 2px;
     }
 
     .btn-edit { color: #0056b3; }
     .btn-delete { color: red; }
 
-    /* Modal / Reporte Final Flotante */
-    .modal-overlay {
+    /* MODO REPORTE PANTALLA COMPLETA */
+    .fullscreen-report {
       display: none;
       position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .modal-content {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 450px;
-      width: 90%;
-      max-height: 90vh;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      z-index: 9999;
       overflow-y: auto;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      padding: 10px;
+      box-sizing: border-box;
+      touch-action: manipulation;
     }
 
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .btn-close-modal {
-      background: #dc3545;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      cursor: pointer;
-      font-weight: bold;
-      border-radius: 4px;
-      width: auto;
-    }
-
-    .btn-print {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      cursor: pointer;
-      font-weight: bold;
-      border-radius: 4px;
-      margin-top: 15px;
+    .fullscreen-report .custom-table {
       width: 100%;
+      margin: 0 auto;
     }
 
-    /* Ocultar acciones al imprimir */
-    @media print {
-      body * { visibility: hidden; }
-      #finalReportTable, #finalReportTable * { visibility: visible; }
-      #finalReportTable { position: absolute; left: 0; top: 0; width: 100%; }
+    .fullscreen-hint {
+      text-align: center;
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 8px;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
 
-  <h1>Registro de Técnicos, Radio y Tablet por Bloque</h1>
+  <h1>Control de Equipos por Bloque</h1>
 
-  <button class="btn-report" onclick="generarReporteFinal()">📋 Generar Reporte Final (Vista Limpia)</button>
+  <div class="action-buttons-container">
+    <button class="btn-report" onclick="mostrarReporteCaptura()">📱 Modo Captura (Pantalla Completa)</button>
+    <button class="btn-download" onclick="descargarImagen()">📥 Descargar Reporte (PNG)</button>
+  </div>
 
-  <div class="container">
-    <!-- FORMULARIO -->
-    <div class="form-container">
+  <div class="container" id="mainLayout">
+    <!-- FORMULARIO DE INGRESO -->
+    <div class="form-container" id="formContainer">
       <h2 id="formTitle">Ingresar Registro</h2>
       <form id="recordForm">
         <input type="hidden" id="editId" value="">
@@ -259,7 +251,7 @@
 
         <div class="form-group">
           <label for="tablets">Tablet(s) por Técnico (Separadas por coma):</label>
-          <input type="text" id="tablets" placeholder="Ej: 1, 11 (coincidente con cada técnico)">
+          <input type="text" id="tablets" placeholder="Ej: 1, 11">
         </div>
 
         <div class="btn-group">
@@ -270,7 +262,7 @@
       </form>
     </div>
 
-    <!-- PANEL DE EDICIÓN Y GESTIÓN -->
+    <!-- PANEL DE EDICIÓN -->
     <div class="preview-container">
       <h2>Panel de Edición</h2>
       <table class="custom-table">
@@ -287,29 +279,20 @@
     </div>
   </div>
 
-  <!-- MODAL / VISTA DEL REPORTE FINAL LIMPIO -->
-  <div class="modal-overlay" id="reportModal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 style="margin:0;">Reporte Final</h3>
-        <button class="btn-close-modal" onclick="cerrarModal()">✕ Cerrar</button>
-      </div>
-
-      <div id="finalReportContainer">
-        <!-- Tabla sin botones de edición -->
-        <table class="custom-table" id="finalReportTable">
-          <thead>
-            <tr>
-              <th style="width: 45%;">BLOQUES</th>
-              <th style="width: 30%;">RADIO</th>
-              <th style="width: 25%;">TABBLE</th>
-            </tr>
-          </thead>
-          <tbody id="finalReportBody"></tbody>
-        </table>
-      </div>
-
-      <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar en PDF</button>
+  <!-- VISTA EXCLUSIVA PARA CAPTURA -->
+  <div class="fullscreen-report" id="fullscreenReport" ondblclick="cerrarReporteCaptura()">
+    <div class="fullscreen-hint">💡 Toca dos veces rápidas en la pantalla para regresar</div>
+    <div id="captureTarget">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th style="width: 45%;">BLOQUES</th>
+            <th style="width: 30%;">RADIO</th>
+            <th style="width: 25%;">TABBLE</th>
+          </tr>
+        </thead>
+        <tbody id="captureReportBody"></tbody>
+      </table>
     </div>
   </div>
 
@@ -376,8 +359,10 @@
       const item = data.find(i => i.id == id);
       if (!item) return;
 
+      // Cargar los valores en el formulario
       document.getElementById("editId").value = item.id;
-      document.getElementById("bloque").value = item.bloque;
+      const inputBloque = document.getElementById("bloque");
+      inputBloque.value = item.bloque;
       document.getElementById("tecnicos").value = item.tecnicos.join(", ");
       document.getElementById("radio").value = item.radios.join(", ");
       document.getElementById("tablets").value = item.tablets.join(", ");
@@ -385,6 +370,18 @@
       document.getElementById("formTitle").innerText = "Editar Registro";
       document.getElementById("btnSubmit").innerText = "Guardar Cambios";
       document.getElementById("btnCancel").style.display = "inline-block";
+
+      // 1. Desplazamiento suave (Scroll) hacia el formulario
+      document.getElementById("formContainer").scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+
+      // 2. Colocar el cursor (foco) en el campo Bloque de inmediato
+      setTimeout(() => {
+        inputBloque.focus();
+        inputBloque.select(); // Selecciona el texto para escribir encima si se requiere
+      }, 300);
     }
 
     function cancelarEdicion() {
@@ -396,7 +393,7 @@
     }
 
     function deleteEntry(id) {
-      if (confirm("¿Desea eliminar este registro del reporte?")) {
+      if (confirm("¿Desea eliminar este registro?")) {
         let currentData = getStoredData();
         currentData = currentData.filter(item => item.id !== id);
         localStorage.setItem("registros_bloques", JSON.stringify(currentData));
@@ -426,7 +423,6 @@
       ];
     }
 
-    // Renderiza la tabla de edición (con botones)
     function renderTable() {
       const data = getStoredData();
       const tbody = document.getElementById("tableBody");
@@ -473,10 +469,9 @@
       });
     }
 
-    // Genera el reporte final exacto a la imagen (sin acciones)
-    function generarReporteFinal() {
+    function buildCleanReport() {
       const data = getStoredData();
-      const tbody = document.getElementById("finalReportBody");
+      const tbody = document.getElementById("captureReportBody");
       tbody.innerHTML = "";
 
       data.forEach(group => {
@@ -511,12 +506,39 @@
           tbody.appendChild(row);
         });
       });
-
-      document.getElementById("reportModal").style.display = "flex";
     }
 
-    function cerrarModal() {
-      document.getElementById("reportModal").style.display = "none";
+    function mostrarReporteCaptura() {
+      buildCleanReport();
+      document.getElementById("fullscreenReport").style.display = "block";
+    }
+
+    function cerrarReporteCaptura() {
+      document.getElementById("fullscreenReport").style.display = "none";
+    }
+
+    function descargarImagen() {
+      buildCleanReport();
+      const container = document.getElementById("captureTarget");
+      
+      const reportDiv = document.getElementById("fullscreenReport");
+      const wasHidden = reportDiv.style.display === "none" || reportDiv.style.display === "";
+      if (wasHidden) {
+        reportDiv.style.display = "block";
+        reportDiv.style.opacity = "0";
+      }
+
+      html2canvas(container, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'Reporte_Equipos_Bloques.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        if (wasHidden) {
+          reportDiv.style.display = "none";
+          reportDiv.style.opacity = "1";
+        }
+      });
     }
   </script>
 </body>
