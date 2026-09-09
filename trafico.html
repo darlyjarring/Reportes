@@ -3,184 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tráfico de Naves - DP World Posorja</title>
+    <title>Visor de Tráfico de Naves - DP World</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f6f9; margin: 20px; color: #333; }
-        h2 { text-align: center; color: #1a365d; margin-bottom: 5px; }
-        p.subtitle { text-align: center; font-size: 0.9em; color: #666; margin-bottom: 20px; }
-        .controls { display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin: 0 auto 15px auto; gap: 10px; flex-wrap: wrap; }
-        button { background-color: #0056b3; color: white; border: none; padding: 10px 16px; font-size: 14px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background-color: #003d80; }
-        button.secundario { background-color: #4a5568; }
-        button.secundario:hover { background-color: #2d3748; }
-        
-        .status-badge { font-size: 0.85em; padding: 4px 8px; border-radius: 12px; font-weight: bold; display: inline-block; }
-        
-        .row-trabajando { background-color: #d4edda !important; border-left: 6px solid #28a745; }
-        .badge-trabajando { background-color: #28a745; color: white; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
 
-        .row-espera { background-color: #fff3cd !important; border-left: 6px solid #ffc107; }
-        .badge-espera { background-color: #ffc107; color: #333; }
+        .header-panel {
+            background-color: #1a365d;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
 
-        .row-finalizado { background-color: #e9ecef !important; border-left: 6px solid #6c757d; }
-        .badge-finalizado { background-color: #6c757d; color: white; }
+        .header-panel h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
 
-        table { width: 100%; max-width: 1000px; margin: 0 auto; border-collapse: collapse; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background-color: #fff; }
-        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 0.9em; }
-        th { background-color: #1a365d; color: white; text-transform: uppercase; font-size: 0.8em; }
-        
-        #loading { text-align: center; font-weight: bold; color: #0056b3; margin: 15px 0; }
-        #manual-area { display: none; max-width: 1000px; margin: 10px auto; }
-        textarea { width: 100%; height: 100px; margin-bottom: 10px; padding: 8px; }
+        .btn {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            background-color: #003d80;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+        }
+
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        .leyenda {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .leyenda-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .box {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+        }
+
+        .box-trabajando { background-color: #28a745; }
+        .box-espera { background-color: #ffc107; }
+        .box-finalizado { background-color: #6c757d; }
+
+        .container-tabla {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: #495057;
+            font-weight: bold;
+        }
+
+        /* Estilos de Estado por Fila */
+        tr.trabajando {
+            background-color: #d4edda !important;
+            color: #155724;
+            font-weight: bold;
+        }
+
+        tr.espera {
+            background-color: #fff3cd !important;
+            color: #856404;
+        }
+
+        tr.finalizado {
+            background-color: #e9ecef !important;
+            color: #6c757d;
+        }
+
+        .status-badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            color: white;
+            display: inline-block;
+        }
+
+        .badge-trabajando { background-color: #28a745; }
+        .badge-espera { background-color: #d39e00; }
+        .badge-finalizado { background-color: #6c757d; }
     </style>
 </head>
 <body>
 
-    <h2>Control de Tráfico de Naves</h2>
-    <p class="subtitle">DP World Posorja - Clasificación por Colores</p>
-
-    <div class="controls">
+    <div class="header-panel">
+        <h2>Monitoreo de Tráfico de Naves - DP World Posorja</h2>
         <div>
-            <button onclick="cargarItinerario()">🔄 Actualizar Web</button>
-            <button class="secundario" onclick="toggleManual()">📋 Pegado Manual</button>
+            <button class="btn btn-success" onclick="abrirOrigen()">1. Abrir Web Oficial</button>
+            <button class="btn" onclick="capturarYProcesar()">2. Extraer y Aplicar Colores</button>
         </div>
-        <span id="last-update" style="font-size: 0.85em; color: #555;"></span>
     </div>
 
-    <div id="manual-area">
-        <p style="font-size:0.85em; margin: 2px 0;">Si la web bloquea la carga, copia la tabla de DP World y pégala aquí:</p>
-        <textarea id="texto-manual" placeholder="Pega aquí los datos copiados de la tabla de DP World..."></textarea>
-        <button onclick="procesarTextoManual()">Procesar Texto Pegado</button>
+    <div class="leyenda">
+        <div class="leyenda-item"><div class="box box-trabajando"></div> <strong>TRABAJANDO EN SITIO:</strong> Registra Atraco (ATA) y no ha zarpado.</div>
+        <div class="leyenda-item"><div class="box box-espera"></div> <strong>EN ESPERA / PRÓXIMA:</strong> Llegada Estimada (ETA) sin atraco registrado.</div>
+        <div class="leyenda-item"><div class="box box-finalizado"></div> <strong>FINALIZADO:</strong> Registra Zarpe (ATD).</div>
     </div>
 
-    <div id="loading" style="display:none;">Conectando con la web de DP World Posorja...</div>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Estado</th>
-                <th>Código / Nave</th>
-                <th>Viaje</th>
-                <th>ETA (Llegada Est.)</th>
-                <th>ATA (Atraco Real)</th>
-                <th>ETD / ATD</th>
-            </tr>
-        </thead>
-        <tbody id="contenido-tabla">
-            <tr>
-                <td colspan="6" style="text-align:center;">Presione "Actualizar Web" para cargar la información.</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="container-tabla">
+        <div id="mensaje-inicial" style="text-align: center; padding: 30px; color: #666;">
+            Presiona <strong>"1. Abrir Web Oficial"</strong> para conectar con DP World, y luego <strong>"2. Extraer y Aplicar Colores"</strong> para renderizar el informe visual.
+        </div>
+        <table id="tabla-resultado" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Estado</th>
+                    <th>Nave</th>
+                    <th>Viaje</th>
+                    <th>ETA</th>
+                    <th>ATA (Atraco)</th>
+                    <th>ETD</th>
+                    <th>ATD (Zarpe)</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-tabla"></tbody>
+        </table>
+    </div>
 
     <script>
-        function toggleManual() {
-            const area = document.getElementById('manual-area');
-            area.style.display = area.style.display === 'none' ? 'block' : 'none';
+        let ventanaOrigen = null;
+
+        function abrirOrigen() {
+            ventanaOrigen = window.open('https://www.dpworldposorja.com.ec/itinerarios.php', 'DPWorldWindow', 'width=1000,height=600');
         }
 
-        async function cargarItinerario() {
-            const loading = document.getElementById('loading');
-            const tbody = document.getElementById('contenido-tabla');
-            const lastUpdate = document.getElementById('last-update');
-
-            loading.style.display = 'block';
-            tbody.innerHTML = '';
-
-            const targetUrl = 'https://www.dpworldposorja.com.ec/itinerarios.php';
-            // Proxy alternativo con mayor compatibilidad para leer datos HTML directos
-            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&timestamp=${new Date().getTime()}`;
+        function capturarYProcesar() {
+            if (!ventanaOrigen || ventanaOrigen.closed) {
+                alert('Primero debes hacer clic en "1. Abrir Web Oficial" para cargar la fuente de datos.');
+                return;
+            }
 
             try {
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error('Error en la red');
+                const docOrigen = ventanaOrigen.document;
+                const filas = docOrigen.querySelectorAll('table tbody tr, table tr');
+                
+                const cuerpoTabla = document.getElementById('cuerpo-tabla');
+                cuerpoTabla.innerHTML = '';
+                let registrosLeidos = 0;
 
-                const data = await response.json();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data.contents, 'text/html');
+                filas.forEach((fila) => {
+                    const columnas = fila.querySelectorAll('td');
+                    if (columnas.length >= 5) {
+                        registrosLeidos++;
+                        
+                        const nave = columnas[0]?.textContent.trim() || '-';
+                        const viaje = columnas[1]?.textContent.trim() || '-';
+                        const eta = columnas[2]?.textContent.trim() || '-';
+                        const ata = columnas[3]?.textContent.trim() || '';
+                        const etd = columnas[4]?.textContent.trim() || '-';
+                        const atd = columnas[5]?.textContent.trim() || '';
 
-                // Busca todas las filas dentro de cualquier tabla en la página
-                const filas = doc.querySelectorAll('tr');
-                let procesados = 0;
-                let html = '';
+                        let claseEstado = 'espera';
+                        let textoBadge = 'PRÓXIMA';
+                        let badgeClase = 'badge-espera';
 
-                filas.forEach(fila => {
-                    const cols = fila.querySelectorAll('td');
-                    if (cols.length >= 3) {
-                        procesados++;
-                        const datos = Array.from(cols).map(c => c.textContent.trim());
-                        html += generarFilaHTML(datos);
+                        // Evaluación del tráfico
+                        if (ata !== '' && ata !== '-' && (atd === '' || atd === '-')) {
+                            claseEstado = 'trabajando';
+                            textoBadge = 'TRABAJANDO';
+                            badgeClase = 'badge-trabajando';
+                        } else if (atd !== '' && atd !== '-') {
+                            claseEstado = 'finalizado';
+                            textoBadge = 'FINALIZADO';
+                            badgeClase = 'badge-finalizado';
+                        }
+
+                        const tr = document.createElement('tr');
+                        tr.className = claseEstado;
+                        tr.innerHTML = `
+                            <td><span class="status-badge ${badgeClase}">${textoBadge}</span></td>
+                            <td>${nave}</td>
+                            <td>${viaje}</td>
+                            <td>${eta}</td>
+                            <td>${ata || '-'}</td>
+                            <td>${etd}</td>
+                            <td>${atd || '-'}</td>
+                        `;
+                        cuerpoTabla.appendChild(tr);
                     }
                 });
 
-                if (procesados === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">La web de DP World no devolvió la tabla estructurada. Usa el botón "Pegado Manual".</td></tr>';
+                if (registrosLeidos > 0) {
+                    document.getElementById('mensaje-inicial').style.display = 'none';
+                    document.getElementById('tabla-resultado').style.display = 'table';
                 } else {
-                    tbody.innerHTML = html;
-                    lastUpdate.textContent = `Actualizado: ${new Date().toLocaleTimeString()}`;
+                    alert('No se detectaron datos en la ventana abierta. Asegúrate de que la página de DP World haya terminado de cargar.');
                 }
 
-            } catch (error) {
-                console.error(error);
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">Bloqueo de conexión por el servidor origen. Usa la opción "Pegado Manual".</td></tr>';
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
-
-        function generarFilaHTML(cols) {
-            // Unifica las columnas leídas
-            const campo1 = cols[0] || '-';
-            const campo2 = cols[1] || '-';
-            const campo3 = cols[2] || '-';
-            const campo4 = cols[3] || '';
-            const campo5 = cols[4] || '';
-
-            let estado = 'row-espera';
-            let badge = '<span class="status-badge badge-espera">PRÓXIMA</span>';
-
-            // Lógica de detección según presencia de fechas de atraco/zarpe
-            const textoFila = cols.join(' ').toUpperCase();
-            
-            if (campo4 !== '' && campo4 !== '-' && (campo5 === '' || campo5 === '-')) {
-                estado = 'row-trabajando';
-                badge = '<span class="status-badge badge-trabajando">TRABAJANDO</span>';
-            } else if (campo5 !== '' && campo5 !== '-') {
-                estado = 'row-finalizado';
-                badge = '<span class="status-badge badge-finalizado">FINALIZADO</span>';
-            }
-
-            return `
-                <tr class="${estado}">
-                    <td>${badge}</td>
-                    <td><strong>${campo1}</strong></td>
-                    <td>${campo2}</td>
-                    <td>${campo3}</td>
-                    <td>${campo4 || '-'}</td>
-                    <td>${campo5 || '-'}</td>
-                </tr>
-            `;
-        }
-
-        function procesarTextoManual() {
-            const texto = document.getElementById('texto-manual').value.trim();
-            const tbody = document.getElementById('contenido-tabla');
-            if (!texto) return;
-
-            const lineas = texto.split('\n');
-            let html = '';
-
-            lineas.forEach(linea => {
-                const columnas = linea.split('\t');
-                if (columnas.length >= 2) {
-                    html += generarFilaHTML(columnas);
-                }
-            });
-
-            if (html !== '') {
-                tbody.innerHTML = html;
-                document.getElementById('manual-area').style.display = 'none';
-                document.getElementById('last-update').textContent = `Procesado manualmente: ${new Date().toLocaleTimeString()}`;
+            } catch (e) {
+                alert('El navegador bloqueó la lectura directa por la seguridad del sitio. Por favor, asegúrate de mantener abierta la pestaña de DP World.');
             }
         }
     </script>
