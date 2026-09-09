@@ -192,11 +192,14 @@ const NAVES = [
 function fecha(s){
   return s ? new Date(s.replace(/ /g, "T")) : null;
 }
+
+// CAMBIO APLICADO: Configuración explícita hour12: false para formato 24h
 function fmt(s){
   if(!s) return "—";
   const d=fecha(s);
-  return isNaN(d) ? s : d.toLocaleString("es-EC",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+  return isNaN(d) ? s : d.toLocaleString("es-EC",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false});
 }
+
 function horasTexto(ms){
   if(ms < 0) ms=0;
   const h=Math.floor(ms/3600000);
@@ -312,7 +315,8 @@ function cargarDatos(){
   document.getElementById("tablaZarpes").innerHTML=zarpes.length
     ? zarpes.map(filaZarpe).join("") : `<tr><td colspan="10" class="empty">No hay zarpes registrados.</td></tr>`;
 
-  document.getElementById("actualizado").textContent=new Date().toLocaleString("es-EC");
+  // CAMBIO APLICADO: Última actualización en formato 24h
+  document.getElementById("actualizado").textContent=new Date().toLocaleString("es-EC", {hour12: false});
 }
 
 document.getElementById("buscar").addEventListener("input",cargarDatos);
