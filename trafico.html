@@ -1,234 +1,352 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo Posorja - Extractor Exacto</title>
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 10px;
-            color: #1a1a1a;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Naves - DP World Posorja</title>
+<style>
+:root{
+  --bg:#f3f6f9; --card:#fff; --text:#1f2937; --muted:#64748b;
+  --border:#dbe2ea; --blue:#0b5ed7; --green:#198754; --yellow:#f0ad00;
+  --red:#dc3545; --cyan:#0dcaf0; --shadow:0 4px 15px rgba(0,0,0,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
+header{background:#073b73;color:white;padding:18px 24px;box-shadow:var(--shadow)}
+header h1{margin:0;font-size:24px}
+header p{margin:5px 0 0;opacity:.85;font-size:13px}
+.container{max-width:1500px;margin:20px auto;padding:0 15px}
 
-        .header {
-            background-color: #1a365d;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 10px;
-        }
+.caja-importar {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  margin-bottom: 15px;
+}
+textarea {
+  width: 100%;
+  height: 80px;
+  border: 1px dashed var(--blue);
+  border-radius: 7px;
+  padding: 10px;
+  font-size: 13px;
+  background: #f8fbff;
+  resize: vertical;
+}
 
-        .header h3 { margin: 0; font-size: 1.05rem; }
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+button,select,input{border:1px solid var(--border);background:white;border-radius:7px;padding:10px 12px;font-size:14px}
+button{cursor:pointer;background:#073b73;color:#fff;border-color:#073b73;font-weight:bold}
+button.secondary{background:white;color:#073b73}
+button.action{background:var(--green);border-color:var(--green)}
+input[type="search"]{min-width:260px;flex:1}
 
-        .caja-pegar {
-            width: 100%;
-            height: 90px;
-            border: 2px dashed #0056b3;
-            border-radius: 8px;
-            background-color: #eef5ff;
-            padding: 10px;
-            font-size: 0.8rem;
-            color: #333;
-            margin-bottom: 10px;
-        }
+.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+.card{background:var(--card);padding:16px;border-radius:10px;box-shadow:var(--shadow);border-left:5px solid #64748b}
+.card.arribo{border-color:var(--yellow)}
+.card.trabajo{border-color:var(--blue)}
+.card.zarpo{border-color:var(--green)}
+.card.atrasada{border-color:var(--red)}
+.card.total{border-color:#334155}
+.card .num{font-size:28px;font-weight:bold}
+.card .label{font-size:12px;color:var(--muted);margin-top:4px}
 
-        .btn-procesar {
-            width: 100%;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
+.section{background:white;border-radius:10px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.section-title{padding:13px 16px;font-size:17px;font-weight:bold;border-bottom:1px solid var(--border)}
+.section-title span{float:right;font-size:12px;color:var(--muted);font-weight:normal}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:1050px}
+th,td{padding:10px 9px;border-bottom:1px solid #edf1f5;text-align:left;font-size:13px;white-space:nowrap}
+th{background:#f7f9fb;color:#475569;position:sticky;top:0;z-index:1}
+tr:hover{background:#f8fbff}
+.nave{font-weight:bold}
 
-        .btn-procesar:active { background-color: #1e7e34; }
+.status{display:inline-block;padding:5px 8px;border-radius:20px;font-size:11px;font-weight:bold}
+.status-arribo{background:#fff3cd;color:#8a6500}
+.status-trabajo{background:#dbeafe;color:#0756a6}
+.status-zarpo{background:#d1e7dd;color:#146c43}
+.status-atrasada{background:#f8d7da;color:#842029}
 
-        .leyenda {
-            display: flex;
-            justify-content: space-around;
-            background: #fff;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-        .dot-v { background-color: #28a745; }
-        .dot-a { background-color: #ffc107; }
-        .dot-g { background-color: #6c757d; }
-
-        .card-tabla {
-            background: white;
-            border-radius: 8px;
-            padding: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            overflow-x: auto;
-        }
-
-        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-        th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-        th { background-color: #1a365d; color: white; font-size: 0.7rem; text-transform: uppercase; }
-
-        /* Estilos por Estado */
-        tr.trabajando { background-color: #d4edda !important; color: #155724; font-weight: bold; }
-        tr.espera { background-color: #fff3cd !important; color: #856404; }
-        tr.finalizado { background-color: #e9ecef !important; color: #6c757d; }
-
-        .badge {
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 0.65rem;
-            color: white;
-            font-weight: bold;
-        }
-        .b-trabajando { background-color: #28a745; }
-        .b-espera { background-color: #d39e00; }
-        .b-finalizado { background-color: #6c757d; }
-    </style>
+.countdown{font-weight:bold;color:#0756a6}
+.empty{text-align:center;padding:25px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:550px){.cards{grid-template-columns:1fr}.toolbar>*{width:100%}input{min-width:0}}
+</style>
 </head>
 <body>
 
-    <div class="header">
-        <h3>Control de Naves - DP World Posorja</h3>
-    </div>
+<header>
+  <h1>⚓ Control de Naves - DP World Posorja</h1>
+  <p>Panel dinámico de monitoreo e importación directa</p>
+</header>
 
-    <textarea id="input-datos" class="caja-pegar" placeholder="Selecciona TODO en la web de Posorja, copia y pega aquí..."></textarea>
+<div class="container">
+  
+  <div class="caja-importar">
+    <textarea id="rawInput" placeholder="Pega aquí todo el texto copiado de la web de DP World Posorja..."></textarea>
+    <div style="margin-top: 8px; display: flex; gap: 10px;">
+      <button class="action" onclick="procesarTextoAbsorvido()">📥 Absorber y Actualizar Dashboard</button>
+      <button class="secondary" onclick="document.getElementById('rawInput').value=''">Limpiar Cuadro</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <input id="buscar" type="search" placeholder="Buscar nave, viaje, línea, servicio...">
+    <select id="filtro">
+      <option value="TODOS">Todos los estados</option>
+      <option value="POR ARRIBAR">Por arribar</option>
+      <option value="TRABAJANDO">Trabajando / En muelle</option>
+      <option value="ATRASADA">Atrasadas</option>
+      <option value="ZARPÓ">Zarpó</option>
+    </select>
+    <button onclick="cargarDatos()">↻ Actualizar Vista</button>
+    <button class="secondary" onclick="window.print()">🖨 Imprimir</button>
+  </div>
+
+  <div class="cards">
+    <div class="card total"><div class="num" id="total">0</div><div class="label">TOTAL REGISTROS</div></div>
+    <div class="card arribo"><div class="num" id="porArribar">0</div><div class="label">🟡 POR ARRIBAR</div></div>
+    <div class="card trabajo"><div class="num" id="trabajando">0</div><div class="label">🔵 TRABAJANDO / EN MUELLE</div></div>
+    <div class="card atrasada"><div class="num" id="atrasadas">0</div><div class="label">🔴 ATRASADAS</div></div>
+    <div class="card zarpo"><div class="num" id="zarparon">0</div><div class="label">🟢 ZARPARON</div></div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🟡 PRÓXIMAS NAVES A ARRIBAR <span>Ordenadas por ETB</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Nave</th><th>Viaje</th><th>Línea</th><th>ETB</th><th>ETD</th><th>Cuenta regresiva</th><th>Estado</th><th>Servicio</th>
+        </tr></thead>
+        <tbody id="tablaArribos"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔵 NAVES TRABAJANDO / EN PUERTO <span>ATA registrado y ATD pendiente</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Nave</th><th>Viaje</th><th>Línea</th><th>ETB</th><th>ATA</th><th>ETD</th><th>Tiempo en puerto</th><th>Estado</th><th>Servicio</th>
+        </tr></thead>
+        <tbody id="tablaTrabajo"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🔴 NAVES ATRASADAS <span>ETB vencida sin ATA</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Nave</th><th>Viaje</th><th>Línea</th><th>ETB</th><th>ETD</th><th>Demora</th><th>Estado</th><th>Servicio</th>
+        </tr></thead>
+        <tbody id="tablaAtrasadas"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">🟢 ZARPES REALIZADOS <span>Ordenados por ATD</span></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th><th>Nave</th><th>Viaje</th><th>Línea</th><th>ETB</th><th>ETD</th><th>ATA</th><th>ATD</th><th>Estado</th><th>Servicio</th>
+        </tr></thead>
+        <tbody id="tablaZarpes"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Última actualización del resumen: <span id="actualizado"></span>
+  </footer>
+</div>
+
+<script>
+let NAVES = [];
+
+function limpiarTexto(t) {
+  if (!t) return "";
+  return t.replace(/null/gi, '').replace(/\s+/g, ' ').trim();
+}
+
+function procesarTextoAbsorvido() {
+  const rawText = document.getElementById('rawInput').value;
+  if (!rawText.trim()) {
+    alert("Pega primero la información copiada de la web.");
+    return;
+  }
+
+  // Separar bloques por código de viaje/línea (Ej: CMA2026, MAE2026, XPF2026, etc.)
+  const patronSeparador = /(?=[A-Z0-9]{3,4}202\d{5})/g;
+  const bloques = rawText.split(patronSeparador);
+
+  let nuevasNaves = [];
+
+  bloques.forEach(bloque => {
+    if (bloque.startsWith("NaveViaje") || bloque.length < 15) return;
+
+    const textoMayus = bloque.toUpperCase();
     
-    <button class="btn-procesar" onclick="procesarTextoAdaptativo()">📥 Absorber y Ajustar Campos</button>
+    // 1. Detección de Estado Web
+    let statusWeb = "TO ARRIVE";
+    if (textoMayus.includes("IN OPERATION") || textoMayus.includes("OPERATING") || textoMayus.includes("WORKING") || textoMayus.includes("BERTHED")) {
+      statusWeb = "IN OPERATION";
+    } else if (textoMayus.includes("DEPARTED") || textoMayus.includes("SAILED")) {
+      statusWeb = "DEPARTED";
+    }
 
-    <div class="leyenda">
-        <span><span class="dot dot-v"></span>En Muelle (In Operation)</span>
-        <span><span class="dot dot-a"></span>Por Arribar (To Arrive)</span>
-        <span><span class="dot dot-g"></span>Zarpó (Departed)</span>
-    </div>
+    // 2. Extraer Fechas Operativas salteando los 'null' iniciales
+    const matchLinea = bloque.match(/\s([A-Z0-9]{3,4})\s/);
+    let textoFechas = bloque;
+    let linea = "N/A";
+    
+    if (matchLinea) {
+      linea = matchLinea[1];
+      textoFechas = bloque.substring(bloque.indexOf(matchLinea[0]));
+    }
 
-    <div class="card-tabla">
-        <table>
-            <thead>
-                <tr>
-                    <th>Estado</th>
-                    <th>Nave / Viaje</th>
-                    <th>ETB / ETD</th>
-                    <th>ATA (Atraco)</th>
-                    <th>ATD (Zarpe)</th>
-                    <th>Status Web</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpo-tabla">
-                <tr>
-                    <td colspan="6" style="text-align:center; padding: 20px; color:#777;">
-                        Pega la selección de la web y presiona el botón verde.
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    const fechas = textoFechas.match(/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(\.\d)?/g) || [];
 
-    <script>
-        function procesarTextoAdaptativo() {
-            const rawText = document.getElementById('input-datos').value;
-            const tbody = document.getElementById('cuerpo-tabla');
+    // 3. Limpiar Nombre de Nave
+    const primeraFechaIdx = bloque.search(/\d{4}-\d{2}-\d{2}|null/);
+    let rawEncabezado = primeraFechaIdx !== -1 ? bloque.substring(0, primeraFechaIdx) : "Nave";
+    let naveLimpia = limpiarTexto(rawEncabezado);
 
-            if (!rawText.trim()) {
-                alert("Pega primero la información en el cuadro.");
-                return;
-            }
+    let etb = "", etd = "", ata = "", atd = "";
 
-            // Separar bloques buscando el código de nave/viaje (ej. MAE2026..., HLC2026..., CMA2026...)
-            const patronSeparador = /(?=[A-Z0-9]{3}2026\d{3})/g;
-            const bloques = rawText.split(patronSeparador);
+    if (statusWeb === "IN OPERATION") {
+      etb = fechas[0] || "";
+      etd = fechas[1] || "";
+      ata = fechas[2] || new Date().toISOString().replace('T', ' ').substring(0,19);
+      atd = "";
+    } else if (statusWeb === "DEPARTED") {
+      etb = fechas[0] || "";
+      etd = fechas[1] || "";
+      ata = fechas[2] || "";
+      atd = fechas[3] || "";
+    } else { // TO ARRIVE
+      etb = fechas[0] || "";
+      etd = fechas[1] || "";
+      ata = "";
+      atd = "";
+    }
 
-            let htmlFilas = '';
-            let contador = 0;
+    nuevasNaves.push({
+      nave: naveLimpia,
+      viaje: "-",
+      linea: linea,
+      etb: etb,
+      etd: etd,
+      ata: ata,
+      atd: atd,
+      status: statusWeb,
+      servicio: "POSORJA"
+    });
+  });
 
-            bloques.forEach(bloque => {
-                if (bloque.startsWith("NaveViaje") || bloque.length < 15) return;
+  if (nuevasNaves.length > 0) {
+    NAVES = nuevasNaves;
+    cargarDatos();
+  } else {
+    alert("No se pudieron extraer registros válidos. Verifica el texto pegado.");
+  }
+}
 
-                const textoMayus = bloque.toUpperCase();
-                let statusOficial = "DESCONOCIDO";
+function fecha(s){ return s ? new Date(s.replace(" ","T")) : null; }
+function fmt(s){
+  if(!s) return "—";
+  const d=fecha(s);
+  return isNaN(d) ? s : d.toLocaleString("es-EC",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+}
+function horasTexto(ms){
+  if(ms < 0) ms=0;
+  const h=Math.floor(ms/3600000);
+  const m=Math.floor((ms%3600000)/60000);
+  return `${h}h ${m}m`;
+}
 
-                // Detección exacta del estado según la web de Posorja
-                if (textoMayus.includes("IN OPERATION") || textoMayus.includes("OPERATING") || textoMayus.includes("WORKING") || textoMayus.includes("BERTHED")) {
-                    statusOficial = "IN OPERATION";
-                } else if (textoMayus.includes("DEPARTED") || textoMayus.includes("SAILED")) {
-                    statusOficial = "DEPARTED";
-                } else if (textoMayus.includes("TO ARRIVE") || textoMayus.includes("ANCHORED")) {
-                    statusOficial = "TO ARRIVE";
-                }
+function estado(n){
+  if(n.atd) return "ZARPÓ";
+  if(n.ata || n.status === "IN OPERATION") return "TRABAJANDO";
+  const etb=fecha(n.etb);
+  if(etb && etb < new Date()) return "ATRASADA";
+  return "POR ARRIBAR";
+}
 
-                // Extraer las fechas YYYY-MM-DD HH:MM:SS
-                const fechas = bloque.match(/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(\.\d)?/g) || [];
+function claseEstado(e){
+  return e==="ZARPÓ"?"status-zarpo":e==="TRABAJANDO"?"status-trabajo":e==="ATRASADA"?"status-atrasada":"status-arribo";
+}
+function badge(e){ return `<span class="status ${claseEstado(e)}">${e}</span>`; }
 
-                // Extraer Nombre de Nave
-                const primeraFechaIdx = bloque.search(/\d{4}-\d{2}-\d{2}/);
-                let encabezadoNave = primeraFechaIdx !== -1 ? bloque.substring(0, primeraFechaIdx).trim() : "Nave";
+function filaArribo(n,i){
+  const e=estado(n), etb=fecha(n.etb), dif=etb-new Date();
+  const cuenta=e==="POR ARRIBAR" ? (dif>0 ? horasTexto(dif) : "AHORA") : "—";
+  return `<tr>
+    <td>${i+1}</td><td class="nave">${n.nave}</td><td>${n.viaje}</td><td>${n.linea}</td>
+    <td>${fmt(n.etb)}</td><td>${fmt(n.etd)}</td><td class="countdown">${cuenta}</td>
+    <td>${badge(e)}</td><td>${n.servicio}</td>
+  </tr>`;
+}
+function filaTrabajo(n,i){
+  const ata=fecha(n.ata), tiempo=ata ? horasTexto(new Date()-ata) : "—";
+  return `<tr>
+    <td>${i+1}</td><td class="nave">${n.nave}</td><td>${n.viaje}</td><td>${n.linea}</td>
+    <td>${fmt(n.etb)}</td><td>${fmt(n.ata)}</td><td>${fmt(n.etd)}</td>
+    <td>${tiempo}</td><td>${badge("TRABAJANDO")}</td><td>${n.servicio}</td>
+  </tr>`;
+}
+function filaAtrasada(n,i){
+  const demora=new Date()-fecha(n.etb);
+  return `<tr>
+    <td>${i+1}</td><td class="nave">${n.nave}</td><td>${n.viaje}</td><td>${n.linea}</td>
+    <td>${fmt(n.etb)}</td><td>${fmt(n.etd)}</td><td>${horasTexto(demora)}</td>
+    <td>${badge("ATRASADA")}</td><td>${n.servicio}</td>
+  </tr>`;
+}
+function filaZarpe(n,i){
+  return `<tr>
+    <td>${i+1}</td><td class="nave">${n.nave}</td><td>${n.viaje}</td><td>${n.linea}</td>
+    <td>${fmt(n.etb)}</td><td>${fmt(n.etd)}</td><td>${fmt(n.ata)}</td><td>${fmt(n.atd)}</td>
+    <td>${badge("ZARPÓ")}</td><td>${n.servicio}</td>
+  </tr>`;
+}
 
-                let claseFila = 'espera';
-                let badge = '<span class="badge b-espera">POR ARRIBAR</span>';
-                let etb = "-", etd = "-", ata = "-", atd = "-";
+function cargarDatos(){
+  const q=document.getElementById("buscar").value.toLowerCase().trim();
+  const f=document.getElementById("filtro").value;
 
-                if (statusOficial === "IN OPERATION") {
-                    claseFila = 'trabajando';
-                    badge = '<span class="badge b-trabajando">OPERANDO</span>';
-                    
-                    // Estructura de 5 fechas de IN OPERATION:
-                    // [0] Reefer, [1] Dry, [2] ETB, [3] ETD, [4] ATA
-                    etb = fechas[2] || "-";
-                    etd = fechas[3] || "-";
-                    ata = fechas[4] || "En Muelle";
-                    atd = "-"; // El zarpe aún no ocurre
-                } 
-                else if (statusOficial === "DEPARTED") {
-                    claseFila = 'finalizado';
-                    badge = '<span class="badge b-finalizado">ZARPÓ</span>';
-                    
-                    // Estructura de 6 fechas de DEPARTED:
-                    etb = fechas[2] || "-";
-                    etd = fechas[3] || "-";
-                    ata = fechas[4] || "-";
-                    atd = fechas[5] || "-";
-                } 
-                else { // TO ARRIVE
-                    claseFila = 'espera';
-                    badge = '<span class="badge b-espera">POR ARRIBAR</span>';
-                    
-                    // Estructura de 4 fechas de TO ARRIVE:
-                    etb = fechas[2] || "-";
-                    etd = fechas[3] || "-";
-                    ata = "-";
-                    atd = "-";
-                }
+  let datos=NAVES.filter(n=>{
+    const texto=Object.values(n).join(" ").toLowerCase();
+    const e=estado(n);
+    return (!q || texto.includes(q)) && (f==="TODOS" || e===f);
+  });
 
-                contador++;
-                htmlFilas += `
-                    <tr class="${claseFila}">
-                        <td>${badge}</td>
-                        <td><strong>${encabezadoNave}</strong></td>
-                        <td>${etb}<br><small>${etd}</small></td>
-                        <td>${ata}</td>
-                        <td>${atd}</td>
-                        <td>${statusOficial}</td>
-                    </tr>
-                `;
-            });
+  const arribos=datos.filter(n=>estado(n)==="POR ARRIBAR").sort((a,b)=>fecha(a.etb)-fecha(b.etb));
+  const trabajo=datos.filter(n=>estado(n)==="TRABAJANDO").sort((a,b)=>fecha(a.etd)-fecha(b.etd));
+  const atrasadas=datos.filter(n=>estado(n)==="ATRASADA").sort((a,b)=>fecha(a.etb)-fecha(b.etb));
+  const zarpes=datos.filter(n=>estado(n)==="ZARPÓ").sort((a,b)=>fecha(b.atd)-fecha(a.atd));
 
-            if (contador > 0) {
-                tbody.innerHTML = htmlFilas;
-            } else {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">No se detectaron datos. Copia y pega de nuevo.</td></tr>';
-            }
-        }
-    </script>
+  document.getElementById("total").textContent=datos.length;
+  document.getElementById("porArribar").textContent=arribos.length;
+  document.getElementById("trabajando").textContent=trabajo.length;
+  document.getElementById("atrasadas").textContent=atrasadas.length;
+  document.getElementById("zarparon").textContent=zarpes.length;
+
+  document.getElementById("tablaArribos").innerHTML=arribos.length ? arribos.map(filaArribo).join("") : `<tr><td colspan="9" class="empty">No hay naves por arribar.</td></tr>`;
+  document.getElementById("tablaTrabajo").innerHTML=trabajo.length ? trabajo.map(filaTrabajo).join("") : `<tr><td colspan="10" class="empty">No hay naves trabajando / en muelle.</td></tr>`;
+  document.getElementById("tablaAtrasadas").innerHTML=atrasadas.length ? atrasadas.map(filaAtrasada).join("") : `<tr><td colspan="9" class="empty">No hay naves atrasadas.</td></tr>`;
+  document.getElementById("tablaZarpes").innerHTML=zarpes.length ? zarpes.map(filaZarpe).join("") : `<tr><td colspan="10" class="empty">No hay zarpes registrados.</td></tr>`;
+
+  document.getElementById("actualizado").textContent=new Date().toLocaleString("es-EC");
+}
+
+document.getElementById("buscar").addEventListener("input",cargarDatos);
+document.getElementById("filtro").addEventListener("change",cargarDatos);
+</script>
 </body>
 </html>
