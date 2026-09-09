@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tráfico de Naves - DP World Posorja</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            margin: 20px;
+            color: #333;
+        }
+
+        h2 {
+            text-align: center;
+            color: #1a365d;
+            margin-bottom: 5px;
+        }
+
+        p.subtitle {
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1000px;
+            margin: 0 auto 15px auto;
+        }
+
+        button {
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #003d80;
+        }
+
+        .status-badge {
+            font-size: 0.85em;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        /* Colores según estado */
+        .row-trabajando {
+            background-color: #d4edda !important; /* Verde claro */
+            border-left: 6px solid #28a745;
+        }
+        .badge-trabajando {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .row-espera {
+            background-color: #fff3cd !important; /* Amarillo claro */
+            border-left: 6px solid #ffc107;
+        }
+        .badge-espera {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .row-finalizado {
+            background-color: #e9ecef !important; /* Gris claro */
+            border-left: 6px solid #6c757d;
+        }
+        .badge-finalizado {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        table {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            border-collapse: collapse;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background-color: #fff;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 0.95em;
+        }
+
+        th {
+            background-color: #1a365d;
+            color: white;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            letter-spacing: 0.5px;
+        }
+
+        #loading {
+            text-align: center;
+            font-weight: bold;
+            color: #0056b3;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            table {
+                font-size: 0.8em;
+            }
+            th, td {
+                padding: 8px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Control de Tráfico de Naves</h2>
+    <p class="subtitle">DP World Posorja - Monitoreo en Tiempo Real</p>
+
+    <div class="controls">
+        <button onclick="cargarItinerario()">🔄 Actualizar Datos</button>
+        <span id="last-update" style="font-size: 0.85em; color: #555;"></span>
+    </div>
+
+    <div id="loading" style="display:none;">Cargando itinerarios desde la web...</div>
+
+    <table id="tabla-naves">
+        <thead>
+            <tr>
+                <th>Estado</th>
+                <th>Nave</th>
+                <th>Viaje</th>
+                <th>ETA (Llegada Est.)</th>
+                <th>ATA (Atraco Real)</th>
+                <th>ETD (Zarpe Est.)</th>
+                <th>ATD (Zarpe Real)</th>
+            </tr>
+        </thead>
+        <tbody id="contenido-tabla">
+            <tr>
+                <td colspan="7" style="text-align:center;">Presione "Actualizar Datos" o espere la carga inicial...</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        async function cargarItinerario() {
+            const loading = document.getElementById('loading');
+            const tbody = document.getElementById('contenido-tabla');
+            const lastUpdate = document.getElementById('last-update');
+
+            loading.style.display = 'block';
+            tbody.innerHTML = '';
+
+            // URL del itinerario de DP World Posorja
+            const targetUrl = 'https://www.dpworldposorja.com.ec/itinerarios.php';
+            // Uso de Proxy CORS público para leer el HTML en el navegador
+            const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error('Error al conectar con el proxy');
+
+                const data = await response.json();
+                
+                // Parsear la respuesta HTML recibida
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data.contents, 'text/html');
+
+                // Buscar las filas de la tabla de la página
+                const filas = doc.querySelectorAll('table tbody tr');
+
+                if (filas.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">No se encontraron datos de itinerario disponibles.</td></tr>';
+                    loading.style.display = 'none';
+                    return;
+                }
+
+                let html = '';
+
+                filas.forEach(fila => {
+                    const columnas = fila.querySelectorAll('td');
+
+                    if (columnas.length >= 6) {
+                        const nave = columnas[0]?.textContent.trim() || '-';
+                        const viaje = columnas[1]?.textContent.trim() || '-';
+                        const eta = columnas[2]?.textContent.trim() || '-';
+                        const ata = columnas[3]?.textContent.trim() || '';
+                        const etd = columnas[4]?.textContent.trim() || '-';
+                        const atd = columnas[5]?.textContent.trim() || '';
+
+                        // Determinar Estado y Clase CSS por colores
+                        let claseFila = 'row-espera';
+                        let badgeHtml = '<span class="status-badge badge-espera">PRÓXIMA</span>';
+
+                        // Si ya tiene ATA (atraco real) y NO tiene ATD (zarpe real) -> Está trabajando en sitio
+                        if (ata !== '' && ata !== '-' && (atd === '' || atd === '-')) {
+                            claseFila = 'row-trabajando';
+                            badgeHtml = '<span class="status-badge badge-trabajando">TRABAJANDO</span>';
+                        } 
+                        // Si ya tiene ATD registrado -> Trabajo finalizado
+                        else if (atd !== '' && atd !== '-') {
+                            claseFila = 'row-finalizado';
+                            badgeHtml = '<span class="status-badge badge-finalizado">FINALIZADO</span>';
+                        }
+
+                        html += `
+                            <tr class="${claseFila}">
+                                <td>${badgeHtml}</td>
+                                <td><strong>${nave}</strong></td>
+                                <td>${viaje}</td>
+                                <td>${eta}</td>
+                                <td>${ata || '-'}</td>
+                                <td>${etd}</td>
+                                <td>${atd || '-'}</td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                tbody.innerHTML = html;
+                const ahora = new Date();
+                lastUpdate.textContent = `Última actualización: ${ahora.toLocaleTimeString()}`;
+
+            } catch (error) {
+                console.error(error);
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Ocurrió un error al cargar la información. Intente nuevamente.</td></tr>';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Carga automática al abrir el archivo
+        window.onload = cargarItinerario;
+    </script>
+</body>
+</html>
