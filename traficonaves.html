@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resumen Operativo de Naves - DP World Posorja</title>
+<style>
+:root{
+  --bg:#f3f6f9; --card:#fff; --text:#1f2937; --muted:#64748b;
+  --border:#dbe2ea; --blue:#0b5ed7; --green:#198754; --yellow:#f0ad00;
+  --red:#dc3545; --shadow:0 4px 15px rgba(0,0,0,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
+header{background:#073b73;color:white;padding:16px 20px;box-shadow:var(--shadow);display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:20px}
+header p{margin:3px 0 0;opacity:.85;font-size:12px}
+.container{max-width:1200px;margin:20px auto;padding:0 15px}
+.toolbar{display:flex;justify-content:flex-end;gap:10px;margin-bottom:15px}
+button{cursor:pointer;background:#073b73;color:#fff;border:1px solid #073b73;border-radius:6px;padding:8px 12px;font-size:13px}
+button.secondary{background:white;color:#073b73;border-color:var(--border)}
+.section{background:white;border-radius:10px;box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+.section-title{padding:12px 16px;font-size:15px;font-weight:bold;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.section-title.proximas{border-left:5px solid var(--blue)}
+.section-title.zarpes{border-left:5px solid var(--green)}
+.badge-count{background:#e2e8f0;color:#334155;font-size:11px;padding:2px 8px;border-radius:12px}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:800px}
+th,td{padding:9px 12px;border-bottom:1px solid #edf1f5;text-align:left;font-size:13px;white-space:nowrap}
+th{background:#f8fafc;color:#475569}
+tr:hover{background:#f1f5f9}
+.nave{font-weight:bold}
+.marcador-dia{font-size:10px;padding:2px 6px;border-radius:10px;margin-left:5px;font-weight:bold}
+.marcador-hoy{background:#ffc107;color:#5c4300}
+.marcador-manana{background:#0dcaf0;color:#064b59}
+.marcador-operacion{background:#0b5ed7;color:#fff}
+.status{display:inline-block;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:bold}
+.status-arribo{background:#fff3cd;color:#8a6500}
+.status-trabajo{background:#dbeafe;color:#0756a6}
+.status-zarpo{background:#d1e7dd;color:#146c43}
+.status-atrasada{background:#f8d7da;color:#842029}
+.empty{text-align:center;padding:20px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⚓ Resumen Ejecutivo de Naves - DP World Posorja</h1>
+    <p>Top 10 Próximos Arribos / En Operación & Últimos 4 Zarpes</p>
+  </div>
+  <div class="toolbar">
+    <button onclick="cargarResumen()">↻ Actualizar</button>
+    <button class="secondary" onclick="window.print()">🖨 Imprimir</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- SECCIÓN 1: PRÓXIMAS 10 NAVES -->
+  <div class="section">
+    <div class="section-title proximas">
+      <span>🔵 PRÓXIMAS NAVES (EN OPERACIÓN Y POR ARRIBAR)</span>
+      <span class="badge-count">Máximo 10 registros</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nave</th>
+            <th>Viaje</th>
+            <th>Línea</th>
+            <th>Servicio</th>
+            <th>ETB / ATA</th>
+            <th>ETD</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tablaProximas"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECCIÓN 2: ÚLTIMAS 4 NAVES ZARPADAS -->
+  <div class="section">
+    <div class="section-title zarpes">
+      <span>🟢 ÚLTIMAS NAVES QUE ZARPARON</span>
+      <span class="badge-count">Últimas 4 salidas</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nave</th>
+            <th>Viaje</th>
+            <th>Línea</th>
+            <th>Servicio</th>
+            <th>ATA</th>
+            <th>ATD (Fecha/Hora Zarpe)</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tablaZarpes"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Última actualización: <span id="actualizado"></span>
+  </footer>
+
+</div>
+
+<script>
+const NAVES = [
+  {nave:"HLC2026090 - ODYSSEUS", viaje:"639N", linea:"HLC", etb:"2026-09-22 01:00:00", etd:"2026-09-22 15:00:00", ata:"", atd:"", servicio:"MSW"},
+  {nave:"HLC2026085 - VALPARAISO EXPRESS", viaje:"6234S", linea:"HLC", etb:"2026-09-21 17:30:00", etd:"2026-09-22 07:00:00", ata:"", atd:"", servicio:"SWX_SB"},
+  {nave:"MAE2026113 - AS PALINA", viaje:"637S", linea:"MAE", etb:"2026-09-20 15:00:00", etd:"2026-09-21 22:00:00", ata:"", atd:"", servicio:"MX_WCSA"},
+  {nave:"MAE2026108 - LARS MAERSK", viaje:"634W", linea:"MAE", etb:"2026-09-19 23:00:00", etd:"2026-09-21 05:00:00", ata:"", atd:"", servicio:"ECUMED"},
+  {nave:"CMA2026107 - CMA CGM GALAPAGOS", viaje:"1MHTNW1MA", linea:"CMA", etb:"2026-09-18 22:00:00", etd:"2026-09-20 06:00:00", ata:"", atd:"", servicio:"ACSA"},
+  {nave:"HLC2026083 - CALLAO EXPRESS", viaje:"6231N", linea:"HLC", etb:"2026-09-17 18:00:00", etd:"2026-09-18 18:00:00", ata:"", atd:"", servicio:"SWX_NB"},
+  {nave:"CMA2026104 - CMA CGM BOLDNESS", viaje:"0DVQFN1MA", linea:"CMA", etb:"2026-09-17 07:00:00", etd:"2026-09-17 18:00:00", ata:"", atd:"", servicio:"MEDCAR"},
+  {nave:"MAE2026111 - MAERSK EMDEN", viaje:"637W", linea:"MAE", etb:"2026-09-15 20:00:00", etd:"2026-09-17 06:00:00", ata:"", atd:"", servicio:"AC2"},
+  {nave:"HLC2026084 - CAPE SKAGEN", viaje:"638N", linea:"HLC", etb:"2026-09-15 16:00:00", etd:"2026-09-16 00:00:00", ata:"", atd:"", servicio:"MSW"},
+  {nave:"CMA2026106 - CMA CGM ESTELLE", viaje:"0WCOPS1MA", linea:"CMA", etb:"2026-09-15 02:00:00", etd:"2026-09-15 16:00:00", ata:"", atd:"", servicio:"SWX_SB"},
+  {nave:"MAE2026110 - AS STINE", viaje:"637S", linea:"MAE", etb:"2026-09-14 04:00:00", etd:"2026-09-14 21:00:00", ata:"", atd:"", servicio:"FE-MAE"},
+  {nave:"MAE2026106 - MAERSK FINISTERRE", viaje:"632W", linea:"MAE", etb:"2026-09-13 03:00:00", etd:"2026-09-14 08:00:00", ata:"", atd:"", servicio:"ECUMED"},
+  {nave:"CMA2026103 - CMA CGM GREENLAND", viaje:"1MHTLW1MA", linea:"CMA", etb:"2026-09-11 17:00:00", etd:"2026-09-13 06:00:00", ata:"", atd:"", servicio:"ACSA"},
+  {nave:"CMA2026101 - CMA CGM JACQUES JOSEPH", viaje:"0WCOKN1MA", linea:"CMA", etb:"2026-09-10 17:00:00", etd:"2026-09-11 15:00:00", ata:"", atd:"", servicio:"SWX_NB"},
+  {nave:"HMM2026007 - HMM IVY", viaje:"0005W", linea:"HMM", etb:"2026-09-08 01:00:00", etd:"2026-09-08 14:00:00", ata:"2026-09-08 01:30:00", atd:"2026-09-08 14:42:00", servicio:"AX4"},
+  {nave:"COS2026007 - COSCO SHIPPING SEINE", viaje:"047S", linea:"COS", etb:"2026-09-07 17:00:00", etd:"2026-09-08 07:00:00", ata:"2026-09-07 16:20:00", atd:"2026-09-08 06:48:00", servicio:"SWX_SB"},
+  {nave:"MAE2026105 - AS STINE", viaje:"636S", linea:"MAE", etb:"2026-09-07 00:00:00", etd:"2026-09-07 18:00:00", ata:"2026-09-07 01:47:00", atd:"2026-09-07 19:36:00", servicio:"FE-MAE"},
+  {nave:"MAE2026104 - LOUIS MAERSK", viaje:"631W", linea:"MAE", etb:"2026-09-05 20:00:00", etd:"2026-09-06 21:30:00", ata:"2026-09-05 19:44:00", atd:"2026-09-06 21:25:00", servicio:"ECUMED"}
+];
+
+function fecha(s){ return s ? new Date(s.replace(/ /g, "T")) : null; }
+
+function fmt(s){
+  if(!s) return "—";
+  const d=fecha(s);
+  return isNaN(d) ? s : d.toLocaleString("es-EC",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false});
+}
+
+function estado(n){
+  if(n.atd) return "ZARPÓ";
+  if(n.ata) return "TRABAJANDO";
+  const etb=fecha(n.etb);
+  if(etb && etb < new Date()) return "ATRASADA";
+  return "POR ARRIBAR";
+}
+
+function badge(e){
+  const cls = e==="ZARPÓ"?"status-zarpo":e==="TRABAJANDO"?"status-trabajo":e==="ATRASADA"?"status-atrasada":"status-arribo";
+  return `<span class="status ${cls}">${e}</span>`;
+}
+
+function marcador(n, est){
+  if(est === "TRABAJANDO") return '<span class="marcador-dia marcador-operacion">EN OPERACIÓN</span>';
+  const d=fecha(n.etb), ahora=new Date();
+  if(!d) return "";
+  if(d.toDateString() === ahora.toDateString()) return '<span class="marcador-dia marcador-hoy">HOY</span>';
+  const manana = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()+1);
+  if(d.toDateString() === manana.toDateString()) return '<span class="marcador-dia marcador-manana">MAÑANA</span>';
+  return "";
+}
+
+function cargarResumen(){
+  const procesadas = NAVES.map(n=>({nave:n, est:estado(n)}));
+
+  // 1. Filtrar las que no han zarpado, ordenar cronológicamente por ETB/ATA y tomar SOLO 10
+  const proximas10 = procesadas
+    .filter(x => x.est !== "ZARPÓ")
+    .sort((a,b) => fecha(a.nave.ata || a.nave.etb) - fecha(b.nave.ata || b.nave.etb))
+    .slice(0, 10);
+
+  // 2. Filtrar las zarpadas, ordenar de más reciente a más antigua por ATD y tomar SOLO 4
+  const ultimas4Zarpadas = procesadas
+    .filter(x => x.est === "ZARPÓ")
+    .sort((a,b) => fecha(b.nave.atd) - fecha(a.nave.atd))
+    .slice(0, 4);
+
+  // Renderizar Tabla Próximas
+  document.getElementById("tablaProximas").innerHTML = proximas10.length ? proximas10.map((item, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td class="nave">${item.nave.nave} ${marcador(item.nave, item.est)}</td>
+      <td>${item.nave.viaje}</td>
+      <td>${item.nave.linea}</td>
+      <td>${item.nave.servicio}</td>
+      <td>${fmt(item.nave.ata || item.nave.etb)}</td>
+      <td>${fmt(item.nave.etd)}</td>
+      <td>${badge(item.est)}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="8" class="empty">No hay naves próximas registradas.</td></tr>`;
+
+  // Renderizar Tabla Zarpes
+  document.getElementById("tablaZarpes").innerHTML = ultimas4Zarpadas.length ? ultimas4Zarpadas.map((item, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td class="nave">${item.nave.nave}</td>
+      <td>${item.nave.viaje}</td>
+      <td>${item.nave.linea}</td>
+      <td>${item.nave.servicio}</td>
+      <td>${fmt(item.nave.ata)}</td>
+      <td><b>${fmt(item.nave.atd)}</b></td>
+      <td>${badge("ZARPÓ")}</td>
+    </tr>
+  `).join('') : `<tr><td colspan="8" class="empty">No hay zarpes recientes.</td></tr>`;
+
+  document.getElementById("actualizado").textContent = new Date().toLocaleString("es-EC", {hour12: false});
+}
+
+cargarResumen();
+setInterval(cargarResumen, 60000);
+</script>
+</body>
+</html>
