@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo de Naves Posorja</title>
+    <title>Absorbedor de Tráfico - Posorja</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -27,7 +27,7 @@
 
         .caja-pegar {
             width: 100%;
-            height: 100px;
+            height: 90px;
             border: 2px dashed #0056b3;
             border-radius: 8px;
             background-color: #eef5ff;
@@ -39,18 +39,18 @@
 
         .btn-procesar {
             width: 100%;
-            background-color: #0056b3;
+            background-color: #28a745;
             color: white;
             border: none;
-            padding: 12px;
-            font-size: 0.95rem;
+            padding: 14px;
+            font-size: 1rem;
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
             margin-bottom: 10px;
         }
 
-        .btn-procesar:active { background-color: #003d80; }
+        .btn-procesar:active { background-color: #1e7e34; }
 
         .leyenda {
             display: flex;
@@ -103,14 +103,13 @@
         <h3>Control de Naves - DP World Posorja</h3>
     </div>
 
-    <!-- Pega todo lo que copiaste de la web -->
     <textarea id="input-datos" class="caja-pegar" placeholder="Selecciona TODO en la web de Posorja, copia y pega aquí..."></textarea>
     
-    <button class="btn-procesar" onclick="procesarCopiaMóvil()">⚡ Procesar y Formatear Tabla</button>
+    <button class="btn-procesar" onclick="procesarTablaOficial()">📥 Absorber y Aplicar Colores</button>
 
     <div class="leyenda">
-        <span><span class="dot dot-v"></span>En Muelle / Operando</span>
-        <span><span class="dot dot-a"></span>Por Arribar (To Arrive)</span>
+        <span><span class="dot dot-v"></span>En Sitio / Operando</span>
+        <span><span class="dot dot-a"></span>Por Arribar</span>
         <span><span class="dot dot-g"></span>Zarpó / Finalizada</span>
     </div>
 
@@ -119,17 +118,18 @@
             <thead>
                 <tr>
                     <th>Estado</th>
-                    <th>Nave / Datos</th>
-                    <th>ETA</th>
+                    <th>Nave / Viaje</th>
+                    <th>Línea</th>
+                    <th>ETB / ETD</th>
                     <th>ATA (Atraco)</th>
                     <th>ATD (Zarpe)</th>
-                    <th>Status Oficial</th>
+                    <th>Status Web</th>
                 </tr>
             </thead>
             <tbody id="cuerpo-tabla">
                 <tr>
-                    <td colspan="6" style="text-align:center; padding: 20px; color:#777;">
-                        Copia la página completa desde el celular, pégala en el cuadro y presiona Procesar.
+                    <td colspan="7" style="text-align:center; padding: 20px; color:#777;">
+                        Pega el texto copiado de la web arriba y presiona el botón verde.
                     </td>
                 </tr>
             </tbody>
@@ -137,84 +137,78 @@
     </div>
 
     <script>
-        function procesarCopiaMóvil() {
-            const raw = document.getElementById('input-datos').value;
+        function procesarTablaOficial() {
+            const rawText = document.getElementById('input-datos').value;
             const tbody = document.getElementById('cuerpo-tabla');
 
-            // 1. Busca el encabezado para ignorar el menú de la web y empezar desde la tabla
-            const inicioTabla = raw.indexOf("NaveViaje");
-            if (inicioTabla === -1) {
-                alert("No se encontró la tabla de itinerarios en el texto pegado. Asegúrate de copiar desde donde empieza la información de las naves.");
+            if (!rawText.trim()) {
+                alert("Pega primero la información copiada de la web.");
                 return;
             }
 
-            // Corta el texto desde la tabla en adelante
-            const textoTabla = raw.substring(inicioTabla);
+            // Expresión regular que detecta cada registro basándose en las palabras clave del STATUS de puerto
+            const patronReg = /(.*?)(TO ARRIVE|BERTHED|WORKING|DEPARTED|AT ANCHOR|SAILED)(.*?)(?=(TO ARRIVE|BERTHED|WORKING|DEPARTED|AT ANCHOR|SAILED|$))/gs;
 
-            // 2. Extrae los bloques de naves detectando los estados clave de la web
-            // Estados comunes de puerto: TO ARRIVE, BERTHED, DEPARTED, AT ANCHOR, WORKING
-            const expresionNaves = /(.*?)(TO ARRIVE|BERTHED|DEPARTED|AT ANCHOR|WORKING|SAILED)(.*?)(?=(TO ARRIVE|BERTHED|DEPARTED|AT ANCHOR|WORKING|SAILED|$))/gs;
-
-            let htmlResultado = '';
+            let match;
+            let htmlFilas = '';
             let contador = 0;
 
-            // Procesar por líneas o por bloques
-            const lineas = textoTabla.split('\n');
+            while ((match = patronReg.exec(rawText)) !== null) {
+                const bloque = match[1];
+                const statusOficial = match[2];
 
-            lineas.forEach(linea => {
-                if (linea.includes("NaveViaje") || linea.includes("Reefer CutOff") || linea.trim() === "") return;
+                // Extrae todas las fechas presentes en el bloque (Formato YYYY-MM-DD HH:MM:SS)
+                const fechas = bloque.match(/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(\.\d)?/g) || [];
 
-                // Extraer el Estado Oficial de la cadena corrida
-                let statusWeb = "DESCONOCIDO";
-                if (linea.includes("TO ARRIVE")) statusWeb = "TO ARRIVE";
-                else if (linea.includes("BERTHED")) statusWeb = "BERTHED";
-                else if (linea.includes("WORKING")) statusWeb = "WORKING";
-                else if (linea.includes("DEPARTED") || linea.includes("SAILED")) statusWeb = "DEPARTED";
+                // Limpia el texto eliminando los encabezados y las fechas para aislar la Nave, Viaje y Línea
+                let textoLimpio = bloque
+                    .replace(/Nave|Viaje|Reefer Cut Off|Dry Cut Off|Línea|ETB|ETD|ATA|ATD|STATUS|PTO\.ORIGEN|PTO\.DESTINO|SERVICIO/gi, '')
+                    .replace(/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(\.\d)?/g, ' ')
+                    .trim();
 
-                // Extraer Fechas (Formato AAAA-MM-DD HH:MM:SS)
-                const fechas = linea.match(/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(\.\d)?/g) || [];
-
-                // Extraer Nombre de Nave (Texto antes de las fechas/códigos)
-                const partes = linea.split(/\t+|\s{2,}/);
-                const nombreNave = partes[0] || "Nave sin nombre";
+                const palabras = textoLimpio.split(/\s+/).filter(p => p.length > 0);
+                const nombreNaveViaje = palabras.slice(0, 4).join(" ") || "Nave Registrada";
+                const linea = palabras[4] || "-";
 
                 let claseFila = 'espera';
-                let badge = '<span class="badge b-espera">PRÓXIMA</span>';
+                let badge = '<span class="badge b-espera">POR ARRIBAR</span>';
 
-                // LÓGICA REVISED SEGÚN EL STATUS OFICIAL DE DP WORLD
-                if (statusWeb === "BERTHED" || statusWeb === "WORKING") {
+                // Lógica de Estados según STATUS oficial
+                if (statusOficial === "BERTHED" || statusOficial === "WORKING") {
                     claseFila = 'trabajando';
                     badge = '<span class="badge b-trabajando">OPERANDO</span>';
-                } else if (statusWeb === "DEPARTED" || statusWeb === "SAILED") {
+                } else if (statusOficial === "DEPARTED" || statusOficial === "SAILED") {
                     claseFila = 'finalizado';
                     badge = '<span class="badge b-finalizado">ZARPÓ</span>';
-                } else if (statusWeb === "TO ARRIVE") {
+                } else if (statusOficial === "TO ARRIVE" || statusOficial === "AT ANCHOR") {
                     claseFila = 'espera';
                     badge = '<span class="badge b-espera">POR ARRIBAR</span>';
                 }
 
-                // Asignación inteligente de fechas según la cantidad extraída
-                const eta = fechas[0] || '-';
-                const ata = fechas[2] || '-';
-                const atd = fechas[3] || '-';
+                // Mapeo de fechas según la estructura de 13 columnas (ETB, ETD, ATA, ATD)
+                const etb = fechas[2] || fechas[0] || '-';
+                const etd = fechas[3] || fechas[1] || '-';
+                const ata = fechas[4] || '-';
+                const atd = fechas[5] || '-';
 
                 contador++;
-                htmlResultado += `
+                htmlFilas += `
                     <tr class="${claseFila}">
                         <td>${badge}</td>
-                        <td><strong>${nombreNave}</strong></td>
-                        <td>${eta}</td>
+                        <td><strong>${nombreNaveViaje}</strong></td>
+                        <td>${linea}</td>
+                        <td>${etb}</td>
                         <td>${ata}</td>
                         <td>${atd}</td>
-                        <td>${statusWeb}</td>
+                        <td>${statusOficial}</td>
                     </tr>
                 `;
-            });
+            }
 
             if (contador > 0) {
-                tbody.innerHTML = htmlResultado;
+                tbody.innerHTML = htmlFilas;
             } else {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">No se pudo procesar la estructura. Intenta copiar seleccionando desde la palabra NaveViaje.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">No se detectaron registros. Asegúrate de copiar desde la web incluyendo la tabla completa.</td></tr>';
             }
         }
     </script>
