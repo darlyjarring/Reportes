@@ -3,42 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visor y Extractor Posorja</title>
+    <title>Analizador de Tráfico Posorja</title>
     <style>
         * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f0f2f5;
+            background-color: #f4f6f9;
             margin: 0;
             padding: 10px;
-            color: #222;
+            color: #1a1a1a;
         }
 
-        .titulo {
-            text-align: center;
-            font-size: 1rem;
-            margin: 0 0 10px 0;
-            color: #1a365d;
-        }
-
-        /* Visor para cargar la web original */
-        .contenedor-visor {
-            width: 100%;
-            height: 200px;
-            border: 2px solid #1a365d;
+        .header {
+            background-color: #1a365d;
+            color: white;
+            padding: 12px;
             border-radius: 8px;
-            overflow: hidden;
+            text-align: center;
             margin-bottom: 10px;
-            background: #fff;
         }
 
-        iframe {
+        .header h3 { margin: 0; font-size: 1.05rem; }
+
+        .caja-pegar {
             width: 100%;
-            height: 100%;
-            border: none;
+            height: 90px;
+            border: 2px dashed #0056b3;
+            border-radius: 8px;
+            background-color: #eef5ff;
+            padding: 10px;
+            font-size: 0.85rem;
+            color: #333;
+            margin-bottom: 10px;
+            resize: vertical;
         }
 
-        /* Área de lectura */
         .btn-procesar {
             width: 100%;
             background-color: #28a745;
@@ -49,25 +48,11 @@
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .btn-procesar:active { background-color: #1e7e34; }
 
-        .caja-pegado {
-            width: 100%;
-            height: 60px;
-            border: 2px dashed #0056b3;
-            border-radius: 6px;
-            background-color: #eef5ff;
-            text-align: center;
-            padding: 10px;
-            font-size: 0.8rem;
-            color: #0056b3;
-            margin-bottom: 10px;
-        }
-
-        /* Leyenda de colores */
         .leyenda {
             display: flex;
             justify-content: space-around;
@@ -84,7 +69,6 @@
         .dot-a { background-color: #ffc107; }
         .dot-g { background-color: #6c757d; }
 
-        /* Tabla resultante procesada */
         .card-tabla {
             background: white;
             border-radius: 8px;
@@ -93,17 +77,17 @@
             overflow-x: auto;
         }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
-        th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #1a365d; color: white; font-size: 0.7rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+        th, td { padding: 8px 5px; text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
+        th { background-color: #1a365d; color: white; font-size: 0.7rem; text-transform: uppercase; }
 
-        /* Estilos por Estado */
+        /* Estados de Operación */
         tr.trabajando { background-color: #d4edda !important; color: #155724; font-weight: bold; }
         tr.espera { background-color: #fff3cd !important; color: #856404; }
         tr.finalizado { background-color: #e9ecef !important; color: #6c757d; }
 
         .badge {
-            padding: 2px 5px;
+            padding: 2px 6px;
             border-radius: 4px;
             font-size: 0.65rem;
             color: white;
@@ -116,42 +100,38 @@
 </head>
 <body>
 
-    <h3 class="titulo">Visor & Analizador de Tráfico</h3>
-
-    <!-- 1. Visor de la web original -->
-    <div class="contenedor-visor">
-        <iframe src="https://www.dpworldposorja.com.ec/itinerarios.php" id="visor"></iframe>
+    <div class="header">
+        <h3>Control de Naves - DP World Posorja</h3>
     </div>
 
-    <!-- 2. Zona de Captura Automática -->
-    <button class="btn-procesar" onclick="leerPortapapeles()">📋 Procesar Datos Seleccionados</button>
+    <!-- Pega directa de datos recopilados -->
+    <textarea id="input-datos" class="caja-pegar" placeholder="Copia la tabla de la web de Posorja y pégala aquí..."></textarea>
     
-    <textarea class="caja-pegado" id="input-texto" placeholder="Si el botón no pega automático: Mantén presionado aquí y pega el texto de la tabla..." oninput="procesarTexto(this.value)"></textarea>
+    <button class="btn-procesar" onclick="analizarTabla()">⚡ Procesar y Dar Color</button>
 
-    <!-- 3. Leyenda de Trabajo -->
     <div class="leyenda">
-        <span><span class="dot dot-v"></span>Trabajando</span>
-        <span><span class="dot dot-a"></span>Próxima</span>
-        <span><span class="dot dot-g"></span>Finalizada</span>
+        <span><span class="dot dot-v"></span>En Sitio / Operando</span>
+        <span><span class="dot dot-a"></span>Próxima Arribo</span>
+        <span><span class="dot dot-g"></span>Zarpada / Finalizada</span>
     </div>
 
-    <!-- 4. Resultado Procesado -->
     <div class="card-tabla">
         <table>
             <thead>
                 <tr>
                     <th>Estado</th>
-                    <th>Nave</th>
-                    <th>Viaje</th>
-                    <th>ETA</th>
-                    <th>ATA</th>
-                    <th>ATD</th>
+                    <th>Nave / Datos</th>
+                    <th>Línea</th>
+                    <th>ETA / ETB</th>
+                    <th>ATA (Atraco)</th>
+                    <th>ATD (Zarpe)</th>
+                    <th>Status Web</th>
                 </tr>
             </thead>
             <tbody id="cuerpo-tabla">
                 <tr>
-                    <td colspan="6" style="text-align:center; color:#777; padding: 15px;">
-                        Selecciona y copia la tabla en el visor de arriba, luego presiona el botón verde.
+                    <td colspan="7" style="text-align:center; padding: 20px; color:#777;">
+                        Pega el texto copiado de la web en el recuadro superior y presiona "Procesar".
                     </td>
                 </tr>
             </tbody>
@@ -159,69 +139,73 @@
     </div>
 
     <script>
-        // Opción 1: Intenta leer automáticamente lo que el usuario copió al portapapeles
-        async function leerPortapapeles() {
-            try {
-                const texto = await navigator.clipboard.readText();
-                if (texto) {
-                    procesarTexto(texto);
-                } else {
-                    alert("Copia primero las filas de la tabla que ves en el visor de arriba.");
-                }
-            } catch (err) {
-                alert("Manten presionado sobre el recuadro azul para pegar manualmente el texto copiado.");
-            }
-        }
-
-        // Opción 2: Procesa el texto plano extraído de la tabla y lo convierte en HTML de colores
-        function procesarTexto(texto) {
-            if (!texto.trim()) return;
-
-            const lineas = texto.split('\n');
+        function analizarTabla() {
+            const rawText = document.getElementById('input-datos').value.trim();
             const tbody = document.getElementById('cuerpo-tabla');
+
+            if (!rawText) {
+                alert("Por favor pega primero la información de la tabla.");
+                return;
+            }
+
+            const lineas = rawText.split('\n');
             let htmlFilas = '';
-            let procesados = 0;
+            let contador = 0;
 
             lineas.forEach(linea => {
-                // Separa la línea copiada por tabuladores o espacios dobles
-                const columnas = linea.split(/\t+|\s{2,}/);
+                // Omitir cabecera si se copió junta
+                if (linea.includes('NaveViaje') || linea.includes('CutOff')) return;
 
-                if (columnas.length >= 4) {
-                    procesados++;
-                    const nave = columnas[0]?.trim() || '-';
-                    const viaje = columnas[1]?.trim() || '-';
-                    const eta = columnas[2]?.trim() || '-';
-                    const ata = columnas[3]?.trim() || '';
-                    const etd = columnas[4]?.trim() || '-';
-                    const atd = columnas[5]?.trim() || '';
+                // Dividir por tabulaciones (formato nativo al copiar de tablas web)
+                const cols = linea.split('\t');
+
+                if (cols.length >= 5) {
+                    contador++;
+
+                    // Mapeo real según las columnas de DP World Posorja
+                    const naveViaje = cols[0]?.trim() || '-';
+                    const reeferCut = cols[1]?.trim() || '-';
+                    const dryCut = cols[2]?.trim() || '-';
+                    const lineaMar = cols[3]?.trim() || '-';
+                    const etb = cols[4]?.trim() || '-';
+                    const eta = cols[5]?.trim() || '-';
+                    const ata = cols[6]?.trim() || '';
+                    const atd = cols[7]?.trim() || '';
+                    const statusOficial = cols[8]?.trim() || '-';
 
                     let claseFila = 'espera';
                     let badge = '<span class="badge b-espera">PRÓXIMA</span>';
 
-                    // Lógica de colores según estado de atraco y zarpe
+                    // LÓGICA DE DETECCIÓN REAL:
+                    // 1. Si tiene fecha de Atraco Real (ATA) y NO tiene Zarpe Real (ATD) -> Operando en Muelle
                     if (ata !== '' && ata !== '-' && (atd === '' || atd === '-')) {
                         claseFila = 'trabajando';
-                        badge = '<span class="badge b-trabajando">TRABAJANDO</span>';
-                    } else if (atd !== '' && atd !== '-') {
+                        badge = '<span class="badge b-trabajando">OPERANDO</span>';
+                    } 
+                    // 2. Si ya registra fecha de Zarpe Real (ATD) -> Finalizado
+                    else if (atd !== '' && atd !== '-') {
                         claseFila = 'finalizado';
-                        badge = '<span class="badge b-finalizado">FINALIZADO</span>';
+                        badge = '<span class="badge b-finalizado">ZARPÓ</span>';
                     }
 
                     htmlFilas += `
                         <tr class="${claseFila}">
                             <td>${badge}</td>
-                            <td><strong>${nave}</strong></td>
-                            <td>${viaje}</td>
-                            <td>${eta}</td>
+                            <td><strong>${naveViaje}</strong></td>
+                            <td>${lineaMar}</td>
+                            <td>${eta !== '-' ? eta : etb}</td>
                             <td>${ata || '-'}</td>
                             <td>${atd || '-'}</td>
+                            <td>${statusOficial}</td>
                         </tr>
                     `;
                 }
             });
 
-            if (procesados > 0) {
+            if (contador > 0) {
                 tbody.innerHTML = htmlFilas;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">No se pudo interpretar el formato. Asegúrate de copiar las filas directamente desde la tabla web.</td></tr>';
             }
         }
     </script>
