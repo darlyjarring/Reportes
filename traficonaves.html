@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resumen Operativo de Naves - DP World Posorja</title>
+<title>Resumen Operativo (Top 10 y Zarpes)</title>
 <style>
 :root{
   --bg:#f3f6f9; --card:#fff; --text:#1f2937; --muted:#64748b;
@@ -47,8 +47,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
 
 <header>
   <div>
-    <h1>⚓ Resumen Ejecutivo de Naves - DP World Posorja</h1>
-    <p>Top 10 Próximos Arribos / En Operación & Últimos 4 Zarpes</p>
+    <h1>⚓ Resumen Operativo de Naves - DP World Posorja</h1>
+    <p>Próximas 10 Naves (Hoy y días posteriores / En Operación) & Últimas 4 Zarpadas</p>
   </div>
   <div class="toolbar">
     <button onclick="cargarResumen()">↻ Actualizar</button>
@@ -58,11 +58,11 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
 
 <div class="container">
 
-  <!-- SECCIÓN 1: PRÓXIMAS 10 NAVES -->
+  <!-- SECCIÓN 1: PRÓXIMAS 10 NAVES (HOY Y POSTERIORES / EN OPERACIÓN) -->
   <div class="section">
     <div class="section-title proximas">
-      <span>🔵 PRÓXIMAS NAVES (EN OPERACIÓN Y POR ARRIBAR)</span>
-      <span class="badge-count">Máximo 10 registros</span>
+      <span>🔵 PRÓXIMAS NAVES (DESDE HOY EN ADELANTE Y EN OPERACIÓN)</span>
+      <span class="badge-count">Próximas 10 naves</span>
     </div>
     <div class="table-wrap">
       <table>
@@ -87,7 +87,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
   <div class="section">
     <div class="section-title zarpes">
       <span>🟢 ÚLTIMAS NAVES QUE ZARPARON</span>
-      <span class="badge-count">Últimas 4 salidas</span>
+      <span class="badge-count">Últimos 4 zarpes</span>
     </div>
     <div class="table-wrap">
       <table>
@@ -99,7 +99,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
             <th>Línea</th>
             <th>Servicio</th>
             <th>ATA</th>
-            <th>ATD (Fecha/Hora Zarpe)</th>
+            <th>ATD (Hora Zarpe)</th>
             <th>Estado</th>
           </tr>
         </thead>
@@ -116,24 +116,24 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
 
 <script>
 const NAVES = [
-  {nave:"HLC2026090 - ODYSSEUS", viaje:"639N", linea:"HLC", etb:"2026-09-22 01:00:00", etd:"2026-09-22 15:00:00", ata:"", atd:"", servicio:"MSW"},
-  {nave:"HLC2026085 - VALPARAISO EXPRESS", viaje:"6234S", linea:"HLC", etb:"2026-09-21 17:30:00", etd:"2026-09-22 07:00:00", ata:"", atd:"", servicio:"SWX_SB"},
-  {nave:"MAE2026113 - AS PALINA", viaje:"637S", linea:"MAE", etb:"2026-09-20 15:00:00", etd:"2026-09-21 22:00:00", ata:"", atd:"", servicio:"MX_WCSA"},
-  {nave:"MAE2026108 - LARS MAERSK", viaje:"634W", linea:"MAE", etb:"2026-09-19 23:00:00", etd:"2026-09-21 05:00:00", ata:"", atd:"", servicio:"ECUMED"},
-  {nave:"CMA2026107 - CMA CGM GALAPAGOS", viaje:"1MHTNW1MA", linea:"CMA", etb:"2026-09-18 22:00:00", etd:"2026-09-20 06:00:00", ata:"", atd:"", servicio:"ACSA"},
-  {nave:"HLC2026083 - CALLAO EXPRESS", viaje:"6231N", linea:"HLC", etb:"2026-09-17 18:00:00", etd:"2026-09-18 18:00:00", ata:"", atd:"", servicio:"SWX_NB"},
-  {nave:"CMA2026104 - CMA CGM BOLDNESS", viaje:"0DVQFN1MA", linea:"CMA", etb:"2026-09-17 07:00:00", etd:"2026-09-17 18:00:00", ata:"", atd:"", servicio:"MEDCAR"},
-  {nave:"MAE2026111 - MAERSK EMDEN", viaje:"637W", linea:"MAE", etb:"2026-09-15 20:00:00", etd:"2026-09-17 06:00:00", ata:"", atd:"", servicio:"AC2"},
-  {nave:"HLC2026084 - CAPE SKAGEN", viaje:"638N", linea:"HLC", etb:"2026-09-15 16:00:00", etd:"2026-09-16 00:00:00", ata:"", atd:"", servicio:"MSW"},
-  {nave:"CMA2026106 - CMA CGM ESTELLE", viaje:"0WCOPS1MA", linea:"CMA", etb:"2026-09-15 02:00:00", etd:"2026-09-15 16:00:00", ata:"", atd:"", servicio:"SWX_SB"},
-  {nave:"MAE2026110 - AS STINE", viaje:"637S", linea:"MAE", etb:"2026-09-14 04:00:00", etd:"2026-09-14 21:00:00", ata:"", atd:"", servicio:"FE-MAE"},
-  {nave:"MAE2026106 - MAERSK FINISTERRE", viaje:"632W", linea:"MAE", etb:"2026-09-13 03:00:00", etd:"2026-09-14 08:00:00", ata:"", atd:"", servicio:"ECUMED"},
-  {nave:"CMA2026103 - CMA CGM GREENLAND", viaje:"1MHTLW1MA", linea:"CMA", etb:"2026-09-11 17:00:00", etd:"2026-09-13 06:00:00", ata:"", atd:"", servicio:"ACSA"},
-  {nave:"CMA2026101 - CMA CGM JACQUES JOSEPH", viaje:"0WCOKN1MA", linea:"CMA", etb:"2026-09-10 17:00:00", etd:"2026-09-11 15:00:00", ata:"", atd:"", servicio:"SWX_NB"},
-  {nave:"HMM2026007 - HMM IVY", viaje:"0005W", linea:"HMM", etb:"2026-09-08 01:00:00", etd:"2026-09-08 14:00:00", ata:"2026-09-08 01:30:00", atd:"2026-09-08 14:42:00", servicio:"AX4"},
-  {nave:"COS2026007 - COSCO SHIPPING SEINE", viaje:"047S", linea:"COS", etb:"2026-09-07 17:00:00", etd:"2026-09-08 07:00:00", ata:"2026-09-07 16:20:00", atd:"2026-09-08 06:48:00", servicio:"SWX_SB"},
-  {nave:"MAE2026105 - AS STINE", viaje:"636S", linea:"MAE", etb:"2026-09-07 00:00:00", etd:"2026-09-07 18:00:00", ata:"2026-09-07 01:47:00", atd:"2026-09-07 19:36:00", servicio:"FE-MAE"},
-  {nave:"MAE2026104 - LOUIS MAERSK", viaje:"631W", linea:"MAE", etb:"2026-09-05 20:00:00", etd:"2026-09-06 21:30:00", ata:"2026-09-05 19:44:00", atd:"2026-09-06 21:25:00", servicio:"ECUMED"}
+  {nave:"HLC2026090 - ODYSSEUS", viaje:"639N", linea:"HLC", etb:"2026-09-22 01:00:00", etd:"2026-09-22 15:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"MSW"},
+  {nave:"HLC2026085 - VALPARAISO EXPRESS", viaje:"6234S", linea:"HLC", etb:"2026-09-21 17:30:00", etd:"2026-09-22 07:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"SWX_SB"},
+  {nave:"MAE2026113 - AS PALINA", viaje:"637S", linea:"MAE", etb:"2026-09-20 15:00:00", etd:"2026-09-21 22:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"MX_WCSA"},
+  {nave:"MAE2026108 - LARS MAERSK", viaje:"634W", linea:"MAE", etb:"2026-09-19 23:00:00", etd:"2026-09-21 05:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"ECUMED"},
+  {nave:"CMA2026107 - CMA CGM GALAPAGOS", viaje:"1MHTNW1MA", linea:"CMA", etb:"2026-09-18 22:00:00", etd:"2026-09-20 06:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"ACSA"},
+  {nave:"HLC2026083 - CALLAO EXPRESS", viaje:"6231N", linea:"HLC", etb:"2026-09-17 18:00:00", etd:"2026-09-18 18:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"SWX_NB"},
+  {nave:"CMA2026104 - CMA CGM BOLDNESS", viaje:"0DVQFN1MA", linea:"CMA", etb:"2026-09-17 07:00:00", etd:"2026-09-17 18:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"MEDCAR"},
+  {nave:"MAE2026111 - MAERSK EMDEN", viaje:"637W", linea:"MAE", etb:"2026-09-15 20:00:00", etd:"2026-09-17 06:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"AC2"},
+  {nave:"HLC2026084 - CAPE SKAGEN", viaje:"638N", linea:"HLC", etb:"2026-09-15 16:00:00", etd:"2026-09-16 00:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"MSW"},
+  {nave:"CMA2026106 - CMA CGM ESTELLE", viaje:"0WCOPS1MA", linea:"CMA", etb:"2026-09-15 02:00:00", etd:"2026-09-15 16:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"SWX_SB"},
+  {nave:"MAE2026110 - AS STINE", viaje:"637S", linea:"MAE", etb:"2026-09-14 04:00:00", etd:"2026-09-14 21:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"FE-MAE"},
+  {nave:"MAE2026106 - MAERSK FINISTERRE", viaje:"632W", linea:"MAE", etb:"2026-09-13 03:00:00", etd:"2026-09-14 08:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"ECUMED"},
+  {nave:"CMA2026103 - CMA CGM GREENLAND", viaje:"1MHTLW1MA", linea:"CMA", etb:"2026-09-11 17:00:00", etd:"2026-09-13 06:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"ACSA"},
+  {nave:"CMA2026101 - CMA CGM JACQUES JOSEPH", viaje:"0WCOKN1MA", linea:"CMA", etb:"2026-09-10 17:00:00", etd:"2026-09-11 15:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"SWX_NB"},
+  {nave:"HMM2026007 - HMM IVY", viaje:"0005W", linea:"HMM", etb:"2026-09-08 01:00:00", etd:"2026-09-08 14:00:00", ata:"2026-09-08 01:30:00", atd:"2026-09-08 14:42:00", status:"DEPARTED", servicio:"AX4"},
+  {nave:"COS2026007 - COSCO SHIPPING SEINE", viaje:"047S", linea:"COS", etb:"2026-09-07 17:00:00", etd:"2026-09-08 07:00:00", ata:"2026-09-07 16:20:00", atd:"2026-09-08 06:48:00", status:"DEPARTED", servicio:"SWX_SB"},
+  {nave:"MAE2026105 - AS STINE", viaje:"636S", linea:"MAE", etb:"2026-09-07 00:00:00", etd:"2026-09-07 18:00:00", ata:"2026-09-07 01:47:00", atd:"2026-09-07 19:36:00", status:"DEPARTED", servicio:"FE-MAE"},
+  {nave:"MAE2026104 - LOUIS MAERSK", viaje:"631W", linea:"MAE", etb:"2026-09-05 20:00:00", etd:"2026-09-06 21:30:00", ata:"2026-09-05 19:44:00", atd:"2026-09-06 21:25:00", status:"DEPARTED", servicio:"ECUMED"}
 ];
 
 function fecha(s){ return s ? new Date(s.replace(/ /g, "T")) : null; }
@@ -144,11 +144,13 @@ function fmt(s){
   return isNaN(d) ? s : d.toLocaleString("es-EC",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false});
 }
 
-function estado(n){
-  if(n.atd) return "ZARPÓ";
-  if(n.ata) return "TRABAJANDO";
-  const etb=fecha(n.etb);
-  if(etb && etb < new Date()) return "ATRASADA";
+function obtenerEstado(n){
+  const st = (n.status || "").toUpperCase();
+  if (st === "DEPARTED" || n.atd) return "ZARPÓ";
+  if (st === "WORKING" || st === "UNDER OPERATION" || st === "BERTHED" || n.ata) return "TRABAJANDO";
+  
+  const etb = fecha(n.etb);
+  if (etb && etb < new Date()) return "ATRASADA";
   return "POR ARRIBAR";
 }
 
@@ -168,18 +170,31 @@ function marcador(n, est){
 }
 
 function cargarResumen(){
-  const procesadas = NAVES.map(n=>({nave:n, est:estado(n)}));
+  const ahora = new Date();
+  const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
 
-  // 1. Filtrar las que no han zarpado, ordenar cronológicamente por ETB/ATA y tomar SOLO 10
+  const procesadas = NAVES.map(n => ({
+    nave: n, 
+    est: obtenerEstado(n),
+    fEtb: fecha(n.etb),
+    fAta: fecha(n.ata),
+    fAtd: fecha(n.atd)
+  }));
+
+  // 1. FILTRO: Naves en operación O por arribar desde HOY en adelante
   const proximas10 = procesadas
-    .filter(x => x.est !== "ZARPÓ")
-    .sort((a,b) => fecha(a.nave.ata || a.nave.etb) - fecha(b.nave.ata || b.nave.etb))
+    .filter(x => {
+      if (x.est === "ZARPÓ") return false;
+      if (x.est === "TRABAJANDO") return true; // Si está en operación se incluye siempre
+      return x.fEtb && x.fEtb >= inicioHoy;     // Por arribar desde la fecha de hoy en adelante
+    })
+    .sort((a,b) => (a.fAta || a.fEtb) - (b.fAta || b.fEtb))
     .slice(0, 10);
 
-  // 2. Filtrar las zarpadas, ordenar de más reciente a más antigua por ATD y tomar SOLO 4
+  // 2. FILTRO: ÚLTIMAS 4 NAVES ZARPADAS
   const ultimas4Zarpadas = procesadas
     .filter(x => x.est === "ZARPÓ")
-    .sort((a,b) => fecha(b.nave.atd) - fecha(a.nave.atd))
+    .sort((a,b) => b.fAtd - a.fAtd)
     .slice(0, 4);
 
   // Renderizar Tabla Próximas
@@ -194,7 +209,7 @@ function cargarResumen(){
       <td>${fmt(item.nave.etd)}</td>
       <td>${badge(item.est)}</td>
     </tr>
-  `).join('') : `<tr><td colspan="8" class="empty">No hay naves próximas registradas.</td></tr>`;
+  `).join('') : `<tr><td colspan="8" class="empty">No hay naves programadas desde hoy.</td></tr>`;
 
   // Renderizar Tabla Zarpes
   document.getElementById("tablaZarpes").innerHTML = ultimas4Zarpadas.length ? ultimas4Zarpadas.map((item, i) => `
@@ -208,7 +223,7 @@ function cargarResumen(){
       <td><b>${fmt(item.nave.atd)}</b></td>
       <td>${badge("ZARPÓ")}</td>
     </tr>
-  `).join('') : `<tr><td colspan="8" class="empty">No hay zarpes recientes.</td></tr>`;
+  `).join('') : `<tr><td colspan="8" class="empty">No hay zarpes registrados.</td></tr>`;
 
   document.getElementById("actualizado").textContent = new Date().toLocaleString("es-EC", {hour12: false});
 }
