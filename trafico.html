@@ -3,158 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Tráfico Posorja</title>
+    <title>Visor y Extractor Posorja</title>
     <style>
         * { box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: #f0f2f5;
             margin: 0;
-            padding: 12px;
-            color: #1c1e21;
+            padding: 10px;
+            color: #222;
         }
 
-        .header {
-            background-color: #1a365d;
-            color: white;
-            padding: 14px;
-            border-radius: 8px;
+        .titulo {
             text-align: center;
-            margin-bottom: 12px;
+            font-size: 1rem;
+            margin: 0 0 10px 0;
+            color: #1a365d;
         }
 
-        .header h2 {
-            margin: 0;
-            font-size: 1.1rem;
-        }
-
-        .btn-cargar {
+        /* Visor para cargar la web original */
+        .contenedor-visor {
             width: 100%;
-            background-color: #0056b3;
+            height: 200px;
+            border: 2px solid #1a365d;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Área de lectura */
+        .btn-procesar {
+            width: 100%;
+            background-color: #28a745;
             color: white;
             border: none;
-            padding: 14px;
-            font-size: 15px;
+            padding: 12px;
+            font-size: 0.95rem;
             font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
-        .btn-cargar:active {
-            background-color: #003d80;
+        .btn-procesar:active { background-color: #1e7e34; }
+
+        .caja-pegado {
+            width: 100%;
+            height: 60px;
+            border: 2px dashed #0056b3;
+            border-radius: 6px;
+            background-color: #eef5ff;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.8rem;
+            color: #0056b3;
+            margin-bottom: 10px;
         }
 
+        /* Leyenda de colores */
         .leyenda {
             display: flex;
-            justify-content: space-between;
-            background: white;
-            padding: 10px 12px;
+            justify-content: space-around;
+            background: #fff;
+            padding: 8px;
             border-radius: 6px;
             font-size: 0.75rem;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
-        .item-leyenda {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
         .dot-v { background-color: #28a745; }
         .dot-a { background-color: #ffc107; }
         .dot-g { background-color: #6c757d; }
 
+        /* Tabla resultante procesada */
         .card-tabla {
             background: white;
             border-radius: 8px;
             padding: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
             overflow-x: auto;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.8rem;
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #1a365d; color: white; font-size: 0.7rem; }
 
-        th, td {
-            padding: 8px 6px;
-            text-align: left;
-            border-bottom: 1px solid #e5e5e5;
-        }
-
-        th {
-            background-color: #1a365d;
-            color: white;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-        }
-
-        /* Formato de colores por fila */
-        tr.trabajando {
-            background-color: #d4edda !important;
-            color: #155724;
-            font-weight: bold;
-        }
-
-        tr.espera {
-            background-color: #fff3cd !important;
-            color: #856404;
-        }
-
-        tr.finalizado {
-            background-color: #e9ecef !important;
-            color: #6c757d;
-        }
+        /* Estilos por Estado */
+        tr.trabajando { background-color: #d4edda !important; color: #155724; font-weight: bold; }
+        tr.espera { background-color: #fff3cd !important; color: #856404; }
+        tr.finalizado { background-color: #e9ecef !important; color: #6c757d; }
 
         .badge {
-            padding: 2px 6px;
-            border-radius: 6px;
+            padding: 2px 5px;
+            border-radius: 4px;
             font-size: 0.65rem;
             color: white;
             font-weight: bold;
-            display: inline-block;
         }
-
         .b-trabajando { background-color: #28a745; }
         .b-espera { background-color: #d39e00; }
         .b-finalizado { background-color: #6c757d; }
-
-        #status {
-            text-align: center;
-            font-size: 0.85rem;
-            color: #0056b3;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>Tráfico de Naves - DP World Posorja</h2>
+    <h3 class="titulo">Visor & Analizador de Tráfico</h3>
+
+    <!-- 1. Visor de la web original -->
+    <div class="contenedor-visor">
+        <iframe src="https://www.dpworldposorja.com.ec/itinerarios.php" id="visor"></iframe>
     </div>
 
-    <button class="btn-cargar" onclick="obtenerItinerario()">🔄 Obteniendo Datos de la Web</button>
+    <!-- 2. Zona de Captura Automática -->
+    <button class="btn-procesar" onclick="leerPortapapeles()">📋 Procesar Datos Seleccionados</button>
+    
+    <textarea class="caja-pegado" id="input-texto" placeholder="Si el botón no pega automático: Mantén presionado aquí y pega el texto de la tabla..." oninput="procesarTexto(this.value)"></textarea>
 
+    <!-- 3. Leyenda de Trabajo -->
     <div class="leyenda">
-        <div class="item-leyenda"><span class="dot dot-v"></span> Trabalhando</div>
-        <div class="item-leyenda"><span class="dot dot-a"></span> Próxima</div>
-        <div class="item-leyenda"><span class="dot dot-g"></span> Finalizada</div>
+        <span><span class="dot dot-v"></span>Trabajando</span>
+        <span><span class="dot dot-a"></span>Próxima</span>
+        <span><span class="dot dot-g"></span>Finalizada</span>
     </div>
 
-    <div id="status"></div>
-
+    <!-- 4. Resultado Procesado -->
     <div class="card-tabla">
         <table>
             <thead>
@@ -169,8 +150,8 @@
             </thead>
             <tbody id="cuerpo-tabla">
                 <tr>
-                    <td colspan="6" style="text-align:center; padding: 20px; color:#666;">
-                        Toca el botón arriba para extraer el tráfico actual.
+                    <td colspan="6" style="text-align:center; color:#777; padding: 15px;">
+                        Selecciona y copia la tabla en el visor de arriba, luego presiona el botón verde.
                     </td>
                 </tr>
             </tbody>
@@ -178,80 +159,69 @@
     </div>
 
     <script>
-        async function obtenerItinerario() {
-            const statusDiv = document.getElementById('status');
-            const tbody = document.getElementById('cuerpo-tabla');
-            
-            statusDiv.textContent = "Conectando con la fuente oficial de DP World...";
-            tbody.innerHTML = '';
-
-            const targetUrl = 'https://www.dpworldposorja.com.ec/itinerarios.php';
-            // Petición con renderizado JSON
-            const apiUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&timestamp=${new Date().getTime()}`;
-
+        // Opción 1: Intenta leer automáticamente lo que el usuario copió al portapapeles
+        async function leerPortapapeles() {
             try {
-                const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error("Error en la conexión");
-
-                const data = await response.json();
-                
-                // Conversión de cadena HTML a DOM interno
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(data.contents, 'text/html');
-
-                const filas = doc.querySelectorAll('table tbody tr, table tr');
-                let htmlResultado = '';
-                let contador = 0;
-
-                filas.forEach((fila) => {
-                    const cols = fila.querySelectorAll('td');
-                    if (cols.length >= 5) {
-                        contador++;
-                        
-                        const nave = cols[0]?.textContent.trim() || '-';
-                        const viaje = cols[1]?.textContent.trim() || '-';
-                        const eta = cols[2]?.textContent.trim() || '-';
-                        const ata = cols[3]?.textContent.trim() || '';
-                        const etd = cols[4]?.textContent.trim() || '-';
-                        const atd = cols[5]?.textContent.trim() || '';
-
-                        let claseFila = 'espera';
-                        let badge = '<span class="badge b-espera">PRÓXIMA</span>';
-
-                        // Evaluación del estado del buque
-                        if (ata !== '' && ata !== '-' && (atd === '' || atd === '-')) {
-                            claseFila = 'trabajando';
-                            badge = '<span class="badge b-trabajando">TRABAJANDO</span>';
-                        } else if (atd !== '' && atd !== '-') {
-                            claseFila = 'finalizado';
-                            badge = '<span class="badge b-finalizado">FINALIZADO</span>';
-                        }
-
-                        htmlResultado += `
-                            <tr class="${claseFila}">
-                                <td>${badge}</td>
-                                <td><strong>${nave}</strong></td>
-                                <td>${viaje}</td>
-                                <td>${eta}</td>
-                                <td>${ata || '-'}</td>
-                                <td>${atd || '-'}</td>
-                            </tr>
-                        `;
-                    }
-                });
-
-                if (contador > 0) {
-                    tbody.innerHTML = htmlResultado;
-                    statusDiv.textContent = `Última actualización: ${new Date().toLocaleTimeString()}`;
+                const texto = await navigator.clipboard.readText();
+                if (texto) {
+                    procesarTexto(texto);
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">No se encontraron filas estructuradas en la web fuente.</td></tr>';
-                    statusDiv.textContent = "";
+                    alert("Copia primero las filas de la tabla que ves en el visor de arriba.");
                 }
+            } catch (err) {
+                alert("Manten presionado sobre el recuadro azul para pegar manualmente el texto copiado.");
+            }
+        }
 
-            } catch (error) {
-                console.error(error);
-                statusDiv.textContent = "";
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">No se pudieron extraer los datos. Verifique la conexión a Internet en su móvil.</td></tr>';
+        // Opción 2: Procesa el texto plano extraído de la tabla y lo convierte en HTML de colores
+        function procesarTexto(texto) {
+            if (!texto.trim()) return;
+
+            const lineas = texto.split('\n');
+            const tbody = document.getElementById('cuerpo-tabla');
+            let htmlFilas = '';
+            let procesados = 0;
+
+            lineas.forEach(linea => {
+                // Separa la línea copiada por tabuladores o espacios dobles
+                const columnas = linea.split(/\t+|\s{2,}/);
+
+                if (columnas.length >= 4) {
+                    procesados++;
+                    const nave = columnas[0]?.trim() || '-';
+                    const viaje = columnas[1]?.trim() || '-';
+                    const eta = columnas[2]?.trim() || '-';
+                    const ata = columnas[3]?.trim() || '';
+                    const etd = columnas[4]?.trim() || '-';
+                    const atd = columnas[5]?.trim() || '';
+
+                    let claseFila = 'espera';
+                    let badge = '<span class="badge b-espera">PRÓXIMA</span>';
+
+                    // Lógica de colores según estado de atraco y zarpe
+                    if (ata !== '' && ata !== '-' && (atd === '' || atd === '-')) {
+                        claseFila = 'trabajando';
+                        badge = '<span class="badge b-trabajando">TRABAJANDO</span>';
+                    } else if (atd !== '' && atd !== '-') {
+                        claseFila = 'finalizado';
+                        badge = '<span class="badge b-finalizado">FINALIZADO</span>';
+                    }
+
+                    htmlFilas += `
+                        <tr class="${claseFila}">
+                            <td>${badge}</td>
+                            <td><strong>${nave}</strong></td>
+                            <td>${viaje}</td>
+                            <td>${eta}</td>
+                            <td>${ata || '-'}</td>
+                            <td>${atd || '-'}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            if (procesados > 0) {
+                tbody.innerHTML = htmlFilas;
             }
         }
     </script>
