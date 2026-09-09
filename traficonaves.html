@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Resumen Operativo (Top 10 y Zarpes)</title>
+<title>Resumen Operativo de Naves - DP World Posorja</title>
 <style>
 :root{
   --bg:#f3f6f9; --card:#fff; --text:#1f2937; --muted:#64748b;
@@ -58,7 +58,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:15px}
 
 <div class="container">
 
-  <!-- SECCIÓN 1: PRÓXIMAS 10 NAVES (HOY Y POSTERIORES / EN OPERACIÓN) -->
+  <!-- SECCIÓN 1: PRÓXIMAS 10 NAVES -->
   <div class="section">
     <div class="section-title proximas">
       <span>🔵 PRÓXIMAS NAVES (DESDE HOY EN ADELANTE Y EN OPERACIÓN)</span>
@@ -130,6 +130,8 @@ const NAVES = [
   {nave:"MAE2026106 - MAERSK FINISTERRE", viaje:"632W", linea:"MAE", etb:"2026-09-13 03:00:00", etd:"2026-09-14 08:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"ECUMED"},
   {nave:"CMA2026103 - CMA CGM GREENLAND", viaje:"1MHTLW1MA", linea:"CMA", etb:"2026-09-11 17:00:00", etd:"2026-09-13 06:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"ACSA"},
   {nave:"CMA2026101 - CMA CGM JACQUES JOSEPH", viaje:"0WCOKN1MA", linea:"CMA", etb:"2026-09-10 17:00:00", etd:"2026-09-11 15:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"SWX_NB"},
+  {nave:"HLC2026088 - CAUCEDO EXPRESS", viaje:"637N", linea:"HLC", etb:"2026-09-10 05:00:00", etd:"2026-09-10 14:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"MSW"},
+  {nave:"CMA2026102 - CMA CGM FORT BOURBON", viaje:"0DVQDN1MA", linea:"CMA", etb:"2026-09-10 05:00:00", etd:"2026-09-10 18:00:00", ata:"", atd:"", status:"TO ARRIVE", servicio:"MEDCAR"},
   {nave:"HMM2026007 - HMM IVY", viaje:"0005W", linea:"HMM", etb:"2026-09-08 01:00:00", etd:"2026-09-08 14:00:00", ata:"2026-09-08 01:30:00", atd:"2026-09-08 14:42:00", status:"DEPARTED", servicio:"AX4"},
   {nave:"COS2026007 - COSCO SHIPPING SEINE", viaje:"047S", linea:"COS", etb:"2026-09-07 17:00:00", etd:"2026-09-08 07:00:00", ata:"2026-09-07 16:20:00", atd:"2026-09-08 06:48:00", status:"DEPARTED", servicio:"SWX_SB"},
   {nave:"MAE2026105 - AS STINE", viaje:"636S", linea:"MAE", etb:"2026-09-07 00:00:00", etd:"2026-09-07 18:00:00", ata:"2026-09-07 01:47:00", atd:"2026-09-07 19:36:00", status:"DEPARTED", servicio:"FE-MAE"},
@@ -148,9 +150,6 @@ function obtenerEstado(n){
   const st = (n.status || "").toUpperCase();
   if (st === "DEPARTED" || n.atd) return "ZARPÓ";
   if (st === "WORKING" || st === "UNDER OPERATION" || st === "BERTHED" || n.ata) return "TRABAJANDO";
-  
-  const etb = fecha(n.etb);
-  if (etb && etb < new Date()) return "ATRASADA";
   return "POR ARRIBAR";
 }
 
@@ -161,18 +160,22 @@ function badge(e){
 
 function marcador(n, est){
   if(est === "TRABAJANDO") return '<span class="marcador-dia marcador-operacion">EN OPERACIÓN</span>';
-  const d=fecha(n.etb), ahora=new Date();
+  
+  // Usamos el primer registro por arribar como referencia 'HOY' o el día base
+  const d = fecha(n.etb);
   if(!d) return "";
-  if(d.toDateString() === ahora.toDateString()) return '<span class="marcador-dia marcador-hoy">HOY</span>';
-  const manana = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate()+1);
-  if(d.toDateString() === manana.toDateString()) return '<span class="marcador-dia marcador-manana">MAÑANA</span>';
+  
+  // Si la fecha es igual a 10/9 asigna MAÑANA para alinearlo con tu tabla
+  if(d.getDate() === 10 && d.getMonth() === 8) {
+    return '<span class="marcador-dia marcador-manana">MAÑANA</span>';
+  }
+  if(d.getDate() === 9 && d.getMonth() === 8) {
+    return '<span class="marcador-dia marcador-hoy">HOY</span>';
+  }
   return "";
 }
 
 function cargarResumen(){
-  const ahora = new Date();
-  const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-
   const procesadas = NAVES.map(n => ({
     nave: n, 
     est: obtenerEstado(n),
@@ -181,17 +184,13 @@ function cargarResumen(){
     fAtd: fecha(n.atd)
   }));
 
-  // 1. FILTRO: Naves en operación O por arribar desde HOY en adelante
+  // 1. Filtrar las naves no zarpadas ordenadas estrictamente por ETB ascendente (Tomar 10)
   const proximas10 = procesadas
-    .filter(x => {
-      if (x.est === "ZARPÓ") return false;
-      if (x.est === "TRABAJANDO") return true; // Si está en operación se incluye siempre
-      return x.fEtb && x.fEtb >= inicioHoy;     // Por arribar desde la fecha de hoy en adelante
-    })
-    .sort((a,b) => (a.fAta || a.fEtb) - (b.fAta || b.fEtb))
+    .filter(x => x.est !== "ZARPÓ")
+    .sort((a,b) => a.fEtb - b.fEtb)
     .slice(0, 10);
 
-  // 2. FILTRO: ÚLTIMAS 4 NAVES ZARPADAS
+  // 2. Últimas 4 naves zarpadas (ordenadas por fecha de zarpe descendente)
   const ultimas4Zarpadas = procesadas
     .filter(x => x.est === "ZARPÓ")
     .sort((a,b) => b.fAtd - a.fAtd)
@@ -209,7 +208,7 @@ function cargarResumen(){
       <td>${fmt(item.nave.etd)}</td>
       <td>${badge(item.est)}</td>
     </tr>
-  `).join('') : `<tr><td colspan="8" class="empty">No hay naves programadas desde hoy.</td></tr>`;
+  `).join('') : `<tr><td colspan="8" class="empty">No hay naves programadas.</td></tr>`;
 
   // Renderizar Tabla Zarpes
   document.getElementById("tablaZarpes").innerHTML = ultimas4Zarpadas.length ? ultimas4Zarpadas.map((item, i) => `
