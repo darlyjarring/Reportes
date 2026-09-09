@@ -1,229 +1,98 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo Posorja - Extractor Exacto</title>
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f0f2f5;
-            margin: 0;
-            padding: 10px;
-            color: #1a1a1a;
+function procesarTextoAdaptativo() {
+    const rawText = document.getElementById('input-datos').value;
+    const tbody = document.getElementById('cuerpo-tabla');
+
+    if (!rawText.trim()) {
+        alert("Pega primero la información en el cuadro.");
+        return;
+    }
+
+    // Separar bloques por el patrón de viaje/nave (ej. HLC2026, MAE2026, CMA2026, etc.)
+    const patronSeparador = /(?=[A-Z0-9]{3}2026\d{3})/g;
+    const bloques = rawText.split(patronSeparador);
+
+    let htmlFilas = '';
+    let contador = 0;
+
+    bloques.forEach(bloque => {
+        if (bloque.startsWith("NaveViaje") || bloque.length < 15) return;
+
+        // 1. Detección exhaustiva de estados de muelle/operación
+        const textoMayus = bloque.toUpperCase();
+        let statusOficial = "DESCONOCIDO";
+
+        if (textoMayus.includes("DEPARTED") || textoMayus.includes("SAILED")) {
+            statusOficial = "DEPARTED";
+        } else if (
+            textoMayus.includes("WORKING") || 
+            textoMayus.includes("BERTHED") || 
+            textoMayus.includes("AT BERTH") || 
+            textoMayus.includes("OPERATING") || 
+            textoMayus.includes("ALONGSIDE") ||
+            textoMayus.includes("MOORED")
+        ) {
+            statusOficial = "WORKING";
+        } else if (textoMayus.includes("TO ARRIVE") || textoMayus.includes("ANCHORED") || textoMayus.includes("WAITING")) {
+            statusOficial = "TO ARRIVE";
         }
 
-        .header {
-            background-color: #1a365d;
-            color: white;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 10px;
+        // 2. Extraer todas las fechas YYYY-MM-DD HH:MM:SS de este bloque
+        const fechas = bloque.match(/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(\.\d)?/g) || [];
+
+        // 3. Extraer Nombre de Nave y Viaje
+        const primeraFechaIdx = bloque.search(/\d{4}-\d{2}-\d{2}/);
+        let encabezadoNave = primeraFechaIdx !== -1 ? bloque.substring(0, primeraFechaIdx).trim() : "Nave";
+
+        let claseFila = 'espera';
+        let badge = '<span class="badge b-espera">POR ARRIBAR</span>';
+        let etb = "-", etd = "-", ata = "-", atd = "-";
+
+        // Asignación inteligente por estado detectado
+        if (statusOficial === "WORKING") {
+            claseFila = 'trabajando';
+            badge = '<span class="badge b-trabajando">OPERANDO</span>';
+            
+            // En operación: Las primeras dos fechas son CutOff/ETB/ETD y la subsiguiente es el ATA (Atraco real)
+            etb = fechas[2] || fechas[0] || "-";
+            etd = fechas[3] || fechas[1] || "-";
+            ata = fechas[4] || "En Muelle";
+            atd = "-"; 
+        } 
+        else if (statusOficial === "DEPARTED") {
+            claseFila = 'finalizado';
+            badge = '<span class="badge b-finalizado">ZARPÓ</span>';
+            
+            etb = fechas[2] || "-";
+            etd = fechas[3] || "-";
+            ata = fechas[4] || "-";
+            atd = fechas[5] || "-";
+        } 
+        else { // TO ARRIVE
+            claseFila = 'espera';
+            badge = '<span class="badge b-espera">POR ARRIBAR</span>';
+            
+            etb = fechas[2] || fechas[0] || "-";
+            etd = fechas[3] || fechas[1] || "-";
+            ata = "-";
+            atd = "-";
         }
 
-        .header h3 { margin: 0; font-size: 1.05rem; }
+        contador++;
+        htmlFilas += `
+            <tr class="${claseFila}">
+                <td>${badge}</td>
+                <td><strong>${encabezadoNave}</strong></td>
+                <td>${etb}<br><small>${etd}</small></td>
+                <td>${ata}</td>
+                <td>${atd}</td>
+                <td>${statusOficial}</td>
+            </tr>
+        `;
+    });
 
-        .caja-pegar {
-            width: 100%;
-            height: 90px;
-            border: 2px dashed #0056b3;
-            border-radius: 8px;
-            background-color: #eef5ff;
-            padding: 10px;
-            font-size: 0.8rem;
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .btn-procesar {
-            width: 100%;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-
-        .btn-procesar:active { background-color: #1e7e34; }
-
-        .leyenda {
-            display: flex;
-            justify-content: space-around;
-            background: #fff;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-
-        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
-        .dot-v { background-color: #28a745; }
-        .dot-a { background-color: #ffc107; }
-        .dot-g { background-color: #6c757d; }
-
-        .card-tabla {
-            background: white;
-            border-radius: 8px;
-            padding: 6px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            overflow-x: auto;
-        }
-
-        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-        th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #e2e8f0; white-space: nowrap; }
-        th { background-color: #1a365d; color: white; font-size: 0.7rem; text-transform: uppercase; }
-
-        /* Estilos por Estado */
-        tr.trabajando { background-color: #d4edda !important; color: #155724; font-weight: bold; }
-        tr.espera { background-color: #fff3cd !important; color: #856404; }
-        tr.finalizado { background-color: #e9ecef !important; color: #6c757d; }
-
-        .badge {
-            padding: 3px 6px;
-            border-radius: 4px;
-            font-size: 0.65rem;
-            color: white;
-            font-weight: bold;
-        }
-        .b-trabajando { background-color: #28a745; }
-        .b-espera { background-color: #d39e00; }
-        .b-finalizado { background-color: #6c757d; }
-    </style>
-</head>
-<body>
-
-    <div class="header">
-        <h3>Control de Naves - DP World Posorja</h3>
-    </div>
-
-    <textarea id="input-datos" class="caja-pegar" placeholder="Selecciona TODO en la web de Posorja, copia y pega aquí..."></textarea>
-    
-    <button class="btn-procesar" onclick="procesarTextoAdaptativo()">📥 Absorber y Ajustar Campos</button>
-
-    <div class="leyenda">
-        <span><span class="dot dot-v"></span>En Muelle / Working</span>
-        <span><span class="dot dot-a"></span>Por Arribar (To Arrive)</span>
-        <span><span class="dot dot-g"></span>Zarpó (Departed)</span>
-    </div>
-
-    <div class="card-tabla">
-        <table>
-            <thead>
-                <tr>
-                    <th>Estado</th>
-                    <th>Nave / Viaje</th>
-                    <th>ETB / ETD</th>
-                    <th>ATA (Atraco)</th>
-                    <th>ATD (Zarpe)</th>
-                    <th>Status Web</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpo-tabla">
-                <tr>
-                    <td colspan="6" style="text-align:center; padding: 20px; color:#777;">
-                        Pega la selección de la web y presiona el botón verde.
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <script>
-        function procesarTextoAdaptativo() {
-            const rawText = document.getElementById('input-datos').value;
-            const tbody = document.getElementById('cuerpo-tabla');
-
-            if (!rawText.trim()) {
-                alert("Pega primero la información en el cuadro.");
-                return;
-            }
-
-            // Separar bloques buscando el inicio de cada registro (3 letras + 2026 + 3 digitos)
-            const patronSeparador = /(?=[A-Z0-9]{3}2026\d{3})/g;
-            const bloques = rawText.split(patronSeparador);
-
-            let htmlFilas = '';
-            let contador = 0;
-
-            bloques.forEach(bloque => {
-                if (bloque.startsWith("NaveViaje") || bloque.length < 20) return;
-
-                // 1. Detectar Status Oficial
-                let statusOficial = "DESCONOCIDO";
-                if (bloque.includes("TO ARRIVE")) statusOficial = "TO ARRIVE";
-                else if (bloque.includes("DEPARTED")) statusOficial = "DEPARTED";
-                else if (bloque.includes("BERTHED")) statusOficial = "BERTHED";
-                else if (bloque.includes("WORKING")) statusOficial = "WORKING";
-
-                // 2. Extraer todas las fechas YYYY-MM-DD HH:MM:SS
-                const fechas = bloque.match(/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(\.\d)?/g) || [];
-
-                // 3. Extraer Nombre de Nave y Viaje
-                const primeraFechaIdx = bloque.search(/\d{4}-\d{2}-\d{2}/);
-                let encabezadoNave = primeraFechaIdx !== -1 ? bloque.substring(0, primeraFechaIdx) : "Nave";
-
-                let claseFila = 'espera';
-                let badge = '<span class="badge b-espera">POR ARRIBAR</span>';
-
-                let etb = "-", etd = "-", ata = "-", atd = "-";
-
-                // LÓGICA ADAPTATIVA SEGÚN LAS IMÁGENES:
-                if (statusOficial === "TO ARRIVE") {
-                    claseFila = 'espera';
-                    badge = '<span class="badge b-espera">POR ARRIBAR</span>';
-                    
-                    // Imagen 1: Solo vienen 4 fechas (Reefer, Dry, ETB, ETD) y ATA/ATD quedan en guion
-                    etb = fechas[2] || "-";
-                    etd = fechas[3] || "-";
-                    ata = "-";
-                    atd = "-";
-                } 
-                else if (statusOficial === "DEPARTED" || statusOficial === "SAILED") {
-                    claseFila = 'finalizado';
-                    badge = '<span class="badge b-finalizado">ZARPÓ</span>';
-                    
-                    // Imagen 2: Vienen 6 fechas (Reefer, Dry, ETB, ETD, ATA, ATD)
-                    etb = fechas[2] || "-";
-                    etd = fechas[3] || "-";
-                    ata = fechas[4] || "-";
-                    atd = fechas[5] || "-";
-                } 
-                else if (statusOficial === "BERTHED" || statusOficial === "WORKING") {
-                    claseFila = 'trabajando';
-                    badge = '<span class="badge b-trabajando">OPERANDO</span>';
-                    
-                    etb = fechas[2] || "-";
-                    etd = fechas[3] || "-";
-                    ata = fechas[4] || "-";
-                    atd = "-";
-                }
-
-                contador++;
-                htmlFilas += `
-                    <tr class="${claseFila}">
-                        <td>${badge}</td>
-                        <td><strong>${encabezadoNave}</strong></td>
-                        <td>${etb}<br><small>${etd}</small></td>
-                        <td>${ata}</td>
-                        <td>${atd}</td>
-                        <td>${statusOficial}</td>
-                    </tr>
-                `;
-            });
-
-            if (contador > 0) {
-                tbody.innerHTML = htmlFilas;
-            } else {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">No se detectó la tabla. Asegúrate de copiar seleccionando la web.</td></tr>';
-            }
-        }
-    </script>
-</body>
-</html>
+    if (contador > 0) {
+        tbody.innerHTML = htmlFilas;
+    } else {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red;">No se detectaron registros válidos. Pega la selección de la web nuevamente.</td></tr>';
+    }
+}
