@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control de Naves - DP World Posorja</title>
+<title>Control de Naves - Posorja</title>
 <style>
 :root{
   --bg:#f3f6f9; --card:#fff; --text:#1f2937; --muted:#64748b;
@@ -16,32 +16,13 @@ header{background:#073b73;color:white;padding:18px 24px;box-shadow:var(--shadow)
 header h1{margin:0;font-size:24px}
 header p{margin:5px 0 0;opacity:.85;font-size:13px}
 .container{max-width:1500px;margin:20px auto;padding:0 15px}
-
-.caja-importar {
-  background: white;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  margin-bottom: 15px;
-}
-textarea {
-  width: 100%;
-  height: 80px;
-  border: 1px dashed var(--blue);
-  border-radius: 7px;
-  padding: 10px;
-  font-size: 13px;
-  background: #f8fbff;
-  resize: vertical;
-}
-
 .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
 button,select,input{border:1px solid var(--border);background:white;border-radius:7px;padding:10px 12px;font-size:14px}
-button{cursor:pointer;background:#073b73;color:#fff;border-color:#073b73;font-weight:bold}
+button{cursor:pointer;background:#073b73;color:#fff;border-color:#073b73}
 button.secondary{background:white;color:#073b73}
-button.action{background:var(--green);border-color:var(--green)}
-input[type="search"]{min-width:260px;flex:1}
-
+input{min-width:260px;flex:1}
+.leyenda-resaltado{margin:-4px 0 15px;color:#475569;font-size:12px}
+.leyenda-resaltado span.texto-nota{margin-left:8px}
 .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
 .card{background:var(--card);padding:16px;border-radius:10px;box-shadow:var(--shadow);border-left:5px solid #64748b}
 .card.arribo{border-color:var(--yellow)}
@@ -51,7 +32,6 @@ input[type="search"]{min-width:260px;flex:1}
 .card.total{border-color:#334155}
 .card .num{font-size:28px;font-weight:bold}
 .card .label{font-size:12px;color:var(--muted);margin-top:4px}
-
 .section{background:white;border-radius:10px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
 .section-title{padding:13px 16px;font-size:17px;font-weight:bold;border-bottom:1px solid var(--border)}
 .section-title span{float:right;font-size:12px;color:var(--muted);font-weight:normal}
@@ -59,15 +39,26 @@ input[type="search"]{min-width:260px;flex:1}
 table{width:100%;border-collapse:collapse;min-width:1050px}
 th,td{padding:10px 9px;border-bottom:1px solid #edf1f5;text-align:left;font-size:13px;white-space:nowrap}
 th{background:#f7f9fb;color:#475569;position:sticky;top:0;z-index:1}
-tr:hover{background:#f8fbff}
+tr:hover{filter:brightness(.98)}
 .nave{font-weight:bold}
-
+tr.fila-hoy{background:#fff4cc}
+tr.fila-manana{background:#e8f4ff}
+tr.fila-trabajando{background:#dceeff;box-shadow:inset 5px 0 0 #0b5ed7}
+tr.fila-atrasada{background:#ffe0e3;box-shadow:inset 5px 0 0 #dc3545}
+tr.fila-zarpo{background:#e3f5eb}
+tr.fila-hoy.fila-trabajando{background:#cfe5ff;box-shadow:inset 6px 0 0 #0b5ed7}
+tr.fila-hoy.fila-atrasada{background:#ffd6da}
+tr.fila-hoy td:first-child, tr.fila-manana td:first-child{font-weight:bold}
+.marcador-dia{font-size:10px;padding:3px 6px;border-radius:12px;margin-left:5px;font-weight:bold}
+.marcador-hoy{background:#ffc107;color:#5c4300}
+.marcador-manana{background:#0dcaf0;color:#064b59}
+.marcador-operacion{background:#0b5ed7;color:#fff}
 .status{display:inline-block;padding:5px 8px;border-radius:20px;font-size:11px;font-weight:bold}
 .status-arribo{background:#fff3cd;color:#8a6500}
 .status-trabajo{background:#dbeafe;color:#0756a6}
 .status-zarpo{background:#d1e7dd;color:#146c43}
 .status-atrasada{background:#f8d7da;color:#842029}
-
+.status-desconocido{background:#e2e3e5;color:#41464b}
 .countdown{font-weight:bold;color:#0756a6}
 .empty{text-align:center;padding:25px;color:var(--muted)}
 footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
@@ -79,36 +70,36 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
 
 <header>
   <h1>⚓ Control de Naves - DP World Posorja</h1>
-  <p>Panel dinámico de monitoreo e importación directa</p>
+  <p>Resumen operativo de arribos, naves en puerto y zarpes</p>
 </header>
 
 <div class="container">
-  
-  <div class="caja-importar">
-    <textarea id="rawInput" placeholder="Pega aquí todo el texto copiado de la web de DP World Posorja..."></textarea>
-    <div style="margin-top: 8px; display: flex; gap: 10px;">
-      <button class="action" onclick="procesarTextoAbsorvido()">📥 Absorber y Actualizar Dashboard</button>
-      <button class="secondary" onclick="document.getElementById('rawInput').value=''">Limpiar Cuadro</button>
-    </div>
-  </div>
 
   <div class="toolbar">
-    <input id="buscar" type="search" placeholder="Buscar nave, viaje, línea, servicio...">
-    <select id="filtro">
+    <input id="buscar" type="search" placeholder="Buscar nave, viaje, línea, servicio..." aria-label="Buscar nave">
+    <select id="filtro" aria-label="Filtrar por estado">
       <option value="TODOS">Todos los estados</option>
       <option value="POR ARRIBAR">Por arribar</option>
-      <option value="TRABAJANDO">Trabajando / En muelle</option>
+      <option value="TRABAJANDO">Trabajando / En puerto</option>
       <option value="ATRASADA">Atrasadas</option>
       <option value="ZARPÓ">Zarpó</option>
     </select>
-    <button onclick="cargarDatos()">↻ Actualizar Vista</button>
+    <button onclick="cargarDatos()">↻ Actualizar resumen</button>
     <button class="secondary" onclick="window.print()">🖨 Imprimir</button>
+  </div>
+
+  <div class="leyenda-resaltado">
+    <b>Resaltado:</b>
+    <span class="marcador-dia marcador-hoy">HOY</span>
+    <span class="marcador-dia marcador-manana">MAÑANA</span>
+    <span class="marcador-dia marcador-operacion">EN OPERACIÓN</span>
+    <span class="texto-nota">Las filas se actualizan automáticamente según la fecha y hora.</span>
   </div>
 
   <div class="cards">
     <div class="card total"><div class="num" id="total">0</div><div class="label">TOTAL REGISTROS</div></div>
     <div class="card arribo"><div class="num" id="porArribar">0</div><div class="label">🟡 POR ARRIBAR</div></div>
-    <div class="card trabajo"><div class="num" id="trabajando">0</div><div class="label">🔵 TRABAJANDO / EN MUELLE</div></div>
+    <div class="card trabajo"><div class="num" id="trabajando">0</div><div class="label">🔵 TRABAJANDO / EN PUERTO</div></div>
     <div class="card atrasada"><div class="num" id="atrasadas">0</div><div class="label">🔴 ATRASADAS</div></div>
     <div class="card zarpo"><div class="num" id="zarparon">0</div><div class="label">🟢 ZARPARON</div></div>
   </div>
@@ -118,7 +109,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
     <div class="table-wrap">
       <table>
         <thead><tr>
-          <th>#</th><th>Nave</th><th>Viaje</th><th>Línea</th><th>ETB</th><th>ETD</th><th>Cuenta regresiva</th><th>Estado</th><th>Servicio</th>
+          <th>#</th><th>Nave</th><th>Viaje</th><th>Línea</th><th>ETB</th><th>ETD</th><th>Cuenta regresiva</th><th>Estado</th><th>Origen</th><th>Destino</th><th>Servicio</th>
         </tr></thead>
         <tbody id="tablaArribos"></tbody>
       </table>
@@ -162,102 +153,45 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   </div>
 
   <footer>
+    Datos cargados localmente. Para actualizar la información, modifica el arreglo <b>NAVES</b> dentro de este archivo.
     Última actualización del resumen: <span id="actualizado"></span>
   </footer>
 </div>
 
 <script>
-let NAVES = [];
+const NAVES = [
+  {nave:"HLC2026090 - ODYSSEUS", viaje:"639N", linea:"HLC", etb:"2026-09-22 01:00:00", etd:"2026-09-22 15:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MSW"},
+  {nave:"HLC2026085 - VALPARAISO EXPRESS", viaje:"6234S", linea:"HLC", etb:"2026-09-21 17:30:00", etd:"2026-09-22 07:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"COBUN", destino:"COBUN", servicio:"SWX_SB"},
+  {nave:"MAE2026113 - AS PALINA", viaje:"637S", linea:"MAE", etb:"2026-09-20 15:00:00", etd:"2026-09-21 22:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PABLB", destino:"PABLB", servicio:"MX_WCSA"},
+  {nave:"MAE2026108 - LARS MAERSK", viaje:"634W", linea:"MAE", etb:"2026-09-19 23:00:00", etd:"2026-09-21 05:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"ECPBO", destino:"ECPBO", servicio:"ECUMED"},
+  {nave:"CMA2026107 - CMA CGM GALAPAGOS", viaje:"1MHTNW1MA", linea:"CMA", etb:"2026-09-18 22:00:00", etd:"2026-09-20 06:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PECLL", destino:"PECLL", servicio:"ACSA"},
+  {nave:"HLC2026083 - CALLAO EXPRESS", viaje:"6231N", linea:"HLC", etb:"2026-09-17 18:00:00", etd:"2026-09-18 18:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PECLL", destino:"PECLL", servicio:"SWX_NB"},
+  {nave:"CMA2026104 - CMA CGM BOLDNESS", viaje:"0DVQFN1MA", linea:"CMA", etb:"2026-09-17 07:00:00", etd:"2026-09-17 18:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MEDCAR"},
+  {nave:"MAE2026111 - MAERSK EMDEN", viaje:"637W", linea:"MAE", etb:"2026-09-15 20:00:00", etd:"2026-09-17 06:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PABLB", destino:"PABLB", servicio:"AC2"},
+  {nave:"HLC2026084 - CAPE SKAGEN", viaje:"638N", linea:"HLC", etb:"2026-09-15 16:00:00", etd:"2026-09-16 00:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MSW"},
+  {nave:"CMA2026106 - CMA CGM ESTELLE", viaje:"0WCOPS1MA", linea:"CMA", etb:"2026-09-15 02:00:00", etd:"2026-09-15 16:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"COCTG", destino:"COCTG", servicio:"SWX_SB"},
+  {nave:"MAE2026110 - AS STINE", viaje:"637S", linea:"MAE", etb:"2026-09-14 04:00:00", etd:"2026-09-14 21:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PABLB", destino:"PABLB", servicio:"FE-MAE"},
+  {nave:"MAE2026106 - MAERSK FINISTERRE", viaje:"632W", linea:"MAE", etb:"2026-09-13 03:00:00", etd:"2026-09-14 08:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"ECPBO", destino:"ECPBO", servicio:"ECUMED"},
+  {nave:"CMA2026103 - CMA CGM GREENLAND", viaje:"1MHTLW1MA", linea:"CMA", etb:"2026-09-11 17:00:00", etd:"2026-09-13 06:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PECLL", destino:"PECLL", servicio:"ACSA"},
+  {nave:"CMA2026101 - CMA CGM JACQUES JOSEPH", viaje:"0WCOKN1MA", linea:"CMA", etb:"2026-09-10 17:00:00", etd:"2026-09-11 15:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PECLL", destino:"PECLL", servicio:"SWX_NB"},
+  {nave:"CMA2026102 - CMA CGM FORT BOURBON", viaje:"0DVQDN1MA", linea:"CMA", etb:"2026-09-10 05:00:00", etd:"2026-09-10 18:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MEDCAR"},
+  {nave:"HLC2026088 - CAUCEDO EXPRESS", viaje:"637N", linea:"HLC", etb:"2026-09-10 05:00:00", etd:"2026-09-10 14:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MSW"},
+  {nave:"HMM2026007 - HMM IVY", viaje:"0005W", linea:"HMM", etb:"2026-09-08 01:00:00", etd:"2026-09-08 14:00:00", ata:"2026-09-08 01:30:00", atd:"2026-09-08 14:42:00", status:"DEPARTED", origen:"PECLL", destino:"PECLL", servicio:"AX4"},
+  {nave:"COS2026007 - COSCO SHIPPING SEINE", viaje:"047S", linea:"COS", etb:"2026-09-07 17:00:00", etd:"2026-09-08 07:00:00", ata:"2026-09-07 16:20:00", atd:"2026-09-08 06:48:00", status:"DEPARTED", origen:"COBUN", destino:"COBUN", servicio:"SWX_SB"},
+  {nave:"MAE2026105 - AS STINE", viaje:"636S", linea:"MAE", etb:"2026-09-07 00:00:00", etd:"2026-09-07 18:00:00", ata:"2026-09-07 01:47:00", atd:"2026-09-07 19:36:00", status:"DEPARTED", origen:"PABLB", destino:"PABLB", servicio:"FE-MAE"},
+  {nave:"MAE2026104 - LOUIS MAERSK", viaje:"631W", linea:"MAE", etb:"2026-09-05 20:00:00", etd:"2026-09-06 21:30:00", ata:"2026-09-05 19:44:00", atd:"2026-09-06 21:25:00", status:"DEPARTED", origen:"ECPBO", destino:"ECPBO", servicio:"ECUMED"},
+  {nave:"CMA2026099 - CMA CGM NEVADA", viaje:"1MHTHW1MA", linea:"CMA", etb:"2026-09-04 23:00:00", etd:"2026-09-06 13:30:00", ata:"2026-09-04 22:15:00", atd:"2026-09-06 13:24:00", status:"DEPARTED", origen:"PECLL", destino:"PECLL", servicio:"ACSA"},
+  {nave:"MAE2026109 - SPIL CAYA", viaje:"631E", linea:"MAE", etb:"2026-09-04 07:00:00", etd:"2026-09-05 12:00:00", ata:"2026-09-04 07:24:00", atd:"2026-09-05 13:12:00", status:"DEPARTED", origen:"COBUN", destino:"COBUN", servicio:"AC1"},
+  {nave:"HLC2026081 - GUAYAQUIL EXPRESS", viaje:"6229N", linea:"HLC", etb:"2026-09-03 18:30:00", etd:"2026-09-04 21:00:00", ata:"2026-09-03 18:48:00", atd:"2026-09-04 20:40:00", status:"DEPARTED", origen:"PECLL", destino:"PECLL", servicio:"SWX_NB"},
+  {nave:"CMA2026100 - CMA CGM EXEMPLARITY", viaje:"0DVQBN1MA", linea:"CMA", etb:"2026-09-03 06:00:00", etd:"2026-09-03 16:00:00", ata:"2026-09-03 06:05:00", atd:"2026-09-03 15:58:00", status:"DEPARTED", origen:"PEPAI", destino:"PEPAI", servicio:"MEDCAR"},
+  {nave:"HMM2026006 - HYUNDAI BRAVE", viaje:"0119W", linea:"HMM", etb:"2026-09-02 00:00:00", etd:"2026-09-02 16:00:00", ata:"2026-09-01 23:30:00", atd:"2026-09-02 16:42:00", status:"DEPARTED", origen:"PECLL", destino:"PECLL", servicio:"AX4"},
+  {nave:"HLC2026080 - CAPE SCOTT", viaje:"636N", linea:"HLC", etb:"2026-09-01 20:30:00", etd:"2026-09-02 03:03:00", ata:"2026-09-01 20:18:00", atd:"2026-09-02 03:50:00", status:"DEPARTED", origen:"PEPAI", destino:"PEPAI", servicio:"MSW"},
+  {nave:"HLC2026079 - CALLAO EXPRESS", viaje:"6231S", linea:"HLC", etb:"2026-08-31 20:30:00", etd:"2026-09-01 22:00:00", ata:"2026-08-31 20:30:00", atd:"2026-09-01 22:06:00", status:"DEPARTED", origen:"COBUN", destino:"COBUN", servicio:"SWX_SB"}
+];
 
-function limpiarTexto(t) {
-  if (!t) return "";
-  return t.replace(/null/gi, '').replace(/\s+/g, ' ').trim();
+function fecha(s){
+  return s ? new Date(s.replace(/ /g, "T")) : null;
 }
-
-function procesarTextoAbsorvido() {
-  const rawText = document.getElementById('rawInput').value;
-  if (!rawText.trim()) {
-    alert("Pega primero la información copiada de la web.");
-    return;
-  }
-
-  // Separar bloques por código de viaje/línea (Ej: CMA2026, MAE2026, XPF2026, etc.)
-  const patronSeparador = /(?=[A-Z0-9]{3,4}202\d{5})/g;
-  const bloques = rawText.split(patronSeparador);
-
-  let nuevasNaves = [];
-
-  bloques.forEach(bloque => {
-    if (bloque.startsWith("NaveViaje") || bloque.length < 15) return;
-
-    const textoMayus = bloque.toUpperCase();
-    
-    // 1. Detección de Estado Web
-    let statusWeb = "TO ARRIVE";
-    if (textoMayus.includes("IN OPERATION") || textoMayus.includes("OPERATING") || textoMayus.includes("WORKING") || textoMayus.includes("BERTHED")) {
-      statusWeb = "IN OPERATION";
-    } else if (textoMayus.includes("DEPARTED") || textoMayus.includes("SAILED")) {
-      statusWeb = "DEPARTED";
-    }
-
-    // 2. Extraer Fechas Operativas salteando los 'null' iniciales
-    const matchLinea = bloque.match(/\s([A-Z0-9]{3,4})\s/);
-    let textoFechas = bloque;
-    let linea = "N/A";
-    
-    if (matchLinea) {
-      linea = matchLinea[1];
-      textoFechas = bloque.substring(bloque.indexOf(matchLinea[0]));
-    }
-
-    const fechas = textoFechas.match(/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}(\.\d)?/g) || [];
-
-    // 3. Limpiar Nombre de Nave
-    const primeraFechaIdx = bloque.search(/\d{4}-\d{2}-\d{2}|null/);
-    let rawEncabezado = primeraFechaIdx !== -1 ? bloque.substring(0, primeraFechaIdx) : "Nave";
-    let naveLimpia = limpiarTexto(rawEncabezado);
-
-    let etb = "", etd = "", ata = "", atd = "";
-
-    if (statusWeb === "IN OPERATION") {
-      etb = fechas[0] || "";
-      etd = fechas[1] || "";
-      ata = fechas[2] || new Date().toISOString().replace('T', ' ').substring(0,19);
-      atd = "";
-    } else if (statusWeb === "DEPARTED") {
-      etb = fechas[0] || "";
-      etd = fechas[1] || "";
-      ata = fechas[2] || "";
-      atd = fechas[3] || "";
-    } else { // TO ARRIVE
-      etb = fechas[0] || "";
-      etd = fechas[1] || "";
-      ata = "";
-      atd = "";
-    }
-
-    nuevasNaves.push({
-      nave: naveLimpia,
-      viaje: "-",
-      linea: linea,
-      etb: etb,
-      etd: etd,
-      ata: ata,
-      atd: atd,
-      status: statusWeb,
-      servicio: "POSORJA"
-    });
-  });
-
-  if (nuevasNaves.length > 0) {
-    NAVES = nuevasNaves;
-    cargarDatos();
-  } else {
-    alert("No se pudieron extraer registros válidos. Verifica el texto pegado.");
-  }
-}
-
-function fecha(s){ return s ? new Date(s.replace(" ","T")) : null; }
 function fmt(s){
   if(!s) return "—";
   const d=fecha(s);
@@ -269,47 +203,76 @@ function horasTexto(ms){
   const m=Math.floor((ms%3600000)/60000);
   return `${h}h ${m}m`;
 }
-
 function estado(n){
   if(n.atd) return "ZARPÓ";
-  if(n.ata || n.status === "IN OPERATION") return "TRABAJANDO";
+  if(n.ata) return "TRABAJANDO";
   const etb=fecha(n.etb);
   if(etb && etb < new Date()) return "ATRASADA";
   return "POR ARRIBAR";
 }
-
 function claseEstado(e){
   return e==="ZARPÓ"?"status-zarpo":e==="TRABAJANDO"?"status-trabajo":e==="ATRASADA"?"status-atrasada":"status-arribo";
 }
 function badge(e){ return `<span class="status ${claseEstado(e)}">${e}</span>`; }
 
-function filaArribo(n,i){
-  const e=estado(n), etb=fecha(n.etb), dif=etb-new Date();
+function mismoDia(d1,d2){
+  return d1 && d2 &&
+    d1.getFullYear()===d2.getFullYear() &&
+    d1.getMonth()===d2.getMonth() &&
+    d1.getDate()===d2.getDate();
+}
+function inicioDia(d){
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate());
+}
+function claseFila(n, e, referencia="etb"){
+  const ahora=new Date();
+  const d=fecha(n[referencia]);
+  let c="";
+  if(e==="TRABAJANDO") c+=" fila-trabajando";
+  else if(e==="ATRASADA") c+=" fila-atrasada";
+  else if(e==="ZARPÓ") c+=" fila-zarpo";
+  if(d && mismoDia(d,ahora)) c+=" fila-hoy";
+  const manana=new Date(inicioDia(ahora).getTime()+86400000);
+  if(d && mismoDia(d,manana)) c+=" fila-manana";
+  return c.trim();
+}
+function marcadorDia(n){
+  const d=fecha(n.etb), ahora=new Date();
+  if(!d) return "";
+  if(mismoDia(d,ahora)) return '<span class="marcador-dia marcador-hoy">HOY</span>';
+  const manana=new Date(inicioDia(ahora).getTime()+86400000);
+  if(mismoDia(d,manana)) return '<span class="marcador-dia marcador-manana">MAÑANA</span>';
+  return "";
+}
+
+function filaArribo(item,i){
+  const {nave: n, est: e}=item, etb=fecha(n.etb), dif=etb-new Date();
   const cuenta=e==="POR ARRIBAR" ? (dif>0 ? horasTexto(dif) : "AHORA") : "—";
-  return `<tr>
-    <td>${i+1}</td><td class="nave">${n.nave}</td><td>${n.viaje}</td><td>${n.linea}</td>
+  return `<tr class="${claseFila(n,e,"etb")}">
+    <td>${i+1}</td><td class="nave">${n.nave} ${marcadorDia(n)}</td><td>${n.viaje}</td><td>${n.linea}</td>
     <td>${fmt(n.etb)}</td><td>${fmt(n.etd)}</td><td class="countdown">${cuenta}</td>
-    <td>${badge(e)}</td><td>${n.servicio}</td>
+    <td>${badge(e)}</td><td>${n.origen}</td><td>${n.destino}</td><td>${n.servicio}</td>
   </tr>`;
 }
-function filaTrabajo(n,i){
-  const ata=fecha(n.ata), tiempo=ata ? horasTexto(new Date()-ata) : "—";
-  return `<tr>
-    <td>${i+1}</td><td class="nave">${n.nave}</td><td>${n.viaje}</td><td>${n.linea}</td>
+function filaTrabajo(item,i){
+  const {nave: n, est: e}=item;
+  return `<tr class="${claseFila(n,e,"ata")}">
+    <td>${i+1}</td><td class="nave">${n.nave} <span class="marcador-dia marcador-operacion">EN OPERACIÓN</span></td><td>${n.viaje}</td><td>${n.linea}</td>
     <td>${fmt(n.etb)}</td><td>${fmt(n.ata)}</td><td>${fmt(n.etd)}</td>
-    <td>${tiempo}</td><td>${badge("TRABAJANDO")}</td><td>${n.servicio}</td>
+    <td>${horasTexto(new Date()-fecha(n.ata))}</td><td>${badge("TRABAJANDO")}</td><td>${n.servicio}</td>
   </tr>`;
 }
-function filaAtrasada(n,i){
-  const demora=new Date()-fecha(n.etb);
-  return `<tr>
-    <td>${i+1}</td><td class="nave">${n.nave}</td><td>${n.viaje}</td><td>${n.linea}</td>
+function filaAtrasada(item,i){
+  const {nave: n, est: e}=item, demora=new Date()-fecha(n.etb);
+  return `<tr class="${claseFila(n,e,"etb")}">
+    <td>${i+1}</td><td class="nave">${n.nave} ${marcadorDia(n)}</td><td>${n.viaje}</td><td>${n.linea}</td>
     <td>${fmt(n.etb)}</td><td>${fmt(n.etd)}</td><td>${horasTexto(demora)}</td>
     <td>${badge("ATRASADA")}</td><td>${n.servicio}</td>
   </tr>`;
 }
-function filaZarpe(n,i){
-  return `<tr>
+function filaZarpe(item,i){
+  const {nave: n, est: e}=item;
+  return `<tr class="${claseFila(n,e,"atd")}">
     <td>${i+1}</td><td class="nave">${n.nave}</td><td>${n.viaje}</td><td>${n.linea}</td>
     <td>${fmt(n.etb)}</td><td>${fmt(n.etd)}</td><td>${fmt(n.ata)}</td><td>${fmt(n.atd)}</td>
     <td>${badge("ZARPÓ")}</td><td>${n.servicio}</td>
@@ -320,33 +283,42 @@ function cargarDatos(){
   const q=document.getElementById("buscar").value.toLowerCase().trim();
   const f=document.getElementById("filtro").value;
 
-  let datos=NAVES.filter(n=>{
-    const texto=Object.values(n).join(" ").toLowerCase();
-    const e=estado(n);
-    return (!q || texto.includes(q)) && (f==="TODOS" || e===f);
+  let datosMapped=NAVES.map(n=>({nave:n, est:estado(n)})).filter(item=>{
+    const texto=Object.values(item.nave).join(" ").toLowerCase();
+    return (!q || texto.includes(q)) && (f==="TODOS" || item.est===f);
   });
 
-  const arribos=datos.filter(n=>estado(n)==="POR ARRIBAR").sort((a,b)=>fecha(a.etb)-fecha(b.etb));
-  const trabajo=datos.filter(n=>estado(n)==="TRABAJANDO").sort((a,b)=>fecha(a.etd)-fecha(b.etd));
-  const atrasadas=datos.filter(n=>estado(n)==="ATRASADA").sort((a,b)=>fecha(a.etb)-fecha(b.etb));
-  const zarpes=datos.filter(n=>estado(n)==="ZARPÓ").sort((a,b)=>fecha(b.atd)-fecha(a.atd));
+  const arribos=datosMapped.filter(item=>item.est==="POR ARRIBAR")
+    .sort((a,b)=>fecha(a.nave.etb)-fecha(b.nave.etb));
+  const trabajo=datosMapped.filter(item=>item.est==="TRABAJANDO")
+    .sort((a,b)=>fecha(a.nave.etd)-fecha(b.nave.etd));
+  const atrasadas=datosMapped.filter(item=>item.est==="ATRASADA")
+    .sort((a,b)=>fecha(a.nave.etb)-fecha(b.nave.etb));
+  const zarpes=datosMapped.filter(item=>item.est==="ZARPÓ")
+    .sort((a,b)=>fecha(b.nave.atd)-fecha(a.nave.atd));
 
-  document.getElementById("total").textContent=datos.length;
+  document.getElementById("total").textContent=datosMapped.length;
   document.getElementById("porArribar").textContent=arribos.length;
   document.getElementById("trabajando").textContent=trabajo.length;
   document.getElementById("atrasadas").textContent=atrasadas.length;
   document.getElementById("zarparon").textContent=zarpes.length;
 
-  document.getElementById("tablaArribos").innerHTML=arribos.length ? arribos.map(filaArribo).join("") : `<tr><td colspan="9" class="empty">No hay naves por arribar.</td></tr>`;
-  document.getElementById("tablaTrabajo").innerHTML=trabajo.length ? trabajo.map(filaTrabajo).join("") : `<tr><td colspan="10" class="empty">No hay naves trabajando / en muelle.</td></tr>`;
-  document.getElementById("tablaAtrasadas").innerHTML=atrasadas.length ? atrasadas.map(filaAtrasada).join("") : `<tr><td colspan="9" class="empty">No hay naves atrasadas.</td></tr>`;
-  document.getElementById("tablaZarpes").innerHTML=zarpes.length ? zarpes.map(filaZarpe).join("") : `<tr><td colspan="10" class="empty">No hay zarpes registrados.</td></tr>`;
+  document.getElementById("tablaArribos").innerHTML=arribos.length
+    ? arribos.map(filaArribo).join("") : `<tr><td colspan="11" class="empty">No hay naves por arribar.</td></tr>`;
+  document.getElementById("tablaTrabajo").innerHTML=trabajo.length
+    ? trabajo.map(filaTrabajo).join("") : `<tr><td colspan="10" class="empty">No hay naves trabajando / en puerto.</td></tr>`;
+  document.getElementById("tablaAtrasadas").innerHTML=atrasadas.length
+    ? atrasadas.map(filaAtrasada).join("") : `<tr><td colspan="9" class="empty">No hay naves atrasadas.</td></tr>`;
+  document.getElementById("tablaZarpes").innerHTML=zarpes.length
+    ? zarpes.map(filaZarpe).join("") : `<tr><td colspan="10" class="empty">No hay zarpes registrados.</td></tr>`;
 
   document.getElementById("actualizado").textContent=new Date().toLocaleString("es-EC");
 }
 
 document.getElementById("buscar").addEventListener("input",cargarDatos);
 document.getElementById("filtro").addEventListener("change",cargarDatos);
+cargarDatos();
+setInterval(cargarDatos,60000);
 </script>
 </body>
 </html>
