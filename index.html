@@ -532,10 +532,7 @@
 
     function getStoredBloques() {
       const data = localStorage.getItem("registros_bloques");
-      if (data !== null) {
-        return JSON.parse(data);
-      }
-      return [
+      return data ? JSON.parse(data) : [
         { id: 1, bloque: "1D", tecnicos: ["TOCTO", "TORRES"], radios: ["4250"], tablets: ["3", "2"] },
         { id: 2, bloque: "1E", tecnicos: ["CHONILLO", "PÉREZ"], radios: ["Lp", "4329"], tablets: ["4", "5"] },
         { id: 3, bloque: "1F", tecnicos: ["DAMIÁN", "VERA"], radios: ["3456", "2340"], tablets: ["6", "7"] },
@@ -625,7 +622,7 @@
 
     function limpiarBloques() {
       if (confirm("¿Borrar todos los bloques?")) {
-        localStorage.setItem("registros_bloques", JSON.stringify([]));
+        localStorage.removeItem("registros_bloques");
         cancelarEdicionBloques();
         renderTableBloques();
       }
@@ -700,10 +697,7 @@
 
     function getStoredReefer() {
       const data = localStorage.getItem("reefer_team_data");
-      if (data !== null) {
-        return JSON.parse(data);
-      }
-      return [
+      return data ? JSON.parse(data) : [
         { id: 1, personal: "DPW Ec", pedido: 7, asistieron: 7, observaciones: "" },
         { id: 2, personal: "Perú (12 hrs)", pedido: 2, asistieron: 2, observaciones: "" },
         { id: 3, personal: "Personal Coestibas", pedido: 5, asistieron: 5, observaciones: "" },
@@ -810,7 +804,7 @@
 
     function limpiarReefer() {
       if (confirm("¿Borrar todos los datos de equipo?")) {
-        localStorage.setItem("reefer_team_data", JSON.stringify([]));
+        localStorage.removeItem("reefer_team_data");
         cancelarEdicionReefer();
         renderReefer();
       }
