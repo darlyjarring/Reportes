@@ -3,32 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Programación Diaria Reefer - Equipo de Trabajo</title>
-  <!-- Librería para descargar el reporte como imagen PNG -->
+  <title>Control Operativo Reefer</title>
+  <!-- Librería para descargar la tabla como imagen PNG -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
-      --header-blue: #5b9bd5;
       --navy-blue: #002060;
+      --header-blue: #5b9bd5;
       --border-color: #000000;
       --bg-light: #f4f7f9;
     }
 
-    body {
-      font-family: Arial, sans-serif;
-      margin: 15px;
-      background-color: var(--bg-light);
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
-    h1, h2 {
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-light);
+      padding-bottom: 30px;
+    }
+
+    /* HEADER Y MENÚ SUPERIOR FIJO */
+    header {
+      background-color: var(--navy-blue);
+      color: white;
+      padding: 12px 15px;
       text-align: center;
-      color: #333;
-      margin-top: 5px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      background-color: #ffffff;
+      border-bottom: 2px solid #ccc;
+      position: sticky;
+      top: 43px;
+      z-index: 99;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      font-size: 13px;
+      font-weight: bold;
+      color: #555;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      color: var(--navy-blue);
+      border-bottom-color: var(--navy-blue);
+      background-color: #eef4fc;
+    }
+
+    /* SECCIONES Y CONTENEDORES */
+    .tab-content {
+      display: none;
+      padding: 15px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .container {
-      max-width: 1100px;
-      margin: 0 auto;
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
@@ -36,7 +96,7 @@
 
     .form-container {
       flex: 1;
-      min-width: 300px;
+      min-width: 100%;
       background: #ffffff;
       padding: 15px;
       border-radius: 8px;
@@ -45,6 +105,11 @@
 
     .form-group {
       margin-bottom: 12px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
     }
 
     label {
@@ -61,11 +126,6 @@
       border-radius: 4px;
       box-sizing: border-box;
       font-size: 14px;
-    }
-
-    .form-row {
-      display: flex;
-      gap: 10px;
     }
 
     .btn-group {
@@ -117,7 +177,6 @@
       border-radius: 5px;
       font-size: 14px;
       flex: 1;
-      max-width: 250px;
     }
 
     button.btn-download {
@@ -130,21 +189,43 @@
       border-radius: 5px;
       font-size: 14px;
       flex: 1;
-      max-width: 250px;
     }
 
     .preview-container {
       flex: 1;
-      min-width: 300px;
+      min-width: 100%;
+      margin-top: 15px;
     }
 
-    /* Tabla con estética idéntica a la imagen */
-    .reefer-table {
+    /* ESTILOS DE TABLAS DE REPORTES */
+    .custom-table, .reefer-table {
       width: 100%;
       border-collapse: collapse;
       border: 2px solid var(--border-color);
       background-color: white;
-      font-size: 13px;
+      font-size: 12px;
+    }
+
+    .custom-table th, .reefer-table th.col-header {
+      background-color: var(--navy-blue);
+      color: white;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 6px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .reefer-table th.col-header {
+      background-color: var(--header-blue);
+      color: black;
+    }
+
+    .custom-table td, .reefer-table td {
+      border: 1px solid var(--border-color);
+      text-align: center;
+      padding: 5px;
+      font-weight: bold;
     }
 
     .reefer-table th.main-title {
@@ -162,36 +243,17 @@
       font-weight: bold;
       text-transform: uppercase;
       padding: 5px 8px;
-      width: 30%;
+      text-align: left;
     }
 
     .reefer-table td.header-val {
       font-weight: bold;
       padding: 5px 8px;
-    }
-
-    .reefer-table th.col-header {
-      background-color: var(--header-blue);
-      color: black;
-      font-weight: bold;
-      text-align: center;
-      padding: 6px;
-      border: 1px solid var(--border-color);
-    }
-
-    .reefer-table td {
-      border: 1px solid var(--border-color);
-      padding: 6px;
-    }
-
-    .reefer-table td.personal-col {
-      font-weight: bold;
       text-align: left;
     }
 
-    .reefer-table td.num-col {
-      text-align: center;
-      font-size: 14px;
+    .reefer-table td.personal-col {
+      text-align: left;
     }
 
     .reefer-table tr.total-row td {
@@ -200,20 +262,31 @@
       color: black;
     }
 
-    .actions-cell { width: 45px; text-align: center; }
+    .section-header {
+      background-color: var(--header-blue);
+      color: black;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .highlight-pink {
+      background-color: #fce4d6;
+    }
+
+    .actions-cell { width: 45px; }
 
     .btn-action {
       background: none;
       border: none;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 14px;
       padding: 2px;
     }
 
     .btn-edit { color: #0056b3; }
     .btn-delete { color: red; }
 
-    /* MODO REPORTE PANTALLA COMPLETA */
+    /* MODO REPORTE PANTALLA COMPLETA REAL */
     .fullscreen-report {
       display: none;
       position: fixed;
@@ -222,16 +295,11 @@
       width: 100vw;
       height: 100vh;
       background: #ffffff;
-      z-index: 9999;
+      z-index: 99999;
       overflow-y: auto;
-      padding: 15px;
+      padding: 10px;
       box-sizing: border-box;
       touch-action: manipulation;
-    }
-
-    .fullscreen-report .reefer-table {
-      width: 100%;
-      margin: 0 auto;
     }
 
     .fullscreen-hint {
@@ -245,231 +313,423 @@
 </head>
 <body>
 
-  <h1>Programación Diaria Reefer</h1>
+  <!-- ENCABEZADO -->
+  <header>
+    <h1>Control Operativo Reefer</h1>
+  </header>
 
-  <div class="action-buttons-container">
-    <button class="btn-report" onclick="mostrarReporteCaptura()">📱 Modo Captura (Pantalla Completa)</button>
-    <button class="btn-download" onclick="descargarImagen()">📥 Descargar Reporte (PNG)</button>
+  <!-- MENÚ TAB SUPERIOR -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tabBloques', this)">
+      📋 Equipos por Bloque
+    </button>
+    <button class="tab-btn" onclick="switchTab('tabReefer', this)">
+      👥 Equipo de Trabajo
+    </button>
+  </nav>
+
+  <!-- PESTAÑA 1: EQUIPOS POR BLOQUE -->
+  <div id="tabBloques" class="tab-content active">
+    <div class="action-buttons-container">
+      <button class="btn-report" onclick="mostrarReporteCapturaBloques()">👁️ Modo Captura</button>
+      <button class="btn-download" onclick="descargarImagenBloques()">📷 Descargar PNG</button>
+    </div>
+
+    <div class="container">
+      <div class="form-container" id="formBloquesContainer">
+        <h2 id="formBloquesTitle" style="text-align:center; margin-bottom:10px;">Ingresar Registro</h2>
+        <form id="recordFormBloques">
+          <input type="hidden" id="editIdBloques" value="">
+
+          <div class="form-group">
+            <label for="bloque">Bloque / Zona:</label>
+            <input type="text" id="bloque" placeholder="Ej: 1D, 1F, BUQUE" required>
+          </div>
+
+          <div class="form-group">
+            <label for="tecnicos">Técnico(s) (Separados por coma):</label>
+            <input type="text" id="tecnicos" placeholder="Ej: TOCTO, TORRES" required>
+          </div>
+
+          <div class="form-group">
+            <label for="radio">Radio(s) (Separadas por coma o una sola):</label>
+            <input type="text" id="radio" placeholder="Ej: 4028, 1018">
+          </div>
+
+          <div class="form-group">
+            <label for="tablets">Tablet(s) por Técnico (Separadas por coma):</label>
+            <input type="text" id="tablets" placeholder="Ej: 1, 11">
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn-add" id="btnSubmitBloques">Añadir Registro</button>
+            <button type="button" class="btn-cancel" id="btnCancelBloques" style="display:none;" onclick="cancelarEdicionBloques()">Cancelar</button>
+          </div>
+          <button type="button" class="btn-clear" onclick="limpiarBloques()">Borrar Todos los Datos</button>
+        </form>
+      </div>
+
+      <div class="preview-container">
+        <h2 style="text-align:center; margin-bottom:10px;">Panel de Edición</h2>
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th style="width: 40%;">BLOQUES</th>
+              <th style="width: 25%;">RADIO</th>
+              <th style="width: 20%;">TABBLE</th>
+              <th class="actions-cell">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyBloques"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
-  <div class="container" id="mainLayout">
-    <!-- FORMULARIO DE EDICIÓN / REGISTRO -->
-    <div class="form-container" id="formContainer">
-      <h2 id="formTitle">Configuración & Registro</h2>
-      
-      <!-- ENCABEZADO DE REPORTE -->
-      <div class="form-group">
-        <label for="fecha">Fecha:</label>
-        <input type="text" id="fecha" value="5/9/2026">
-      </div>
-      <div class="form-row">
-        <div class="form-group" style="flex:1;">
-          <label for="turno">Turno:</label>
-          <input type="text" id="turno" value="1">
-        </div>
-        <div class="form-group" style="flex:2;">
-          <label for="team">Team / Grupo:</label>
-          <input type="text" id="team" value="HALCONES">
-        </div>
-      </div>
+  <!-- PESTAÑA 2: EQUIPO DE TRABAJO -->
+  <div id="tabReefer" class="tab-content">
+    <div class="action-buttons-container">
+      <button class="btn-report" onclick="mostrarReporteCapturaReefer()">👁️ Modo Captura</button>
+      <button class="btn-download" onclick="descargarImagenReefer()">📷 Descargar PNG</button>
+    </div>
 
-      <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ccc;">
-
-      <h3 style="font-size:15px; margin-top:0;">Agregar / Editar Personal</h3>
-      <form id="recordForm">
-        <input type="hidden" id="editId" value="">
-
+    <div class="container">
+      <div class="form-container" id="formReeferContainer">
+        <h2 id="formReeferTitle" style="text-align:center; margin-bottom:10px;">Configuración & Registro</h2>
+        
         <div class="form-group">
-          <label for="personal">Categoría Personal:</label>
-          <input type="text" id="personal" placeholder="Ej: DPW Ec, Perú (12 hrs), Gate" required>
+          <label for="fecha">Fecha:</label>
+          <input type="text" id="fecha" value="5/9/2026">
         </div>
-
         <div class="form-row">
           <div class="form-group" style="flex:1;">
-            <label for="pedido">Pedido:</label>
-            <input type="number" id="pedido" min="0" required>
+            <label for="turno">Turno:</label>
+            <input type="text" id="turno" value="1">
           </div>
-          <div class="form-group" style="flex:1;">
-            <label for="asistieron">Asistieron:</label>
-            <input type="number" id="asistieron" min="0" required>
+          <div class="form-group" style="flex:2;">
+            <label for="team">Team / Grupo:</label>
+            <input type="text" id="team" value="HALCONES">
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="observaciones">Observaciones:</label>
-          <input type="text" id="observaciones" placeholder="Opcional">
-        </div>
+        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ccc;">
 
-        <div class="btn-group">
-          <button type="submit" class="btn-add" id="btnSubmit">Añadir / Actualizar Filas</button>
-          <button type="button" class="btn-cancel" id="btnCancel" style="display:none;" onclick="cancelarEdicion()">Cancelar</button>
-        </div>
-        <button type="button" class="btn-clear" onclick="limpiarTodo()">Borrar Todos los Datos</button>
-      </form>
-    </div>
+        <form id="recordFormReefer">
+          <input type="hidden" id="editIdReefer" value="">
 
-    <!-- PANEL DE EDICIÓN Y VISTA PREVIA -->
-    <div class="preview-container">
-      <h2>Panel de Edición</h2>
-      <div id="tablePreviewContainer"></div>
+          <div class="form-group">
+            <label for="personal">Categoría Personal:</label>
+            <input type="text" id="personal" placeholder="Ej: DPW Ec, Perú (12 hrs)" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label for="pedido">Pedido:</label>
+              <input type="number" id="pedido" min="0" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="asistieron">Asistieron:</label>
+              <input type="number" id="asistieron" min="0" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="observaciones">Observaciones:</label>
+            <input type="text" id="observaciones" placeholder="Opcional">
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn-add" id="btnSubmitReefer">Añadir / Actualizar Fila</button>
+            <button type="button" class="btn-cancel" id="btnCancelReefer" style="display:none;" onclick="cancelarEdicionReefer()">Cancelar</button>
+          </div>
+          <button type="button" class="btn-clear" onclick="limpiarReefer()">Borrar Todos los Datos</button>
+        </form>
+      </div>
+
+      <div class="preview-container">
+        <h2 style="text-align:center; margin-bottom:10px;">Panel de Edición</h2>
+        <div id="tablePreviewContainerReefer"></div>
+      </div>
     </div>
   </div>
 
-  <!-- VISTA EXCLUSIVA PARA CAPTURA DE PANTALLA -->
-  <div class="fullscreen-report" id="fullscreenReport" ondblclick="cerrarReporteCaptura()">
-    <div class="fullscreen-hint">💡 Toca dos veces rápidas en la pantalla para regresar</div>
-    <div id="captureTarget" style="background: white; padding: 5px;">
-      <div id="tableCaptureContainer"></div>
+  <!-- VISTAS DE CAPTURA EN PANTALLA COMPLETA (SIN IFRAMES) -->
+  <div class="fullscreen-report" id="fullscreenReportBloques" ondblclick="cerrarReportes()">
+    <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
+    <div id="captureTargetBloques" style="background: white; padding: 5px;">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th style="width: 45%;">BLOQUES</th>
+            <th style="width: 30%;">RADIO</th>
+            <th style="width: 25%;">TABBLE</th>
+          </tr>
+        </thead>
+        <tbody id="captureReportBodyBloques"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="fullscreen-report" id="fullscreenReportReefer" ondblclick="cerrarReportes()">
+    <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
+    <div id="captureTargetReefer" style="background: white; padding: 5px;">
+      <div id="tableCaptureContainerReefer"></div>
     </div>
   </div>
 
   <script>
+    // CAMBIO DE PESTAÑAS (TAB SYSTEM)
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      btnElement.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
-      // Sincronizar cambios de metadatos (Fecha, Turno, Team)
-      document.getElementById("fecha").addEventListener("input", renderAll);
-      document.getElementById("turno").addEventListener("input", renderAll);
-      document.getElementById("team").addEventListener("input", renderAll);
+      renderTableBloques();
       
-      renderAll();
+      document.getElementById("fecha").addEventListener("input", renderReefer);
+      document.getElementById("turno").addEventListener("input", renderReefer);
+      document.getElementById("team").addEventListener("input", renderReefer);
+      renderReefer();
     });
 
-    const form = document.getElementById("recordForm");
+    // ==========================================
+    // LÓGICA 1: EQUIPOS POR BLOQUE
+    // ==========================================
+    const formBloques = document.getElementById("recordFormBloques");
 
-    form.addEventListener("submit", function(e) {
+    formBloques.addEventListener("submit", function(e) {
       e.preventDefault();
+      const editId = document.getElementById("editIdBloques").value;
+      const bloque = document.getElementById("bloque").value.trim().toUpperCase();
+      const tecnicosStr = document.getElementById("tecnicos").value.trim();
+      const radioStr = document.getElementById("radio").value.trim();
+      const tabletsStr = document.getElementById("tablets").value.trim();
 
-      const editId = document.getElementById("editId").value;
+      const tecnicos = tecnicosStr.split(',').map(t => t.trim()).filter(t => t !== "");
+      const radios = radioStr ? radioStr.split(',').map(r => r.trim()) : [];
+      const tablets = tabletsStr ? tabletsStr.split(',').map(t => t.trim()) : [];
+
+      if (tecnicos.length === 0) return;
+
+      let currentData = getStoredBloques();
+
+      if (editId) {
+        currentData = currentData.map(item => item.id == editId ? { id: Number(editId), bloque, tecnicos, radios, tablets } : item);
+        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+        cancelarEdicionBloques();
+      } else {
+        currentData.push({ id: Date.now(), bloque, tecnicos, radios, tablets });
+        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+        formBloques.reset();
+      }
+      renderTableBloques();
+    });
+
+    function getStoredBloques() {
+      const data = localStorage.getItem("registros_bloques");
+      if (data !== null) {
+        return JSON.parse(data);
+      }
+      const defaultData = [
+        { id: 1, bloque: "1D", tecnicos: ["TOCTO", "TORRES"], radios: ["4250"], tablets: ["3", "2"] },
+        { id: 2, bloque: "1E", tecnicos: ["CHONILLO", "PÉREZ"], radios: ["Lp", "4329"], tablets: ["4", "5"] },
+        { id: 3, bloque: "1F", tecnicos: ["DAMIÁN", "VERA"], radios: ["3456", "2340"], tablets: ["6", "7"] },
+        { id: 4, bloque: "1G", tecnicos: ["SÁNCHEZ", "PINEDA"], radios: ["4250"], tablets: ["23", "45"] },
+        { id: 5, bloque: "1H", tecnicos: ["VIRIUS", "TERRY"], radios: ["2390", "3450"], tablets: ["34", "67"] },
+        { id: 6, bloque: "1I", tecnicos: ["TERRY", "TOREWS"], radios: ["3260", "5634"], tablets: ["12", "11"] },
+        { id: 7, bloque: "AFOROS", tecnicos: ["PATIMO"], radios: ["3212"], tablets: ["78"] },
+        { id: 8, bloque: "BUQUE", tecnicos: ["PÉREZ"], radios: [""], tablets: ["2"] }
+      ];
+      localStorage.setItem("registros_bloques", JSON.stringify(defaultData));
+      return defaultData;
+    }
+
+    function renderTableBloques() {
+      const data = getStoredBloques();
+      const tbody = document.getElementById("tableBodyBloques");
+      tbody.innerHTML = "";
+
+      data.forEach(group => {
+        const rowCount = group.tecnicos.length;
+        const hasMultipleRadios = Array.isArray(group.radios) && group.radios.length > 1;
+
+        const headerRow = document.createElement("tr");
+        headerRow.innerHTML = `<td colspan="4" class="section-header">${group.bloque}</td>`;
+        tbody.appendChild(headerRow);
+
+        group.tecnicos.forEach((tecnico, index) => {
+          const row = document.createElement("tr");
+          let html = `<td class="tech-name">${tecnico}</td>`;
+
+          if (hasMultipleRadios) {
+            html += `<td>${group.radios[index] || ""}</td>`;
+          } else {
+            if (index === 0) html += `<td rowspan="${rowCount}" style="vertical-align: middle;">${group.radios[0] || ""}</td>`;
+          }
+
+          html += `<td>${group.tablets[index] || ""}</td>`;
+
+          if (index === 0) {
+            html += `<td rowspan="${rowCount}" class="actions-cell" style="vertical-align: middle;">
+                      <button class="btn-action btn-edit" onclick="cargarEdicionBloques(${group.id})">✏️</button>
+                      <button class="btn-action btn-delete" onclick="deleteEntryBloques(${group.id})">🗑️</button>
+                    </td>`;
+          }
+          row.innerHTML = html;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    function cargarEdicionBloques(id) {
+      const item = getStoredBloques().find(i => i.id == id);
+      if (!item) return;
+
+      document.getElementById("editIdBloques").value = item.id;
+      const inputBloque = document.getElementById("bloque");
+      inputBloque.value = item.bloque;
+      document.getElementById("tecnicos").value = item.tecnicos.join(", ");
+      document.getElementById("radio").value = item.radios.join(", ");
+      document.getElementById("tablets").value = item.tablets.join(", ");
+
+      document.getElementById("formBloquesTitle").innerText = "Editar Registro";
+      document.getElementById("btnSubmitBloques").innerText = "Guardar Cambios";
+      document.getElementById("btnCancelBloques").style.display = "inline-block";
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => {
+        inputBloque.focus();
+        inputBloque.select();
+      }, 200);
+    }
+
+    function cancelarEdicionBloques() {
+      document.getElementById("editIdBloques").value = "";
+      formBloques.reset();
+      document.getElementById("formBloquesTitle").innerText = "Ingresar Registro";
+      document.getElementById("btnSubmitBloques").innerText = "Añadir Registro";
+      document.getElementById("btnCancelBloques").style.display = "none";
+    }
+
+    function deleteEntryBloques(id) {
+      if (confirm("¿Eliminar registro?")) {
+        const currentData = getStoredBloques().filter(item => item.id !== id);
+        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+        renderTableBloques();
+      }
+    }
+
+    function limpiarBloques() {
+      if (confirm("¿Borrar todos los bloques?")) {
+        localStorage.setItem("registros_bloques", JSON.stringify([]));
+        cancelarEdicionBloques();
+        renderTableBloques();
+      }
+    }
+
+    function buildCleanBloques() {
+      const data = getStoredBloques();
+      const tbody = document.getElementById("captureReportBodyBloques");
+      tbody.innerHTML = "";
+
+      data.forEach(group => {
+        const rowCount = group.tecnicos.length;
+        const hasMultipleRadios = Array.isArray(group.radios) && group.radios.length > 1;
+
+        const headerRow = document.createElement("tr");
+        headerRow.innerHTML = `<td colspan="3" class="section-header">${group.bloque}</td>`;
+        tbody.appendChild(headerRow);
+
+        group.tecnicos.forEach((tecnico, index) => {
+          const row = document.createElement("tr");
+          let html = `<td class="tech-name">${tecnico}</td>`;
+
+          if (hasMultipleRadios) {
+            html += `<td>${group.radios[index] || ""}</td>`;
+          } else {
+            if (index === 0) html += `<td rowspan="${rowCount}" style="vertical-align: middle;">${group.radios[0] || ""}</td>`;
+          }
+
+          html += `<td>${group.tablets[index] || ""}</td>`;
+          row.innerHTML = html;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    function mostrarReporteCapturaBloques() {
+      buildCleanBloques();
+      document.getElementById("fullscreenReportBloques").style.display = "block";
+    }
+
+    function descargarImagenBloques() {
+      buildCleanBloques();
+      descargarCanvas(document.getElementById("captureTargetBloques"), document.getElementById("fullscreenReportBloques"), 'Reporte_Equipos_Bloques.png');
+    }
+
+    // ==========================================
+    // LÓGICA 2: EQUIPO DE TRABAJO (REEFER)
+    // ==========================================
+    const formReefer = document.getElementById("recordFormReefer");
+
+    formReefer.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const editId = document.getElementById("editIdReefer").value;
       const personal = document.getElementById("personal").value.trim();
       const pedido = parseInt(document.getElementById("pedido").value) || 0;
       const asistieron = parseInt(document.getElementById("asistieron").value) || 0;
       const observaciones = document.getElementById("observaciones").value.trim();
 
-      let currentData = getStoredData();
+      let currentData = getStoredReefer();
 
       if (editId) {
-        currentData = currentData.map(item => {
-          if (item.id == editId) {
-            return { id: Number(editId), personal, pedido, asistieron, observaciones };
-          }
-          return item;
-        });
+        currentData = currentData.map(item => item.id == editId ? { id: Number(editId), personal, pedido, asistieron, observaciones } : item);
         localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
-        cancelarEdicion();
+        cancelarEdicionReefer();
       } else {
-        const newEntry = {
-          id: Date.now(),
-          personal,
-          pedido,
-          asistieron,
-          observaciones
-        };
-        currentData.push(newEntry);
+        currentData.push({ id: Date.now(), personal, pedido, asistieron, observaciones });
         localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
-        form.reset();
+        formReefer.reset();
       }
-
-      renderAll();
+      renderReefer();
     });
 
-    function getStoredData() {
+    function getStoredReefer() {
       const data = localStorage.getItem("reefer_team_data");
-      return data ? JSON.parse(data) : getInitialData();
-    }
-
-    function getInitialData() {
-      return [
+      if (data !== null) {
+        return JSON.parse(data);
+      }
+      const defaultData = [
         { id: 1, personal: "DPW Ec", pedido: 7, asistieron: 7, observaciones: "" },
         { id: 2, personal: "Perú (12 hrs)", pedido: 2, asistieron: 2, observaciones: "" },
         { id: 3, personal: "Personal Coestibas", pedido: 5, asistieron: 5, observaciones: "" },
         { id: 4, personal: "Gate", pedido: 2, asistieron: 2, observaciones: "" },
         { id: 5, personal: "Proyecto", pedido: 2, asistieron: 2, observaciones: "" }
       ];
+      localStorage.setItem("reefer_team_data", JSON.stringify(defaultData));
+      return defaultData;
     }
 
-    function cargarEdicion(id) {
-      const data = getStoredData();
-      const item = data.find(i => i.id == id);
-      if (!item) return;
-
-      document.getElementById("editId").value = item.id;
-      const inputPersonal = document.getElementById("personal");
-      inputPersonal.value = item.personal;
-      document.getElementById("pedido").value = item.pedido;
-      document.getElementById("asistieron").value = item.asistieron;
-      document.getElementById("observaciones").value = item.observaciones;
-
-      document.getElementById("formTitle").innerText = "Editar Registro";
-      document.getElementById("btnSubmit").innerText = "Guardar Cambios";
-      document.getElementById("btnCancel").style.display = "inline-block";
-
-      // Autoscroll suave hacia el formulario en celulares
-      document.getElementById("formContainer").scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
-
-      // Foco inmediato en el textbox
-      setTimeout(() => {
-        inputPersonal.focus();
-        inputPersonal.select();
-      }, 300);
-    }
-
-    function cancelarEdicion() {
-      document.getElementById("editId").value = "";
-      form.reset();
-      document.getElementById("formTitle").innerText = "Configuración & Registro";
-      document.getElementById("btnSubmit").innerText = "Añadir / Actualizar Filas";
-      document.getElementById("btnCancel").style.display = "none";
-    }
-
-    function deleteEntry(id) {
-      if (confirm("¿Desea eliminar esta fila?")) {
-        let currentData = getStoredData();
-        currentData = currentData.filter(item => item.id !== id);
-        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
-        if (document.getElementById("editId").value == id) cancelarEdicion();
-        renderAll();
-      }
-    }
-
-    function limpiarTodo() {
-      if (confirm("¿Está seguro de borrar todos los registros de la tabla?")) {
-        localStorage.removeItem("reefer_team_data");
-        cancelarEdicion();
-        renderAll();
-      }
-    }
-
-    // Genera el HTML dinámico de la tabla
-    function generateTableHTML(isCaptureMode = false) {
-      const data = getStoredData();
+    function generateTableHTMLReefer(isCaptureMode = false) {
+      const data = getStoredReefer();
       const fecha = document.getElementById("fecha").value;
       const turno = document.getElementById("turno").value;
       const team = document.getElementById("team").value;
 
-      let totalPedido = 0;
-      let totalAsistieron = 0;
-
-      const colSpanMain = isCaptureMode ? 4 : 5;
+      let totalPedido = 0, totalAsistieron = 0;
+      const colSpan = isCaptureMode ? 4 : 5;
 
       let html = `<table class="reefer-table">
         <thead>
-          <tr>
-            <th colspan="${colSpanMain}" class="main-title">PROGRAMACION DIARIA REEFER</th>
-          </tr>
-          <tr>
-            <td class="header-label">FECHA:</td>
-            <td class="header-val" colspan="${colSpanMain - 1}">${fecha}</td>
-          </tr>
-          <tr>
-            <td class="header-label">TURNO:</td>
-            <td class="header-val" colspan="${colSpanMain - 1}">${turno}</td>
-          </tr>
-          <tr>
-            <td class="header-label">TEAM:</td>
-            <td class="header-val" colspan="${colSpanMain - 1}">${team}</td>
-          </tr>
+          <tr><th colspan="${colSpan}" class="main-title">PROGRAMACION DIARIA REEFER</th></tr>
+          <tr><td class="header-label">FECHA:</td><td class="header-val" colspan="${colSpan - 1}">${fecha}</td></tr>
+          <tr><td class="header-label">TURNO:</td><td class="header-val" colspan="${colSpan - 1}">${turno}</td></tr>
+          <tr><td class="header-label">TEAM:</td><td class="header-val" colspan="${colSpan - 1}">${team}</td></tr>
           <tr>
             <th class="col-header" style="width: 40%;">PERSONAL</th>
             <th class="col-header" style="width: 20%;">PEDIDO</th>
@@ -483,16 +743,15 @@
       data.forEach(item => {
         totalPedido += Number(item.pedido);
         totalAsistieron += Number(item.asistieron);
-
         html += `<tr>
           <td class="personal-col">${item.personal}</td>
-          <td class="num-col">${item.pedido}</td>
-          <td class="num-col">${item.asistieron}</td>
+          <td>${item.pedido}</td>
+          <td>${item.asistieron}</td>
           <td>${item.observaciones}</td>
           ${!isCaptureMode ? `
             <td class="actions-cell">
-              <button class="btn-action btn-edit" onclick="cargarEdicion(${item.id})">✏️</button>
-              <button class="btn-action btn-delete" onclick="deleteEntry(${item.id})">✕</button>
+              <button class="btn-action btn-edit" onclick="cargarEdicionReefer(${item.id})">✏️</button>
+              <button class="btn-action btn-delete" onclick="deleteEntryReefer(${item.id})">🗑️</button>
             </td>
           ` : ''}
         </tr>`;
@@ -500,50 +759,97 @@
 
       html += `<tr class="total-row">
         <td class="personal-col">TOTAL</td>
-        <td class="num-col">${totalPedido}</td>
-        <td class="num-col">${totalAsistieron}</td>
+        <td>${totalPedido}</td>
+        <td>${totalAsistieron}</td>
         <td></td>
         ${!isCaptureMode ? '<td></td>' : ''}
-      </tr>
-      </tbody>
-      </table>`;
+      </tr></tbody></table>`;
 
       return html;
     }
 
-    function renderAll() {
-      document.getElementById("tablePreviewContainer").innerHTML = generateTableHTML(false);
+    function renderReefer() {
+      document.getElementById("tablePreviewContainerReefer").innerHTML = generateTableHTMLReefer(false);
     }
 
-    function mostrarReporteCaptura() {
-      document.getElementById("tableCaptureContainer").innerHTML = generateTableHTML(true);
-      document.getElementById("fullscreenReport").style.display = "block";
+    function cargarEdicionReefer(id) {
+      const item = getStoredReefer().find(i => i.id == id);
+      if (!item) return;
+
+      document.getElementById("editIdReefer").value = item.id;
+      const inputPersonal = document.getElementById("personal");
+      inputPersonal.value = item.personal;
+      document.getElementById("pedido").value = item.pedido;
+      document.getElementById("asistieron").value = item.asistieron;
+      document.getElementById("observaciones").value = item.observaciones;
+
+      document.getElementById("formReeferTitle").innerText = "Editar Registro";
+      document.getElementById("btnSubmitReefer").innerText = "Guardar Cambios";
+      document.getElementById("btnCancelReefer").style.display = "inline-block";
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => {
+        inputPersonal.focus();
+        inputPersonal.select();
+      }, 200);
     }
 
-    function cerrarReporteCaptura() {
-      document.getElementById("fullscreenReport").style.display = "none";
+    function cancelarEdicionReefer() {
+      document.getElementById("editIdReefer").value = "";
+      formReefer.reset();
+      document.getElementById("formReeferTitle").innerText = "Configuración & Registro";
+      document.getElementById("btnSubmitReefer").innerText = "Añadir / Actualizar Fila";
+      document.getElementById("btnCancelReefer").style.display = "none";
     }
 
-    function descargarImagen() {
-      document.getElementById("tableCaptureContainer").innerHTML = generateTableHTML(true);
-      const container = document.getElementById("captureTarget");
-      
-      const reportDiv = document.getElementById("fullscreenReport");
-      const wasHidden = reportDiv.style.display === "none" || reportDiv.style.display === "";
+    function deleteEntryReefer(id) {
+      if (confirm("¿Eliminar fila?")) {
+        const currentData = getStoredReefer().filter(item => item.id !== id);
+        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
+        renderReefer();
+      }
+    }
+
+    function limpiarReefer() {
+      if (confirm("¿Borrar todos los datos de equipo?")) {
+        localStorage.setItem("reefer_team_data", JSON.stringify([]));
+        cancelarEdicionReefer();
+        renderReefer();
+      }
+    }
+
+    function mostrarReporteCapturaReefer() {
+      document.getElementById("tableCaptureContainerReefer").innerHTML = generateTableHTMLReefer(true);
+      document.getElementById("fullscreenReportReefer").style.display = "block";
+    }
+
+    function descargarImagenReefer() {
+      document.getElementById("tableCaptureContainerReefer").innerHTML = generateTableHTMLReefer(true);
+      descargarCanvas(document.getElementById("captureTargetReefer"), document.getElementById("fullscreenReportReefer"), 'Programacion_Reefer.png');
+    }
+
+    // CERRAR MODALES / DESCARGAS
+    function cerrarReportes() {
+      document.getElementById("fullscreenReportBloques").style.display = "none";
+      document.getElementById("fullscreenReportReefer").style.display = "none";
+    }
+
+    function descargarCanvas(target, parentModal, fileName) {
+      const wasHidden = parentModal.style.display === "none" || parentModal.style.display === "";
       if (wasHidden) {
-        reportDiv.style.display = "block";
-        reportDiv.style.opacity = "0";
+        parentModal.style.display = "block";
+        parentModal.style.opacity = "0";
       }
 
-      html2canvas(container, { scale: 2 }).then(canvas => {
+      html2canvas(target, { scale: 2 }).then(canvas => {
         const link = document.createElement('a');
-        link.download = `Programacion_Reefer_${document.getElementById("fecha").value.replace(/\//g, '-')}.png`;
+        link.download = fileName;
         link.href = canvas.toDataURL('image/png');
         link.click();
 
         if (wasHidden) {
-          reportDiv.style.display = "none";
-          reportDiv.style.opacity = "1";
+          parentModal.style.display = "none";
+          parentModal.style.opacity = "1";
         }
       });
     }
