@@ -3,848 +3,449 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Control Operativo Reefer</title>
-  <!-- Librería para descargar la tabla como imagen PNG -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <title>Gestión de Bloques y Personal Reefer</title>
   <style>
     :root {
-      --navy-blue: #002060;
-      --header-blue: #5b9bd5;
-      --border-color: #000000;
-      --bg-light: #f4f7f9;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+      --bg-primary: #121826;
+      --bg-secondary: #1a2332;
+      --card-bg: #212d40;
+      --accent: #00d2ff;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --danger: #ff4757;
+      --border: #334155;
     }
 
     body {
-      font-family: Arial, sans-serif;
-      background-color: var(--bg-light);
-      padding-bottom: 30px;
-    }
-
-    /* HEADER Y MENÚ SUPERIOR FIJO */
-    header {
-      background-color: var(--navy-blue);
-      color: white;
-      padding: 12px 15px;
-      text-align: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-
-    header h1 {
-      font-size: 16px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .nav-tabs {
-      display: flex;
-      background-color: #ffffff;
-      border-bottom: 2px solid #ccc;
-      position: sticky;
-      top: 43px;
-      z-index: 99;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 12px 8px;
-      background: none;
-      border: none;
-      font-size: 13px;
-      font-weight: bold;
-      color: #555;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s ease;
-    }
-
-    .tab-btn.active {
-      color: var(--navy-blue);
-      border-bottom-color: var(--navy-blue);
-      background-color: #eef4fc;
-    }
-
-    /* SECCIONES Y CONTENEDORES */
-    .tab-content {
-      display: none;
-      padding: 15px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .tab-content.active {
-      display: block;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      margin: 0;
+      padding: 20px;
     }
 
     .container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
     }
 
-    .form-container {
-      flex: 1;
-      min-width: 100%;
-      background: #ffffff;
-      padding: 15px;
+    h1, h2 {
+      color: var(--accent);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
+
+    .grid-section {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    @media (min-width: 900px) {
+      .grid-section {
+        grid-template-columns: 1fr 2fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 20px;
     }
 
     .form-group {
-      margin-bottom: 12px;
-    }
-
-    .form-row {
-      display: flex;
-      gap: 10px;
+      margin-bottom: 15px;
     }
 
     label {
       display: block;
-      font-weight: bold;
       margin-bottom: 5px;
-      font-size: 13px;
+      color: var(--text-muted);
+      font-size: 0.9em;
     }
 
-    input, select, button {
+    input[type="text"], input[type="number"] {
       width: 100%;
-      padding: 9px;
-      border: 1px solid #ccc;
+      padding: 8px 12px;
       border-radius: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-main);
       box-sizing: border-box;
-      font-size: 14px;
     }
 
     .btn-group {
       display: flex;
       gap: 10px;
-      margin-top: 10px;
-    }
-
-    button.btn-add {
-      background-color: #28a745;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-
-    button.btn-cancel {
-      background-color: #6c757d;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-    }
-
-    button.btn-clear {
-      background-color: #dc3545;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-
-    .action-buttons-container {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-bottom: 15px;
-      flex-wrap: wrap;
-    }
-
-    button.btn-report {
-      background-color: var(--navy-blue);
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      padding: 12px 15px;
-      border-radius: 5px;
-      font-size: 14px;
-      flex: 1;
-    }
-
-    button.btn-download {
-      background-color: #17a2b8;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      padding: 12px 15px;
-      border-radius: 5px;
-      font-size: 14px;
-      flex: 1;
-    }
-
-    .preview-container {
-      flex: 1;
-      min-width: 100%;
       margin-top: 15px;
     }
 
-    /* ESTILOS DE TABLAS DE REPORTES */
-    .custom-table, .reefer-table {
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+
+    button:hover { opacity: 0.8; }
+    .btn-primary { background: var(--accent); color: #000; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-secondary { background: var(--border); color: var(--text-main); }
+
+    table {
       width: 100%;
       border-collapse: collapse;
-      border: 2px solid var(--border-color);
-      background-color: white;
-      font-size: 12px;
+      background: var(--card-bg);
+      border-radius: 8px;
+      overflow: hidden;
     }
 
-    .custom-table th, .reefer-table th.col-header {
-      background-color: var(--navy-blue);
-      color: white;
-      font-weight: bold;
-      text-transform: uppercase;
-      padding: 6px;
-      border: 1px solid var(--border-color);
-      text-align: center;
-    }
-
-    .reefer-table th.col-header {
-      background-color: var(--header-blue);
-      color: black;
-    }
-
-    .custom-table td, .reefer-table td {
-      border: 1px solid var(--border-color);
-      text-align: center;
-      padding: 5px;
-      font-weight: bold;
-    }
-
-    .reefer-table th.main-title {
-      background-color: var(--header-blue);
-      color: black;
-      font-size: 15px;
-      font-weight: bold;
-      text-align: center;
-      padding: 8px;
-      border-bottom: 2px solid var(--border-color);
-      text-transform: uppercase;
-    }
-
-    .reefer-table td.header-label {
-      font-weight: bold;
-      text-transform: uppercase;
-      padding: 5px 8px;
+    th, td {
+      padding: 12px;
       text-align: left;
+      border-bottom: 1px solid var(--border);
     }
 
-    .reefer-table td.header-val {
-      font-weight: bold;
-      padding: 5px 8px;
-      text-align: left;
+    th {
+      background: var(--bg-secondary);
+      color: var(--accent);
     }
 
-    .reefer-table td.personal-col {
-      text-align: left;
-    }
-
-    .reefer-table tr.total-row td {
-      background-color: var(--header-blue);
-      font-weight: bold;
-      color: black;
-    }
-
-    .section-header {
-      background-color: var(--header-blue);
-      color: black;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .highlight-pink {
-      background-color: #fce4d6;
-    }
-
-    .actions-cell { width: 45px; }
-
-    .btn-action {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      padding: 2px;
-    }
-
-    .btn-edit { color: #0056b3; }
-    .btn-delete { color: red; }
-
-    /* MODO REPORTE PANTALLA COMPLETA REAL */
-    .fullscreen-report {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #ffffff;
-      z-index: 99999;
-      overflow-y: auto;
-      padding: 10px;
-      box-sizing: border-box;
-      touch-action: manipulation;
-    }
-
-    .fullscreen-hint {
-      text-align: center;
-      font-size: 11px;
-      color: #666;
-      margin-bottom: 8px;
-      font-style: italic;
+    .action-btn {
+      padding: 4px 8px;
+      font-size: 0.8em;
+      margin-right: 5px;
     }
   </style>
 </head>
 <body>
 
-  <!-- ENCABEZADO -->
-  <header>
-    <h1>Control Operativo Reefer</h1>
-  </header>
+<div class="container">
+  <h1>Sistema de Control de Operaciones</h1>
 
-  <!-- MENÚ TAB SUPERIOR -->
-  <nav class="nav-tabs">
-    <button class="tab-btn active" onclick="switchTab('tabBloques', this)">
-      📦 Equipos por Bloque
-    </button>
-    <button class="tab-btn" onclick="switchTab('tabReefer', this)">
-      👥 Equipo de Trabajo
-    </button>
-  </nav>
-
-  <!-- PESTAÑA 1: EQUIPOS POR BLOQUE -->
-  <div id="tabBloques" class="tab-content active">
-    <div class="action-buttons-container">
-      <button class="btn-report" onclick="mostrarReporteCapturaBloques()">📱 Modo Captura</button>
-      <button class="btn-download" onclick="descargarImagenBloques()">📥 Descargar PNG</button>
-    </div>
-
-    <div class="container">
-      <div class="form-container" id="formBloquesContainer">
-        <h2 id="formBloquesTitle" style="text-align:center; margin-bottom:10px;">Ingresar Registro</h2>
-        <form id="recordFormBloques">
-          <input type="hidden" id="editIdBloques" value="">
-
-          <div class="form-group">
-            <label for="bloque">Bloque / Zona:</label>
-            <input type="text" id="bloque" placeholder="Ej: 1D, 1F, BUQUE" required>
-          </div>
-
-          <div class="form-group">
-            <label for="tecnicos">Técnico(s) (Separados por coma):</label>
-            <input type="text" id="tecnicos" placeholder="Ej: TOCTO, TORRES" required>
-          </div>
-
-          <div class="form-group">
-            <label for="radio">Radio(s) (Separadas por coma o una sola):</label>
-            <input type="text" id="radio" placeholder="Ej: 4028, 1018">
-          </div>
-
-          <div class="form-group">
-            <label for="tablets">Tablet(s) por Técnico (Separadas por coma):</label>
-            <input type="text" id="tablets" placeholder="Ej: 1, 11">
-          </div>
-
-          <div class="btn-group">
-            <button type="submit" class="btn-add" id="btnSubmitBloques">Añadir Registro</button>
-            <button type="button" class="btn-cancel" id="btnCancelBloques" style="display:none;" onclick="cancelarEdicionBloques()">Cancelar</button>
-          </div>
-          <button type="button" class="btn-clear" onclick="limpiarBloques()">Borrar Todos los Datos</button>
-        </form>
-      </div>
-
-      <div class="preview-container">
-        <h2 style="text-align:center; margin-bottom:10px;">Panel de Edición</h2>
-        <table class="custom-table">
-          <thead>
-            <tr>
-              <th style="width: 40%;">BLOQUES</th>
-              <th style="width: 25%;">RADIO</th>
-              <th style="width: 20%;">TABBLE</th>
-              <th class="actions-cell">Acción</th>
-            </tr>
-          </thead>
-          <tbody id="tableBodyBloques"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- PESTAÑA 2: EQUIPO DE TRABAJO -->
-  <div id="tabReefer" class="tab-content">
-    <div class="action-buttons-container">
-      <button class="btn-report" onclick="mostrarReporteCapturaReefer()">📱 Modo Captura</button>
-      <button class="btn-download" onclick="descargarImagenReefer()">📥 Descargar PNG</button>
-    </div>
-
-    <div class="container">
-      <div class="form-container" id="formReeferContainer">
-        <h2 id="formReeferTitle" style="text-align:center; margin-bottom:10px;">Configuración & Registro</h2>
-        
+  <!-- SECCIÓN BLOQUES -->
+  <h2>Gestión de Bloques y Equipos</h2>
+  <div class="grid-section">
+    <div class="card">
+      <h3 id="formBloquesTitle">Agregar Bloque</h3>
+      <form id="formBloques">
+        <input type="hidden" id="bloqueId">
         <div class="form-group">
-          <label for="fecha">Fecha:</label>
-          <input type="text" id="fecha" value="5/9/2026">
+          <label>Bloque / Zona</label>
+          <input type="text" id="bloqueNombre" required>
         </div>
-        <div class="form-row">
-          <div class="form-group" style="flex:1;">
-            <label for="turno">Turno:</label>
-            <input type="text" id="turno" value="1">
-          </div>
-          <div class="form-group" style="flex:2;">
-            <label for="team">Team / Grupo:</label>
-            <input type="text" id="team" value="HALCONES">
-          </div>
+        <div class="form-group">
+          <label>Técnicos (separados por coma)</label>
+          <input type="text" id="bloqueTecnicos" required>
         </div>
-
-        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ccc;">
-
-        <form id="recordFormReefer">
-          <input type="hidden" id="editIdReefer" value="">
-
-          <div class="form-group">
-            <label for="personal">Categoría Personal:</label>
-            <input type="text" id="personal" placeholder="Ej: DPW Ec, Perú (12 hrs)" required>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group" style="flex:1;">
-              <label for="pedido">Pedido:</label>
-              <input type="number" id="pedido" min="0" required>
-            </div>
-            <div class="form-group" style="flex:1;">
-              <label for="asistieron">Asistieron:</label>
-              <input type="number" id="asistieron" min="0" required>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="observaciones">Observaciones:</label>
-            <input type="text" id="observaciones" placeholder="Opcional">
-          </div>
-
-          <div class="btn-group">
-            <button type="submit" class="btn-add" id="btnSubmitReefer">Añadir / Actualizar Fila</button>
-            <button type="button" class="btn-cancel" id="btnCancelReefer" style="display:none;" onclick="cancelarEdicionReefer()">Cancelar</button>
-          </div>
-          <button type="button" class="btn-clear" onclick="limpiarReefer()">Borrar Todos los Datos</button>
-        </form>
-      </div>
-
-      <div class="preview-container">
-        <h2 style="text-align:center; margin-bottom:10px;">Panel de Edición</h2>
-        <div id="tablePreviewContainerReefer"></div>
-      </div>
+        <div class="form-group">
+          <label>Radios (separados por coma)</label>
+          <input type="text" id="bloqueRadios">
+        </div>
+        <div class="form-group">
+          <label>Tablets (separados por coma)</label>
+          <input type="text" id="bloqueTablets">
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn-primary">Guardar</button>
+          <button type="button" class="btn-secondary" onclick="cancelarEdicionBloques()">Cancelar</button>
+        </div>
+      </form>
     </div>
-  </div>
 
-  <!-- VISTAS DE CAPTURA EN PANTALLA COMPLETA (SIN IFRAMES) -->
-  <div class="fullscreen-report" id="fullscreenReportBloques" ondblclick="cerrarReportes()">
-    <div class="fullscreen-hint">💡 Toca dos veces rápidas para regresar</div>
-    <div id="captureTargetBloques" style="background: white; padding: 5px;">
-      <table class="custom-table">
+    <div>
+      <div style="margin-bottom: 10px; text-align: right;">
+        <button class="btn-danger" onclick="limpiarBloques()">Borrar Todos los Bloques</button>
+      </div>
+      <table>
         <thead>
           <tr>
-            <th style="width: 45%;">BLOQUES</th>
-            <th style="width: 30%;">RADIO</th>
-            <th style="width: 25%;">TABBLE</th>
+            <th>Bloque</th>
+            <th>Técnicos</th>
+            <th>Radios</th>
+            <th>Tablets</th>
+            <th>Acciones</th>
           </tr>
         </thead>
-        <tbody id="captureReportBodyBloques"></tbody>
+        <tbody id="tbodyBloques"></tbody>
       </table>
     </div>
   </div>
 
-  <div class="fullscreen-report" id="fullscreenReportReefer" ondblclick="cerrarReportes()">
-    <div class="fullscreen-hint">💡 Toca dos veces rápidas para regresar</div>
-    <div id="captureTargetReefer" style="background: white; padding: 5px;">
-      <div id="tableCaptureContainerReefer"></div>
+  <!-- SECCIÓN REEFER TEAM -->
+  <h2>Personal Reefer</h2>
+  <div class="grid-section">
+    <div class="card">
+      <h3 id="formReeferTitle">Agregar Personal Reefer</h3>
+      <form id="formReefer">
+        <input type="hidden" id="reeferId">
+        <div class="form-group">
+          <label>Personal / Grupo</label>
+          <input type="text" id="reeferPersonal" required>
+        </div>
+        <div class="form-group">
+          <label>Pedido</label>
+          <input type="number" id="reeferPedido" required>
+        </div>
+        <div class="form-group">
+          <label>Asistieron</label>
+          <input type="number" id="reeferAsistieron" required>
+        </div>
+        <div class="form-group">
+          <label>Observaciones</label>
+          <input type="text" id="reeferObservaciones">
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn-primary">Guardar</button>
+          <button type="button" class="btn-secondary" onclick="cancelarEdicionReefer()">Cancelar</button>
+        </div>
+      </form>
     </div>
-  </div>
 
-  <script>
-    // CAMBIO DE PESTAÑAS (TAB SYSTEM)
-    function switchTab(tabId, btnElement) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-
-      document.getElementById(tabId).classList.add('active');
-      btnElement.classList.add('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-      renderTableBloques();
-      
-      document.getElementById("fecha").addEventListener("input", renderReefer);
-      document.getElementById("turno").addEventListener("input", renderReefer);
-      document.getElementById("team").addEventListener("input", renderReefer);
-      renderReefer();
-    });
-
-    // ==========================================
-    // LÓGICA 1: EQUIPOS POR BLOQUE
-    // ==========================================
-    const formBloques = document.getElementById("recordFormBloques");
-
-    formBloques.addEventListener("submit", function(e) {
-      e.preventDefault();
-      const editId = document.getElementById("editIdBloques").value;
-      const bloque = document.getElementById("bloque").value.trim().toUpperCase();
-      const tecnicosStr = document.getElementById("tecnicos").value.trim();
-      const radioStr = document.getElementById("radio").value.trim();
-      const tabletsStr = document.getElementById("tablets").value.trim();
-
-      const tecnicos = tecnicosStr.split(',').map(t => t.trim()).filter(t => t !== "");
-      const radios = radioStr ? radioStr.split(',').map(r => r.trim()) : [];
-      const tablets = tabletsStr ? tabletsStr.split(',').map(t => t.trim()) : [];
-
-      if (tecnicos.length === 0) return;
-
-      let currentData = getStoredBloques();
-
-      if (editId) {
-        currentData = currentData.map(item => item.id == editId ? { id: Number(editId), bloque, tecnicos, radios, tablets } : item);
-        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
-        cancelarEdicionBloques();
-      } else {
-        currentData.push({ id: Date.now(), bloque, tecnicos, radios, tablets });
-        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
-        formBloques.reset();
-      }
-      renderTableBloques();
-    });
-
-    function getStoredBloques() {
-      const data = localStorage.getItem("registros_bloques");
-      return data ? JSON.parse(data) : [
-        { id: 1, bloque: "1D", tecnicos: ["TOCTO", "TORRES"], radios: ["4250"], tablets: ["3", "2"] },
-        { id: 2, bloque: "1E", tecnicos: ["CHONILLO", "PÉREZ"], radios: ["Lp", "4329"], tablets: ["4", "5"] },
-        { id: 3, bloque: "1F", tecnicos: ["DAMIÁN", "VERA"], radios: ["3456", "2340"], tablets: ["6", "7"] },
-        { id: 4, bloque: "1G", tecnicos: ["SÁNCHEZ", "PINEDA"], radios: ["4250"], tablets: ["23", "45"] },
-        { id: 5, bloque: "1H", tecnicos: ["VIRIUS", "TERRY"], radios: ["2390", "3450"], tablets: ["34", "67"] },
-        { id: 6, bloque: "1I", tecnicos: ["TERRY", "TOREWS"], radios: ["3260", "5634"], tablets: ["12", "11"] },
-        { id: 7, bloque: "AFOROS", tecnicos: ["PATIMO"], radios: ["3212"], tablets: ["78"] },
-        { id: 8, bloque: "BUQUE", tecnicos: ["PÉREZ"], radios: [""], tablets: ["2"] }
-      ];
-    }
-
-    function renderTableBloques() {
-      const data = getStoredBloques();
-      const tbody = document.getElementById("tableBodyBloques");
-      tbody.innerHTML = "";
-
-      data.forEach(group => {
-        const rowCount = group.tecnicos.length;
-        const hasMultipleRadios = Array.isArray(group.radios) && group.radios.length > 1;
-
-        const headerRow = document.createElement("tr");
-        headerRow.innerHTML = `<td colspan="4" class="section-header">${group.bloque}</td>`;
-        tbody.appendChild(headerRow);
-
-        group.tecnicos.forEach((tecnico, index) => {
-          const row = document.createElement("tr");
-          let html = `<td class="tech-name">${tecnico}</td>`;
-
-          if (hasMultipleRadios) {
-            html += `<td>${group.radios[index] || ""}</td>`;
-          } else {
-            if (index === 0) html += `<td rowspan="${rowCount}" style="vertical-align: middle;">${group.radios[0] || ""}</td>`;
-          }
-
-          html += `<td>${group.tablets[index] || ""}</td>`;
-
-          if (index === 0) {
-            html += `<td rowspan="${rowCount}" class="actions-cell" style="vertical-align: middle;">
-                      <button class="btn-action btn-edit" onclick="cargarEdicionBloques(${group.id})">✏️</button>
-                      <button class="btn-action btn-delete" onclick="deleteEntryBloques(${group.id})">✕</button>
-                    </td>`;
-          }
-          row.innerHTML = html;
-          tbody.appendChild(row);
-        });
-      });
-    }
-
-    function cargarEdicionBloques(id) {
-      const item = getStoredBloques().find(i => i.id == id);
-      if (!item) return;
-
-      document.getElementById("editIdBloques").value = item.id;
-      const inputBloque = document.getElementById("bloque");
-      inputBloque.value = item.bloque;
-      document.getElementById("tecnicos").value = item.tecnicos.join(", ");
-      document.getElementById("radio").value = item.radios.join(", ");
-      document.getElementById("tablets").value = item.tablets.join(", ");
-
-      document.getElementById("formBloquesTitle").innerText = "Editar Registro";
-      document.getElementById("btnSubmitBloques").innerText = "Guardar Cambios";
-      document.getElementById("btnCancelBloques").style.display = "inline-block";
-
-      // SCROLL CORREGIDO Y ENFOQUE
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => {
-        inputBloque.focus();
-        inputBloque.select();
-      }, 200);
-    }
-
-    function cancelarEdicionBloques() {
-      document.getElementById("editIdBloques").value = "";
-      formBloques.reset();
-      document.getElementById("formBloquesTitle").innerText = "Ingresar Registro";
-      document.getElementById("btnSubmitBloques").innerText = "Añadir Registro";
-      document.getElementById("btnCancelBloques").style.display = "none";
-    }
-
-    function deleteEntryBloques(id) {
-      if (confirm("¿Eliminar registro?")) {
-        const currentData = getStoredBloques().filter(item => item.id !== id);
-        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
-        renderTableBloques();
-      }
-    }
-
-    function limpiarBloques() {
-      if (confirm("¿Borrar todos los bloques?")) {
-        localStorage.removeItem("registros_bloques");
-        cancelarEdicionBloques();
-        renderTableBloques();
-      }
-    }
-
-    function buildCleanBloques() {
-      const data = getStoredBloques();
-      const tbody = document.getElementById("captureReportBodyBloques");
-      tbody.innerHTML = "";
-
-      data.forEach(group => {
-        const rowCount = group.tecnicos.length;
-        const hasMultipleRadios = Array.isArray(group.radios) && group.radios.length > 1;
-
-        const headerRow = document.createElement("tr");
-        headerRow.innerHTML = `<td colspan="3" class="section-header">${group.bloque}</td>`;
-        tbody.appendChild(headerRow);
-
-        group.tecnicos.forEach((tecnico, index) => {
-          const row = document.createElement("tr");
-          let html = `<td class="tech-name">${tecnico}</td>`;
-
-          if (hasMultipleRadios) {
-            html += `<td>${group.radios[index] || ""}</td>`;
-          } else {
-            if (index === 0) html += `<td rowspan="${rowCount}" style="vertical-align: middle;">${group.radios[0] || ""}</td>`;
-          }
-
-          html += `<td>${group.tablets[index] || ""}</td>`;
-          row.innerHTML = html;
-          tbody.appendChild(row);
-        });
-      });
-    }
-
-    function mostrarReporteCapturaBloques() {
-      buildCleanBloques();
-      document.getElementById("fullscreenReportBloques").style.display = "block";
-    }
-
-    function descargarImagenBloques() {
-      buildCleanBloques();
-      descargarCanvas(document.getElementById("captureTargetBloques"), document.getElementById("fullscreenReportBloques"), 'Reporte_Equipos_Bloques.png');
-    }
-
-    // ==========================================
-    // LÓGICA 2: EQUIPO DE TRABAJO (REEFER)
-    // ==========================================
-    const formReefer = document.getElementById("recordFormReefer");
-
-    formReefer.addEventListener("submit", function(e) {
-      e.preventDefault();
-      const editId = document.getElementById("editIdReefer").value;
-      const personal = document.getElementById("personal").value.trim();
-      const pedido = parseInt(document.getElementById("pedido").value) || 0;
-      const asistieron = parseInt(document.getElementById("asistieron").value) || 0;
-      const observaciones = document.getElementById("observaciones").value.trim();
-
-      let currentData = getStoredReefer();
-
-      if (editId) {
-        currentData = currentData.map(item => item.id == editId ? { id: Number(editId), personal, pedido, asistieron, observaciones } : item);
-        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
-        cancelarEdicionReefer();
-      } else {
-        currentData.push({ id: Date.now(), personal, pedido, asistieron, observaciones });
-        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
-        formReefer.reset();
-      }
-      renderReefer();
-    });
-
-    function getStoredReefer() {
-      const data = localStorage.getItem("reefer_team_data");
-      return data ? JSON.parse(data) : [
-        { id: 1, personal: "DPW Ec", pedido: 7, asistieron: 7, observaciones: "" },
-        { id: 2, personal: "Perú (12 hrs)", pedido: 2, asistieron: 2, observaciones: "" },
-        { id: 3, personal: "Personal Coestibas", pedido: 5, asistieron: 5, observaciones: "" },
-        { id: 4, personal: "Gate", pedido: 2, asistieron: 2, observaciones: "" },
-        { id: 5, personal: "Proyecto", pedido: 2, asistieron: 2, observaciones: "" }
-      ];
-    }
-
-    function generateTableHTMLReefer(isCaptureMode = false) {
-      const data = getStoredReefer();
-      const fecha = document.getElementById("fecha").value;
-      const turno = document.getElementById("turno").value;
-      const team = document.getElementById("team").value;
-
-      let totalPedido = 0, totalAsistieron = 0;
-      const colSpan = isCaptureMode ? 4 : 5;
-
-      let html = `<table class="reefer-table">
+    <div>
+      <div style="margin-bottom: 10px; text-align: right;">
+        <button class="btn-danger" onclick="limpiarReefer()">Borrar Todo el Personal</button>
+      </div>
+      <table>
         <thead>
-          <tr><th colspan="${colSpan}" class="main-title">PROGRAMACION DIARIA REEFER</th></tr>
-          <tr><td class="header-label">FECHA:</td><td class="header-val" colspan="${colSpan - 1}">${fecha}</td></tr>
-          <tr><td class="header-label">TURNO:</td><td class="header-val" colspan="${colSpan - 1}">${turno}</td></tr>
-          <tr><td class="header-label">TEAM:</td><td class="header-val" colspan="${colSpan - 1}">${team}</td></tr>
           <tr>
-            <th class="col-header" style="width: 40%;">PERSONAL</th>
-            <th class="col-header" style="width: 20%;">PEDIDO</th>
-            <th class="col-header" style="width: 20%;">ASISTIERON</th>
-            <th class="col-header" style="width: 20%;">Observaciones</th>
-            ${!isCaptureMode ? '<th class="col-header actions-cell">Acción</th>' : ''}
+            <th>Personal</th>
+            <th>Pedido</th>
+            <th>Asistieron</th>
+            <th>Observaciones</th>
+            <th>Acciones</th>
           </tr>
         </thead>
-        <tbody>`;
+        <tbody id="tbodyReefer"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-      data.forEach(item => {
-        totalPedido += Number(item.pedido);
-        totalAsistieron += Number(item.asistieron);
-        html += `<tr>
-          <td class="personal-col">${item.personal}</td>
-          <td>${item.pedido}</td>
-          <td>${item.asistieron}</td>
-          <td>${item.observaciones}</td>
-          ${!isCaptureMode ? `
-            <td class="actions-cell">
-              <button class="btn-action btn-edit" onclick="cargarEdicionReefer(${item.id})">✏️</button>
-              <button class="btn-action btn-delete" onclick="deleteEntryReefer(${item.id})">✕</button>
-            </td>
-          ` : ''}
-        </tr>`;
-      });
+<script>
+// ==========================================
+// PERSISTENCIA Y MANEJO DE ESTADO
+// ==========================================
 
-      html += `<tr class="total-row">
-        <td class="personal-col">TOTAL</td>
-        <td>${totalPedido}</td>
-        <td>${totalAsistieron}</td>
-        <td></td>
-        ${!isCaptureMode ? '<td></td>' : ''}
-      </tr></tbody></table>`;
+function getStoredBloques() {
+  const data = localStorage.getItem("registros_bloques");
+  if (data === null) {
+    const defaultBloques = [
+      { id: 1, bloque: "1D", tecnicos: ["TOCTO", "TORRES"], radios: ["4250"], tablets: ["3", "2"] },
+      { id: 2, bloque: "1E", tecnicos: ["CHONILLO", "PÉREZ"], radios: ["Lp", "4329"], tablets: ["4", "5"] },
+      { id: 3, bloque: "1F", tecnicos: ["DAMIÁN", "VERA"], radios: ["3456", "2340"], tablets: ["6", "7"] },
+      { id: 4, bloque: "1G", tecnicos: ["SÁNCHEZ", "PINEDA"], radios: ["4250"], tablets: ["23", "45"] },
+      { id: 5, bloque: "1H", tecnicos: ["VIRIUS", "TERRY"], radios: ["2390", "3450"], tablets: ["34", "67"] },
+      { id: 6, bloque: "1I", tecnicos: ["TERRY", "TOREWS"], radios: ["3260", "5634"], tablets: ["12", "11"] },
+      { id: 7, bloque: "AFOROS", tecnicos: ["PATIMO"], radios: ["3212"], tablets: ["78"] },
+      { id: 8, bloque: "BUQUE", tecnicos: ["PÉREZ"], radios: [""], tablets: ["2"] }
+    ];
+    localStorage.setItem("registros_bloques", JSON.stringify(defaultBloques));
+    return defaultBloques;
+  }
+  return JSON.parse(data);
+}
 
-      return html;
-    }
+function saveBloques(data) {
+  localStorage.setItem("registros_bloques", JSON.stringify(data));
+}
 
-    function renderReefer() {
-      document.getElementById("tablePreviewContainerReefer").innerHTML = generateTableHTMLReefer(false);
-    }
+function getStoredReefer() {
+  const data = localStorage.getItem("reefer_team_data");
+  if (data === null) {
+    const defaultReefer = [
+      { id: 1, personal: "DPW Ec", pedido: 7, asistieron: 7, observaciones: "" },
+      { id: 2, personal: "Perú (12 hrs)", pedido: 2, asistieron: 2, observaciones: "" },
+      { id: 3, personal: "Personal Coestibas", pedido: 5, asistieron: 5, observaciones: "" },
+      { id: 4, personal: "Gate", pedido: 2, asistieron: 2, observaciones: "" },
+      { id: 5, personal: "Proyecto", pedido: 2, asistieron: 2, observaciones: "" }
+    ];
+    localStorage.setItem("reefer_team_data", JSON.stringify(defaultReefer));
+    return defaultReefer;
+  }
+  return JSON.parse(data);
+}
 
-    function cargarEdicionReefer(id) {
-      const item = getStoredReefer().find(i => i.id == id);
-      if (!item) return;
+function saveReefer(data) {
+  localStorage.setItem("reefer_team_data", JSON.stringify(data));
+}
 
-      document.getElementById("editIdReefer").value = item.id;
-      const inputPersonal = document.getElementById("personal");
-      inputPersonal.value = item.personal;
-      document.getElementById("pedido").value = item.pedido;
-      document.getElementById("asistieron").value = item.asistieron;
-      document.getElementById("observaciones").value = item.observaciones;
+// ==========================================
+// LÓGICA DE BLOQUES
+// ==========================================
 
-      document.getElementById("formReeferTitle").innerText = "Editar Registro";
-      document.getElementById("btnSubmitReefer").innerText = "Guardar Cambios";
-      document.getElementById("btnCancelReefer").style.display = "inline-block";
+function renderTableBloques() {
+  const bloques = getStoredBloques();
+  const tbody = document.getElementById("tbodyBloques");
+  tbody.innerHTML = "";
 
-      // SCROLL CORREGIDO Y ENFOQUE
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      setTimeout(() => {
-        inputPersonal.focus();
-        inputPersonal.select();
-      }, 200);
-    }
+  bloques.forEach(b => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${b.bloque}</strong></td>
+      <td>${b.tecnicos.join(", ")}</td>
+      <td>${b.radios.join(", ")}</td>
+      <td>${b.tablets.join(", ")}</td>
+      <td>
+        <button class="action-btn btn-primary" onclick="editarBloque(${b.id})">Editar</button>
+        <button class="action-btn btn-danger" onclick="eliminarBloque(${b.id})">Eliminar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
 
-    function cancelarEdicionReefer() {
-      document.getElementById("editIdReefer").value = "";
-      formReefer.reset();
-      document.getElementById("formReeferTitle").innerText = "Configuración & Registro";
-      document.getElementById("btnSubmitReefer").innerText = "Añadir / Actualizar Fila";
-      document.getElementById("btnCancelReefer").style.display = "none";
-    }
+document.getElementById("formBloques").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const id = document.getElementById("bloqueId").value;
+  const bloque = document.getElementById("bloqueNombre").value.trim();
+  const tecnicos = document.getElementById("bloqueTecnicos").value.split(",").map(s => s.trim());
+  const radios = document.getElementById("bloqueRadios").value.split(",").map(s => s.trim());
+  const tablets = document.getElementById("bloqueTablets").value.split(",").map(s => s.trim());
 
-    function deleteEntryReefer(id) {
-      if (confirm("¿Eliminar fila?")) {
-        const currentData = getStoredReefer().filter(item => item.id !== id);
-        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
-        renderReefer();
-      }
-    }
+  let list = getStoredBloques();
 
-    function limpiarReefer() {
-      if (confirm("¿Borrar todos los datos de equipo?")) {
-        localStorage.removeItem("reefer_team_data");
-        cancelarEdicionReefer();
-        renderReefer();
-      }
-    }
+  if (id) {
+    list = list.map(item => item.id == id ? { id: Number(id), bloque, tecnicos, radios, tablets } : item);
+  } else {
+    const newId = list.length > 0 ? Math.max(...list.map(i => i.id)) + 1 : 1;
+    list.push({ id: newId, bloque, tecnicos, radios, tablets });
+  }
 
-    function mostrarReporteCapturaReefer() {
-      document.getElementById("tableCaptureContainerReefer").innerHTML = generateTableHTMLReefer(true);
-      document.getElementById("fullscreenReportReefer").style.display = "block";
-    }
+  saveBloques(list);
+  cancelarEdicionBloques();
+  renderTableBloques();
+});
 
-    function descargarImagenReefer() {
-      document.getElementById("tableCaptureContainerReefer").innerHTML = generateTableHTMLReefer(true);
-      descargarCanvas(document.getElementById("captureTargetReefer"), document.getElementById("fullscreenReportReefer"), 'Programacion_Reefer.png');
-    }
+function editarBloque(id) {
+  const list = getStoredBloques();
+  const item = list.find(i => i.id === id);
+  if (item) {
+    document.getElementById("bloqueId").value = item.id;
+    document.getElementById("bloqueNombre").value = item.bloque;
+    document.getElementById("bloqueTecnicos").value = item.tecnicos.join(", ");
+    document.getElementById("bloqueRadios").value = item.radios.join(", ");
+    document.getElementById("bloqueTablets").value = item.tablets.join(", ");
+    document.getElementById("formBloquesTitle").innerText = "Editar Bloque";
+  }
+}
 
-    // CERRAR MODALES / DESCARGAS
-    function cerrarReportes() {
-      document.getElementById("fullscreenReportBloques").style.display = "none";
-      document.getElementById("fullscreenReportReefer").style.display = "none";
-    }
+function eliminarBloque(id) {
+  if (confirm("¿Desea eliminar este registro?")) {
+    let list = getStoredBloques();
+    list = list.filter(item => item.id !== id);
+    saveBloques(list);
+    renderTableBloques();
+  }
+}
 
-    function descargarCanvas(target, parentModal, fileName) {
-      const wasHidden = parentModal.style.display === "none" || parentModal.style.display === "";
-      if (wasHidden) {
-        parentModal.style.display = "block";
-        parentModal.style.opacity = "0";
-      }
+function limpiarBloques() {
+  if (confirm("¿Borrar todos los bloques?")) {
+    saveBloques([]);
+    cancelarEdicionBloques();
+    renderTableBloques();
+  }
+}
 
-      html2canvas(target, { scale: 2 }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = fileName;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
+function cancelarEdicionBloques() {
+  document.getElementById("formBloques").reset();
+  document.getElementById("bloqueId").value = "";
+  document.getElementById("formBloquesTitle").innerText = "Agregar Bloque";
+}
 
-        if (wasHidden) {
-          parentModal.style.display = "none";
-          parentModal.style.opacity = "1";
-        }
-      });
-    }
-  </script>
+// ==========================================
+// LÓGICA DE REEFER TEAM
+// ==========================================
+
+function renderReefer() {
+  const reefer = getStoredReefer();
+  const tbody = document.getElementById("tbodyReefer");
+  tbody.innerHTML = "";
+
+  reefer.forEach(r => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${r.personal}</strong></td>
+      <td>${r.pedido}</td>
+      <td>${r.asistieron}</td>
+      <td>${r.observaciones || '-'}</td>
+      <td>
+        <button class="action-btn btn-primary" onclick="editarReefer(${r.id})">Editar</button>
+        <button class="action-btn btn-danger" onclick="eliminarReefer(${r.id})">Eliminar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+document.getElementById("formReefer").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const id = document.getElementById("reeferId").value;
+  const personal = document.getElementById("reeferPersonal").value.trim();
+  const pedido = Number(document.getElementById("reeferPedido").value);
+  const asistieron = Number(document.getElementById("reeferAsistieron").value);
+  const observaciones = document.getElementById("reeferObservaciones").value.trim();
+
+  let list = getStoredReefer();
+
+  if (id) {
+    list = list.map(item => item.id == id ? { id: Number(id), personal, pedido, asistieron, observaciones } : item);
+  } else {
+    const newId = list.length > 0 ? Math.max(...list.map(i => i.id)) + 1 : 1;
+    list.push({ id: newId, personal, pedido, asistieron, observaciones });
+  }
+
+  saveReefer(list);
+  cancelarEdicionReefer();
+  renderReefer();
+});
+
+function editarReefer(id) {
+  const list = getStoredReefer();
+  const item = list.find(i => i.id === id);
+  if (item) {
+    document.getElementById("reeferId").value = item.id;
+    document.getElementById("reeferPersonal").value = item.personal;
+    document.getElementById("reeferPedido").value = item.pedido;
+    document.getElementById("reeferAsistieron").value = item.asistieron;
+    document.getElementById("reeferObservaciones").value = item.observaciones;
+    document.getElementById("formReeferTitle").innerText = "Editar Personal";
+  }
+}
+
+function eliminarReefer(id) {
+  if (confirm("¿Desea eliminar este registro?")) {
+    let list = getStoredReefer();
+    list = list.filter(item => item.id !== id);
+    saveReefer(list);
+    renderReefer();
+  }
+}
+
+function limpiarReefer() {
+  if (confirm("¿Borrar todos los datos de equipo?")) {
+    saveReefer([]);
+    cancelarEdicionReefer();
+    renderReefer();
+  }
+}
+
+function cancelarEdicionReefer() {
+  document.getElementById("formReefer").reset();
+  document.getElementById("reeferId").value = "";
+  document.getElementById("formReeferTitle").innerText = "Agregar Personal Reefer";
+}
+
+// Inicialización de la aplicación
+document.addEventListener("DOMContentLoaded", () => {
+  renderTableBloques();
+  renderReefer();
+});
+</script>
+
 </body>
 </html>
