@@ -321,7 +321,7 @@
   <!-- MENÚ TAB SUPERIOR -->
   <nav class="nav-tabs">
     <button class="tab-btn active" onclick="switchTab('tabBloques', this)">
-      📦 Equipos por Bloque
+      📋 Equipos por Bloque
     </button>
     <button class="tab-btn" onclick="switchTab('tabReefer', this)">
       👥 Equipo de Trabajo
@@ -331,8 +331,8 @@
   <!-- PESTAÑA 1: EQUIPOS POR BLOQUE -->
   <div id="tabBloques" class="tab-content active">
     <div class="action-buttons-container">
-      <button class="btn-report" onclick="mostrarReporteCapturaBloques()">📱 Modo Captura</button>
-      <button class="btn-download" onclick="descargarImagenBloques()">📥 Descargar PNG</button>
+      <button class="btn-report" onclick="mostrarReporteCapturaBloques()">👁️ Modo Captura</button>
+      <button class="btn-download" onclick="descargarImagenBloques()">📷 Descargar PNG</button>
     </div>
 
     <div class="container">
@@ -389,8 +389,8 @@
   <!-- PESTAÑA 2: EQUIPO DE TRABAJO -->
   <div id="tabReefer" class="tab-content">
     <div class="action-buttons-container">
-      <button class="btn-report" onclick="mostrarReporteCapturaReefer()">📱 Modo Captura</button>
-      <button class="btn-download" onclick="descargarImagenReefer()">📥 Descargar PNG</button>
+      <button class="btn-report" onclick="mostrarReporteCapturaReefer()">👁️ Modo Captura</button>
+      <button class="btn-download" onclick="descargarImagenReefer()">📷 Descargar PNG</button>
     </div>
 
     <div class="container">
@@ -455,7 +455,7 @@
 
   <!-- VISTAS DE CAPTURA EN PANTALLA COMPLETA (SIN IFRAMES) -->
   <div class="fullscreen-report" id="fullscreenReportBloques" ondblclick="cerrarReportes()">
-    <div class="fullscreen-hint">💡 Toca dos veces rápidas para regresar</div>
+    <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
     <div id="captureTargetBloques" style="background: white; padding: 5px;">
       <table class="custom-table">
         <thead>
@@ -471,7 +471,7 @@
   </div>
 
   <div class="fullscreen-report" id="fullscreenReportReefer" ondblclick="cerrarReportes()">
-    <div class="fullscreen-hint">💡 Toca dos veces rápidas para regresar</div>
+    <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
     <div id="captureTargetReefer" style="background: white; padding: 5px;">
       <div id="tableCaptureContainerReefer"></div>
     </div>
@@ -532,7 +532,10 @@
 
     function getStoredBloques() {
       const data = localStorage.getItem("registros_bloques");
-      return data ? JSON.parse(data) : [
+      if (data !== null) {
+        return JSON.parse(data);
+      }
+      const defaultData = [
         { id: 1, bloque: "1D", tecnicos: ["TOCTO", "TORRES"], radios: ["4250"], tablets: ["3", "2"] },
         { id: 2, bloque: "1E", tecnicos: ["CHONILLO", "PÉREZ"], radios: ["Lp", "4329"], tablets: ["4", "5"] },
         { id: 3, bloque: "1F", tecnicos: ["DAMIÁN", "VERA"], radios: ["3456", "2340"], tablets: ["6", "7"] },
@@ -542,6 +545,8 @@
         { id: 7, bloque: "AFOROS", tecnicos: ["PATIMO"], radios: ["3212"], tablets: ["78"] },
         { id: 8, bloque: "BUQUE", tecnicos: ["PÉREZ"], radios: [""], tablets: ["2"] }
       ];
+      localStorage.setItem("registros_bloques", JSON.stringify(defaultData));
+      return defaultData;
     }
 
     function renderTableBloques() {
@@ -572,7 +577,7 @@
           if (index === 0) {
             html += `<td rowspan="${rowCount}" class="actions-cell" style="vertical-align: middle;">
                       <button class="btn-action btn-edit" onclick="cargarEdicionBloques(${group.id})">✏️</button>
-                      <button class="btn-action btn-delete" onclick="deleteEntryBloques(${group.id})">✕</button>
+                      <button class="btn-action btn-delete" onclick="deleteEntryBloques(${group.id})">🗑️</button>
                     </td>`;
           }
           row.innerHTML = html;
@@ -596,7 +601,6 @@
       document.getElementById("btnSubmitBloques").innerText = "Guardar Cambios";
       document.getElementById("btnCancelBloques").style.display = "inline-block";
 
-      // SCROLL CORREGIDO Y ENFOQUE
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => {
         inputBloque.focus();
@@ -622,7 +626,7 @@
 
     function limpiarBloques() {
       if (confirm("¿Borrar todos los bloques?")) {
-        localStorage.removeItem("registros_bloques");
+        localStorage.setItem("registros_bloques", JSON.stringify([]));
         cancelarEdicionBloques();
         renderTableBloques();
       }
@@ -697,13 +701,18 @@
 
     function getStoredReefer() {
       const data = localStorage.getItem("reefer_team_data");
-      return data ? JSON.parse(data) : [
+      if (data !== null) {
+        return JSON.parse(data);
+      }
+      const defaultData = [
         { id: 1, personal: "DPW Ec", pedido: 7, asistieron: 7, observaciones: "" },
         { id: 2, personal: "Perú (12 hrs)", pedido: 2, asistieron: 2, observaciones: "" },
         { id: 3, personal: "Personal Coestibas", pedido: 5, asistieron: 5, observaciones: "" },
         { id: 4, personal: "Gate", pedido: 2, asistieron: 2, observaciones: "" },
         { id: 5, personal: "Proyecto", pedido: 2, asistieron: 2, observaciones: "" }
       ];
+      localStorage.setItem("reefer_team_data", JSON.stringify(defaultData));
+      return defaultData;
     }
 
     function generateTableHTMLReefer(isCaptureMode = false) {
@@ -742,7 +751,7 @@
           ${!isCaptureMode ? `
             <td class="actions-cell">
               <button class="btn-action btn-edit" onclick="cargarEdicionReefer(${item.id})">✏️</button>
-              <button class="btn-action btn-delete" onclick="deleteEntryReefer(${item.id})">✕</button>
+              <button class="btn-action btn-delete" onclick="deleteEntryReefer(${item.id})">🗑️</button>
             </td>
           ` : ''}
         </tr>`;
@@ -778,7 +787,6 @@
       document.getElementById("btnSubmitReefer").innerText = "Guardar Cambios";
       document.getElementById("btnCancelReefer").style.display = "inline-block";
 
-      // SCROLL CORREGIDO Y ENFOQUE
       window.scrollTo({ top: 0, behavior: 'smooth' });
       setTimeout(() => {
         inputPersonal.focus();
@@ -804,7 +812,7 @@
 
     function limpiarReefer() {
       if (confirm("¿Borrar todos los datos de equipo?")) {
-        localStorage.removeItem("reefer_team_data");
+        localStorage.setItem("reefer_team_data", JSON.stringify([]));
         cancelarEdicionReefer();
         renderReefer();
       }
