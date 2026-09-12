@@ -270,7 +270,7 @@
     }
 
     .highlight-pink {
-      background-color: #fce4d6;
+      background-color: #fce4d6 !important;
     }
 
     .actions-cell { width: 45px; }
@@ -286,7 +286,7 @@
     .btn-edit { color: #0056b3; }
     .btn-delete { color: red; }
 
-    /* MODO REPORTE PANTALLA COMPLETA REAL (CENTRADO) */
+    /* MODO REPORTE PANTALLA COMPLETA REAL */
     .fullscreen-report {
       display: none;
       position: fixed;
@@ -297,14 +297,18 @@
       background: #ffffff;
       z-index: 99999;
       overflow-y: auto;
-      padding: 15px;
+      padding: 10px;
       box-sizing: border-box;
       touch-action: manipulation;
-      
-      /* Alineación centrada horizontal y vertical */
+    }
+
+    /* ESTILOS ESPECÍFICOS PARA CENTRAR Y AJUSTAR EL REPORTE MODO CAPTURA */
+    .fullscreen-report.flex-center {
+      display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: flex-start;
+      padding-top: 15px;
     }
 
     .fullscreen-hint {
@@ -313,13 +317,26 @@
       color: #666;
       margin-bottom: 8px;
       font-style: italic;
-      width: 100%;
     }
 
-    /* Ancho controlado para centrar el reporte adecuadamente */
-    #captureTargetBloques, #captureTargetReefer {
+    /* Ancho compacto ajustado tipo la 2da imagen */
+    #captureTargetBloques {
+      background: white;
+      padding: 2px;
+      width: 260px; /* Ancho compacto de la tabla */
+      margin: 0 auto;
+    }
+
+    #captureTargetBloques .custom-table th, 
+    #captureTargetBloques .custom-table td {
+      padding: 4px 2px;
+    }
+
+    #captureTargetReefer {
+      background: white;
+      padding: 5px;
       width: 100%;
-      max-width: 800px;
+      max-width: 450px;
       margin: 0 auto;
     }
   </style>
@@ -466,16 +483,16 @@
     </div>
   </div>
 
-  <!-- VISTAS DE CAPTURA EN PANTALLA COMPLETA (SIN IFRAMES) -->
+  <!-- VISTAS DE CAPTURA EN PANTALLA COMPLETA -->
   <div class="fullscreen-report" id="fullscreenReportBloques" ondblclick="cerrarReportes()">
     <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
-    <div id="captureTargetBloques" style="background: white; padding: 5px;">
+    <div id="captureTargetBloques">
       <table class="custom-table">
         <thead>
           <tr>
-            <th style="width: 45%;">BLOQUES</th>
+            <th style="width: 42%;">BLOQUES</th>
             <th style="width: 30%;">RADIO</th>
-            <th style="width: 25%;">TABBLE</th>
+            <th style="width: 28%;">TABBLE</th>
           </tr>
         </thead>
         <tbody id="captureReportBodyBloques"></tbody>
@@ -485,7 +502,7 @@
 
   <div class="fullscreen-report" id="fullscreenReportReefer" ondblclick="cerrarReportes()">
     <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
-    <div id="captureTargetReefer" style="background: white; padding: 5px;">
+    <div id="captureTargetReefer">
       <div id="tableCaptureContainerReefer"></div>
     </div>
   </div>
@@ -549,14 +566,14 @@
         return JSON.parse(data);
       }
       const defaultData = [
-        { id: 1, bloque: "1D", tecnicos: ["TOCTO", "TORRES"], radios: ["4250"], tablets: ["3", "2"] },
-        { id: 2, bloque: "1E", tecnicos: ["CHONILLO", "PÉREZ"], radios: ["Lp", "4329"], tablets: ["4", "5"] },
-        { id: 3, bloque: "1F", tecnicos: ["DAMIÁN", "VERA"], radios: ["3456", "2340"], tablets: ["6", "7"] },
-        { id: 4, bloque: "1G", tecnicos: ["SÁNCHEZ", "PINEDA"], radios: ["4250"], tablets: ["23", "45"] },
-        { id: 5, bloque: "1H", tecnicos: ["VIRIUS", "TERRY"], radios: ["2390", "3450"], tablets: ["34", "67"] },
-        { id: 6, bloque: "1I", tecnicos: ["TERRY", "TOREWS"], radios: ["3260", "5634"], tablets: ["12", "11"] },
-        { id: 7, bloque: "AFOROS", tecnicos: ["PATIMO"], radios: ["3212"], tablets: ["78"] },
-        { id: 8, bloque: "BUQUE", tecnicos: ["PÉREZ"], radios: [""], tablets: ["2"] }
+        { id: 1, bloque: "1D", tecnicos: ["TOMALA", "CHONILLO"], radios: ["4012"], tablets: ["5", "6"] },
+        { id: 2, bloque: "1E", tecnicos: ["SOLANO", "MESA"], radios: ["4029"], tablets: ["9", "7"] },
+        { id: 3, bloque: "1F", tecnicos: ["TOCTO", "TORRES"], radios: ["4028", "1018"], tablets: ["1", "11"] },
+        { id: 4, bloque: "1G", tecnicos: ["TARIFEÑO", "PAREDES"], radios: ["LP"], tablets: ["13", "8"] },
+        { id: 5, bloque: "1H", tecnicos: ["PACHAY", "TENORIO"], radios: ["4025"], tablets: ["10", "4"] },
+        { id: 6, bloque: "1I", tecnicos: ["MINA", "SANCHEZ"], radios: ["4078"], tablets: ["12", "3"] },
+        { id: 7, bloque: "AFOROS", tecnicos: ["FAJARDO"], radios: ["4071"], tablets: [""] },
+        { id: 8, bloque: "BUQ", tecnicos: ["CEDEÑO", "GERRERO", "PIBAQUE"], radios: ["4015"], tablets: ["", "", ""] }
       ];
       localStorage.setItem("registros_bloques", JSON.stringify(defaultData));
       return defaultData;
@@ -577,7 +594,12 @@
 
         group.tecnicos.forEach((tecnico, index) => {
           const row = document.createElement("tr");
-          let html = `<td class="tech-name">${tecnico}</td>`;
+
+          // Resaltado de técnicos específicos si aplica
+          const isPink = (tecnico.toUpperCase().includes("CEDEÑO") || tecnico.toUpperCase().includes("GERRERO"));
+          const pinkClass = isPink ? 'class="highlight-pink"' : '';
+
+          let html = `<td ${pinkClass}>${tecnico}</td>`;
 
           if (hasMultipleRadios) {
             html += `<td>${group.radios[index] || ""}</td>`;
@@ -660,7 +682,12 @@
 
         group.tecnicos.forEach((tecnico, index) => {
           const row = document.createElement("tr");
-          let html = `<td class="tech-name">${tecnico}</td>`;
+
+          // Resaltar en rosado si coincide con la muestra
+          const isPink = (tecnico.toUpperCase().includes("CEDEÑO") || tecnico.toUpperCase().includes("GERRERO"));
+          const pinkClass = isPink ? 'class="highlight-pink"' : '';
+
+          let html = `<td ${pinkClass}>${tecnico}</td>`;
 
           if (hasMultipleRadios) {
             html += `<td>${group.radios[index] || ""}</td>`;
@@ -677,7 +704,9 @@
 
     function mostrarReporteCapturaBloques() {
       buildCleanBloques();
-      document.getElementById("fullscreenReportBloques").style.display = "flex";
+      const report = document.getElementById("fullscreenReportBloques");
+      report.classList.add("flex-center");
+      report.style.display = "flex";
     }
 
     function descargarImagenBloques() {
@@ -833,7 +862,9 @@
 
     function mostrarReporteCapturaReefer() {
       document.getElementById("tableCaptureContainerReefer").innerHTML = generateTableHTMLReefer(true);
-      document.getElementById("fullscreenReportReefer").style.display = "flex";
+      const report = document.getElementById("fullscreenReportReefer");
+      report.classList.add("flex-center");
+      report.style.display = "flex";
     }
 
     function descargarImagenReefer() {
@@ -843,13 +874,18 @@
 
     // CERRAR MODALES / DESCARGAS
     function cerrarReportes() {
-      document.getElementById("fullscreenReportBloques").style.display = "none";
-      document.getElementById("fullscreenReportReefer").style.display = "none";
+      const reportBloques = document.getElementById("fullscreenReportBloques");
+      const reportReefer = document.getElementById("fullscreenReportReefer");
+      reportBloques.style.display = "none";
+      reportBloques.classList.remove("flex-center");
+      reportReefer.style.display = "none";
+      reportReefer.classList.remove("flex-center");
     }
 
     function descargarCanvas(target, parentModal, fileName) {
       const wasHidden = parentModal.style.display === "none" || parentModal.style.display === "";
       if (wasHidden) {
+        parentModal.classList.add("flex-center");
         parentModal.style.display = "flex";
         parentModal.style.opacity = "0";
       }
@@ -862,6 +898,7 @@
 
         if (wasHidden) {
           parentModal.style.display = "none";
+          parentModal.classList.remove("flex-center");
           parentModal.style.opacity = "1";
         }
       });
