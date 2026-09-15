@@ -193,7 +193,6 @@ function fecha(s){
   return s ? new Date(s.replace(/ /g, "T")) : null;
 }
 
-// CAMBIO APLICADO: Configuración explícita hour12: false para formato 24h
 function fmt(s){
   if(!s) return "—";
   const d=fecha(s);
@@ -206,13 +205,29 @@ function horasTexto(ms){
   const m=Math.floor((ms%3600000)/60000);
   return `${h}h ${m}m`;
 }
+
 function estado(n){
-  if(n.atd) return "ZARPÓ";
-  if(n.ata) return "TRABAJANDO";
-  const etb=fecha(n.etb);
-  if(etb && etb < new Date()) return "ATRASADA";
+  const st = (n.status || "").toUpperCase().trim();
+  const ahora = new Date();
+  const etb = fecha(n.etb);
+  const etd = fecha(n.etd);
+
+  // 1. Zarparon
+  if(n.atd || st === "DEPARTED" || st === "ZARPÓ") return "ZARPÓ";
+
+  // 2. En operación (Trabajando): si tiene ATA, si su status es IN OPERATION / TRABAJANDO
+  // o si la fecha/hora actual se encuentra entre su llegada (ETB) y salida (ETD)
+  if(n.ata || st === "IN OPERATION" || st === "TRABAJANDO" || (etb && etd && ahora >= etb && ahora <= etd)){
+    return "TRABAJANDO";
+  }
+
+  // 3. Atrasadas
+  if(etb && etb < ahora) return "ATRASADA";
+
+  // 4. Por arribar
   return "POR ARRIBAR";
 }
+
 function claseEstado(e){
   return e==="ZARPÓ"?"status-zarpo":e==="TRABAJANDO"?"status-trabajo":e==="ATRASADA"?"status-atrasada":"status-arribo";
 }
@@ -257,14 +272,17 @@ function filaArribo(item,i){
     <td>${badge(e)}</td><td>${n.origen}</td><td>${n.destino}</td><td>${n.servicio}</td>
   </tr>`;
 }
+
 function filaTrabajo(item,i){
   const {nave: n, est: e}=item;
+  const fechaInicio = fecha(n.ata) || fecha(n.etb) || new Date();
   return `<tr class="${claseFila(n,e,"ata")}">
     <td>${i+1}</td><td class="nave">${n.nave} <span class="marcador-dia marcador-operacion">EN OPERACIÓN</span></td><td>${n.viaje}</td><td>${n.linea}</td>
     <td>${fmt(n.etb)}</td><td>${fmt(n.ata)}</td><td>${fmt(n.etd)}</td>
-    <td>${horasTexto(new Date()-fecha(n.ata))}</td><td>${badge("TRABAJANDO")}</td><td>${n.servicio}</td>
+    <td>${horasTexto(new Date()-fechaInicio)}</td><td>${badge("TRABAJANDO")}</td><td>${n.servicio}</td>
   </tr>`;
 }
+
 function filaAtrasada(item,i){
   const {nave: n, est: e}=item, demora=new Date()-fecha(n.etb);
   return `<tr class="${claseFila(n,e,"etb")}">
@@ -273,6 +291,7 @@ function filaAtrasada(item,i){
     <td>${badge("ATRASADA")}</td><td>${n.servicio}</td>
   </tr>`;
 }
+
 function filaZarpe(item,i){
   const {nave: n, est: e}=item;
   return `<tr class="${claseFila(n,e,"atd")}">
@@ -315,7 +334,6 @@ function cargarDatos(){
   document.getElementById("tablaZarpes").innerHTML=zarpes.length
     ? zarpes.map(filaZarpe).join("") : `<tr><td colspan="10" class="empty">No hay zarpes registrados.</td></tr>`;
 
-  // CAMBIO APLICADO: Última actualización en formato 24h
   document.getElementById("actualizado").textContent=new Date().toLocaleString("es-EC", {hour12: false});
 }
 
