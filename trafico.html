@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control de Naves - Posorja</title>
+<title>Control de Naves - DP World Posorja</title>
 <style>
 :root{
   --bg:#f3f6f9; --card:#fff; --text:#1f2937; --muted:#64748b;
@@ -153,41 +153,26 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
   </div>
 
   <footer>
-    Datos cargados localmente. Para actualizar la información, modifica el arreglo <b>NAVES</b> dentro de este archivo.
-    Última actualización del resumen: <span id="actualizado"></span>
+    Conectado dinámicamente a la base de datos de operaciones.
+    Última actualización del resumen: <span id="actualizado">--:--:--</span>
   </footer>
 </div>
 
 <script>
-const NAVES = [
-  {nave:"HLC2026090 - ODYSSEUS", viaje:"639N", linea:"HLC", etb:"2026-09-22 01:00:00", etd:"2026-09-22 15:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MSW"},
-  {nave:"HLC2026085 - VALPARAISO EXPRESS", viaje:"6234S", linea:"HLC", etb:"2026-09-21 17:30:00", etd:"2026-09-22 07:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"COBUN", destino:"COBUN", servicio:"SWX_SB"},
-  {nave:"MAE2026113 - AS PALINA", viaje:"637S", linea:"MAE", etb:"2026-09-20 15:00:00", etd:"2026-09-21 22:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PABLB", destino:"PABLB", servicio:"MX_WCSA"},
-  {nave:"MAE2026108 - LARS MAERSK", viaje:"634W", linea:"MAE", etb:"2026-09-19 23:00:00", etd:"2026-09-21 05:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"ECPBO", destino:"ECPBO", servicio:"ECUMED"},
-  {nave:"CMA2026107 - CMA CGM GALAPAGOS", viaje:"1MHTNW1MA", linea:"CMA", etb:"2026-09-18 22:00:00", etd:"2026-09-20 06:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PECLL", destino:"PECLL", servicio:"ACSA"},
-  {nave:"HLC2026083 - CALLAO EXPRESS", viaje:"6231N", linea:"HLC", etb:"2026-09-17 18:00:00", etd:"2026-09-18 18:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PECLL", destino:"PECLL", servicio:"SWX_NB"},
-  {nave:"CMA2026104 - CMA CGM BOLDNESS", viaje:"0DVQFN1MA", linea:"CMA", etb:"2026-09-17 07:00:00", etd:"2026-09-17 18:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MEDCAR"},
-  {nave:"MAE2026111 - MAERSK EMDEN", viaje:"637W", linea:"MAE", etb:"2026-09-15 20:00:00", etd:"2026-09-17 06:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PABLB", destino:"PABLB", servicio:"AC2"},
-  {nave:"HLC2026084 - CAPE SKAGEN", viaje:"638N", linea:"HLC", etb:"2026-09-15 16:00:00", etd:"2026-09-16 00:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MSW"},
-  {nave:"CMA2026106 - CMA CGM ESTELLE", viaje:"0WCOPS1MA", linea:"CMA", etb:"2026-09-15 02:00:00", etd:"2026-09-15 16:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"COCTG", destino:"COCTG", servicio:"SWX_SB"},
-  {nave:"MAE2026110 - AS STINE", viaje:"637S", linea:"MAE", etb:"2026-09-14 04:00:00", etd:"2026-09-14 21:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PABLB", destino:"PABLB", servicio:"FE-MAE"},
-  {nave:"MAE2026106 - MAERSK FINISTERRE", viaje:"632W", linea:"MAE", etb:"2026-09-13 03:00:00", etd:"2026-09-14 08:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"ECPBO", destino:"ECPBO", servicio:"ECUMED"},
-  {nave:"CMA2026103 - CMA CGM GREENLAND", viaje:"1MHTLW1MA", linea:"CMA", etb:"2026-09-11 17:00:00", etd:"2026-09-13 06:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PECLL", destino:"PECLL", servicio:"ACSA"},
-  {nave:"CMA2026101 - CMA CGM JACQUES JOSEPH", viaje:"0WCOKN1MA", linea:"CMA", etb:"2026-09-10 17:00:00", etd:"2026-09-11 15:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PECLL", destino:"PECLL", servicio:"SWX_NB"},
-  {nave:"CMA2026102 - CMA CGM FORT BOURBON", viaje:"0DVQDN1MA", linea:"CMA", etb:"2026-09-10 05:00:00", etd:"2026-09-10 18:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MEDCAR"},
-  {nave:"HLC2026088 - CAUCEDO EXPRESS", viaje:"637N", linea:"HLC", etb:"2026-09-10 05:00:00", etd:"2026-09-10 14:00:00", ata:"", atd:"", status:"TO ARRIVE", origen:"PEPAI", destino:"PEPAI", servicio:"MSW"},
-  {nave:"HMM2026007 - HMM IVY", viaje:"0005W", linea:"HMM", etb:"2026-09-08 01:00:00", etd:"2026-09-08 14:00:00", ata:"2026-09-08 01:30:00", atd:"2026-09-08 14:42:00", status:"DEPARTED", origen:"PECLL", destino:"PECLL", servicio:"AX4"},
-  {nave:"COS2026007 - COSCO SHIPPING SEINE", viaje:"047S", linea:"COS", etb:"2026-09-07 17:00:00", etd:"2026-09-08 07:00:00", ata:"2026-09-07 16:20:00", atd:"2026-09-08 06:48:00", status:"DEPARTED", origen:"COBUN", destino:"COBUN", servicio:"SWX_SB"},
-  {nave:"MAE2026105 - AS STINE", viaje:"636S", linea:"MAE", etb:"2026-09-07 00:00:00", etd:"2026-09-07 18:00:00", ata:"2026-09-07 01:47:00", atd:"2026-09-07 19:36:00", status:"DEPARTED", origen:"PABLB", destino:"PABLB", servicio:"FE-MAE"},
-  {nave:"MAE2026104 - LOUIS MAERSK", viaje:"631W", linea:"MAE", etb:"2026-09-05 20:00:00", etd:"2026-09-06 21:30:00", ata:"2026-09-05 19:44:00", atd:"2026-09-06 21:25:00", status:"DEPARTED", origen:"ECPBO", destino:"ECPBO", servicio:"ECUMED"},
-  {nave:"CMA2026099 - CMA CGM NEVADA", viaje:"1MHTHW1MA", linea:"CMA", etb:"2026-09-04 23:00:00", etd:"2026-09-06 13:30:00", ata:"2026-09-04 22:15:00", atd:"2026-09-06 13:24:00", status:"DEPARTED", origen:"PECLL", destino:"PECLL", servicio:"ACSA"},
-  {nave:"MAE2026109 - SPIL CAYA", viaje:"631E", linea:"MAE", etb:"2026-09-04 07:00:00", etd:"2026-09-05 12:00:00", ata:"2026-09-04 07:24:00", atd:"2026-09-05 13:12:00", status:"DEPARTED", origen:"COBUN", destino:"COBUN", servicio:"AC1"},
-  {nave:"HLC2026081 - GUAYAQUIL EXPRESS", viaje:"6229N", linea:"HLC", etb:"2026-09-03 18:30:00", etd:"2026-09-04 21:00:00", ata:"2026-09-03 18:48:00", atd:"2026-09-04 20:40:00", status:"DEPARTED", origen:"PECLL", destino:"PECLL", servicio:"SWX_NB"},
-  {nave:"CMA2026100 - CMA CGM EXEMPLARITY", viaje:"0DVQBN1MA", linea:"CMA", etb:"2026-09-03 06:00:00", etd:"2026-09-03 16:00:00", ata:"2026-09-03 06:05:00", atd:"2026-09-03 15:58:00", status:"DEPARTED", origen:"PEPAI", destino:"PEPAI", servicio:"MEDCAR"},
-  {nave:"HMM2026006 - HYUNDAI BRAVE", viaje:"0119W", linea:"HMM", etb:"2026-09-02 00:00:00", etd:"2026-09-02 16:00:00", ata:"2026-09-01 23:30:00", atd:"2026-09-02 16:42:00", status:"DEPARTED", origen:"PECLL", destino:"PECLL", servicio:"AX4"},
-  {nave:"HLC2026080 - CAPE SCOTT", viaje:"636N", linea:"HLC", etb:"2026-09-01 20:30:00", etd:"2026-09-02 03:03:00", ata:"2026-09-01 20:18:00", atd:"2026-09-02 03:50:00", status:"DEPARTED", origen:"PEPAI", destino:"PEPAI", servicio:"MSW"},
-  {nave:"HLC2026079 - CALLAO EXPRESS", viaje:"6231S", linea:"HLC", etb:"2026-08-31 20:30:00", etd:"2026-09-01 22:00:00", ata:"2026-08-31 20:30:00", atd:"2026-09-01 22:06:00", status:"DEPARTED", origen:"COBUN", destino:"COBUN", servicio:"SWX_SB"}
-];
+// URL de la API/Base de Datos
+const API_URL = "https://www.dpworldposorja.com.ec/itinerarios.php"; 
+
+let NAVES = [];
+
+async function obtenerDatos() {
+  try {
+    const res = await fetch(API_URL);
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    NAVES = await res.json();
+  } catch (err) {
+    console.error("Error al obtener los datos de la BD:", err);
+  }
+}
 
 function fecha(s){
   return s ? new Date(s.replace(/ /g, "T")) : null;
@@ -212,19 +197,11 @@ function estado(n){
   const etb = fecha(n.etb);
   const etd = fecha(n.etd);
 
-  // 1. Zarparon
   if(n.atd || st === "DEPARTED" || st === "ZARPÓ") return "ZARPÓ";
-
-  // 2. En operación (Trabajando): si tiene ATA, si su status es IN OPERATION / TRABAJANDO
-  // o si la fecha/hora actual se encuentra entre su llegada (ETB) y salida (ETD)
   if(n.ata || st === "IN OPERATION" || st === "TRABAJANDO" || (etb && etd && ahora >= etb && ahora <= etd)){
     return "TRABAJANDO";
   }
-
-  // 3. Atrasadas
   if(etb && etb < ahora) return "ATRASADA";
-
-  // 4. Por arribar
   return "POR ARRIBAR";
 }
 
@@ -269,7 +246,7 @@ function filaArribo(item,i){
   return `<tr class="${claseFila(n,e,"etb")}">
     <td>${i+1}</td><td class="nave">${n.nave} ${marcadorDia(n)}</td><td>${n.viaje}</td><td>${n.linea}</td>
     <td>${fmt(n.etb)}</td><td>${fmt(n.etd)}</td><td class="countdown">${cuenta}</td>
-    <td>${badge(e)}</td><td>${n.origen}</td><td>${n.destino}</td><td>${n.servicio}</td>
+    <td>${badge(e)}</td><td>${n.origen || '—'}</td><td>${n.destino || '—'}</td><td>${n.servicio || '—'}</td>
   </tr>`;
 }
 
@@ -279,7 +256,7 @@ function filaTrabajo(item,i){
   return `<tr class="${claseFila(n,e,"ata")}">
     <td>${i+1}</td><td class="nave">${n.nave} <span class="marcador-dia marcador-operacion">EN OPERACIÓN</span></td><td>${n.viaje}</td><td>${n.linea}</td>
     <td>${fmt(n.etb)}</td><td>${fmt(n.ata)}</td><td>${fmt(n.etd)}</td>
-    <td>${horasTexto(new Date()-fechaInicio)}</td><td>${badge("TRABAJANDO")}</td><td>${n.servicio}</td>
+    <td>${horasTexto(new Date()-fechaInicio)}</td><td>${badge("TRABAJANDO")}</td><td>${n.servicio || '—'}</td>
   </tr>`;
 }
 
@@ -288,7 +265,7 @@ function filaAtrasada(item,i){
   return `<tr class="${claseFila(n,e,"etb")}">
     <td>${i+1}</td><td class="nave">${n.nave} ${marcadorDia(n)}</td><td>${n.viaje}</td><td>${n.linea}</td>
     <td>${fmt(n.etb)}</td><td>${fmt(n.etd)}</td><td>${horasTexto(demora)}</td>
-    <td>${badge("ATRASADA")}</td><td>${n.servicio}</td>
+    <td>${badge("ATRASADA")}</td><td>${n.servicio || '—'}</td>
   </tr>`;
 }
 
@@ -297,11 +274,13 @@ function filaZarpe(item,i){
   return `<tr class="${claseFila(n,e,"atd")}">
     <td>${i+1}</td><td class="nave">${n.nave}</td><td>${n.viaje}</td><td>${n.linea}</td>
     <td>${fmt(n.etb)}</td><td>${fmt(n.etd)}</td><td>${fmt(n.ata)}</td><td>${fmt(n.atd)}</td>
-    <td>${badge("ZARPÓ")}</td><td>${n.servicio}</td>
+    <td>${badge("ZARPÓ")}</td><td>${n.servicio || '—'}</td>
   </tr>`;
 }
 
-function cargarDatos(){
+async function cargarDatos(){
+  await obtenerDatos();
+
   const q=document.getElementById("buscar").value.toLowerCase().trim();
   const f=document.getElementById("filtro").value;
 
