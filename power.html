@@ -395,7 +395,7 @@ return html;
 }
 
 /* =========================================================
-   COPIAR HTML
+   COPIAR HTML (CORREGIDO)
 ========================================================= */
 async function copiarHTML(html,texto){
 try{
@@ -412,6 +412,7 @@ return true;
 console.error("Error copiando HTML:",error);
 return false;
 }
+} // <--- Faltaba esta llave de cierre que rompía todo el script
 
 /* =========================================================
    GENERAR CORREO
