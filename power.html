@@ -335,7 +335,7 @@ return texto
 .split(/[;\n,]+/)
 .map(c=>c.trim())
 .filter(c=>c!=="")
-.join(",");
+.join(";");
 }
 
 function guardarCorreos(){
@@ -395,27 +395,7 @@ return html;
 }
 
 /* =========================================================
-   COPIAR HTML (CORREGIDO)
-========================================================= */
-async function copiarHTML(html,texto){
-try{
-if(!navigator.clipboard||!window.ClipboardItem)return false;
-
-const contenido=new ClipboardItem({
-"text/html":new Blob([html],{type:"text/html"}),
-"text/plain":new Blob([texto],{type:"text/plain"})
-});
-
-await navigator.clipboard.write([contenido]);
-return true;
-}catch(error){
-console.error("Error copiando HTML:",error);
-return false;
-}
-} // <--- Faltaba esta llave de cierre que rompía todo el script
-
-/* =========================================================
-   GENERAR CORREO
+   GENERAR CORREO (CON PORTAPAPELES ESTABLE Y FIRMA COMPATIBLE)
 ========================================================= */
 async function enviarCorreoOutlook(){
 const porAbastecer=inventario.filter(item=>
@@ -443,50 +423,43 @@ const saludo=obtenerSaludo();
 const asunto="ABASTECIMIENTO DE POWER PACK";
 const tabla=construirTablaCorreo(porAbastecer);
 
-const texto=`
-${saludo}
-
-Su ayuda abasteciendo los siguientes PPks.
-
-${porAbastecer.map(x=>x.nombre+" | "+x.ubicacion+" | "+x.nivel+" | POR ABASTECER").join("\n")}
-
-Kind Regards,`;
+const textoPlano=`${saludo}\n\nSu ayuda abasteciendo los siguientes PPks.\n\n`+
+porAbastecer.map(x=>x.nombre+" | "+x.ubicacion+" | "+x.nivel+" | POR ABASTECER").join("\n")+
+`\n\nKind Regards,`;
 
 const htmlCorreo=`
 <div style="font-family:Arial,sans-serif;font-size:14px">
 <p>${saludo}</p>
 <p>Su ayuda abasteciendo los siguientes PPks.</p>
 ${tabla}
-<p>Kind Regards,</p>
 </div>`;
 
-const copiado=await copiarHTML(htmlCorreo,texto);
-
-if(!copiado){
-alert("No se pudo copiar la tabla HTML al portapapeles. Puede continuar abriendo Outlook, pero la tabla deberá pegarse manualmente.");
+try{
+if(navigator.clipboard && window.ClipboardItem){
+const blobHtml = new Blob([htmlCorreo], { type: "text/html" });
+const blobText = new Blob([textoPlano], { type: "text/plain" });
+await navigator.clipboard.write([new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText })]);
+}
+}catch(e){
+console.error("No se pudo copiar automáticamente al portapapeles:", e);
 }
 
+// Abrir Outlook mediante mailto pasando solo destinatarios y asunto
 let parametros=[];
 parametros.push("subject="+encodeURIComponent(asunto));
-parametros.push("body="+encodeURIComponent(saludo+"\n\nSu ayuda abasteciendo los siguientes PPks.\n\n"));
-
 if(cc)parametros.push("cc="+encodeURIComponent(cc));
 
 const mailto="mailto:"+encodeURIComponent(para)+"?"+parametros.join("&");
-
 window.location.href=mailto;
 
 setTimeout(()=>{
 alert(
-"Correo preparado.\n\n"+
-"Destinatarios: "+para+
-(cc?"\nCC: "+cc:"")+
-"\n\n"+
-"Se copiaron los PPk que están POR ABASTECER.\n\n"+
-"En Outlook coloque el cursor después del texto 'Su ayuda abasteciendo los siguientes PPks.' y presione CTRL + V para pegar la tabla.\n\n"+
-"Tu firma configurada en Outlook se mantiene."
-);
-},1000);
+"📧 CORREO PREPARADO:\n\n" +
+"1. Se abrió Outlook con los destinatarios y el asunto.\n" +
+"2. La tabla con los PPk ya está copiada en tu memoria.\n\n" +
+"👉 Solo haz clic en el cuerpo del mensaje y presiona CTRL + V para pegar la tabla con su diseño exacto.\n\n" +
+"*(Tu firma configurada en Outlook aparecerá intacta abajo).*");
+}, 600);
 }
 
 /* =========================================================
