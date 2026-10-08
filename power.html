@@ -1,339 +1,358 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario y Abastecimiento de Power Packs</title>
-    <style>
-        :root {
-            --primary-color: #004080;
-            --secondary-color: #0066cc;
-            --accent-color: #ffcc00;
-            --danger-color: #cc0000;
-            --success-color: #008000;
-            --bg-color: #f4f6f9;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            margin: 0;
-            padding: 20px;
-            color: #333;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-
-        h2 {
-            color: var(--primary-color);
-            border-bottom: 2px solid var(--secondary-color);
-            padding-bottom: 10px;
-            margin-top: 0;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-            background: #eef2f7;
-            padding: 15px;
-            border-radius: 6px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-            color: #444;
-        }
-
-        input, select {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-size: 0.95rem;
-        }
-
-        .btn-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.95rem;
-            transition: background 0.2s;
-        }
-
-        .btn-primary { background-color: var(--secondary-color); color: white; }
-        .btn-primary:hover { background-color: var(--primary-color); }
-
-        .btn-outlook { background-color: #0078d4; color: white; }
-        .btn-outlook:hover { background-color: #005a9e; }
-
-        .btn-danger { background-color: #e74c3c; color: white; }
-        .btn-danger:hover { background-color: #c0392b; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-            font-size: 0.95rem;
-        }
-
-        th {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        .badge-abastecer {
-            background-color: var(--accent-color);
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .badge-ok {
-            background-color: #d4edda;
-            color: var(--success-color);
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .badge-fuera {
-            background-color: #f8d7da;
-            color: var(--danger-color);
-            font-weight: bold;
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        .actions-cell button {
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            margin: 2px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Inventario y Abastecimiento de Power Packs</title>
+<style>
+:root{--primary:#004080;--secondary:#0066cc;--accent:#ffcc00;--danger:#cc0000;--success:#008000;--bg:#f4f6f9}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:var(--bg);margin:0;padding:20px;color:#333}
+.container{max-width:1200px;margin:auto;background:#fff;padding:25px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+h2{color:var(--primary);border-bottom:2px solid var(--secondary);padding-bottom:10px;margin-top:0}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px;background:#eef2f7;padding:15px;border-radius:6px}
+.form-group{display:flex;flex-direction:column}
+label{font-weight:600;margin-bottom:5px;font-size:.9rem;color:#444}
+input,select{padding:8px;border:1px solid #ccc;border-radius:4px;font-size:.95rem}
+input:disabled{background:#e9ecef;color:#777}
+.btn-container{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+button{padding:10px 18px;border:0;border-radius:4px;cursor:pointer;font-weight:bold;font-size:.95rem}
+.btn-primary{background:var(--secondary);color:#fff}.btn-primary:hover{background:var(--primary)}
+.btn-outlook{background:#0078d4;color:#fff}.btn-outlook:hover{background:#005a9e}
+.btn-danger{background:#e74c3c;color:#fff}.btn-danger:hover{background:#c0392b}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #ddd;padding:10px;text-align:center;font-size:.95rem}
+th{background:var(--primary);color:#fff}
+tr:nth-child(even){background:#f9f9f9}
+.badge-abastecer{background:#ffcc00;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px}
+.badge-ok{background:#d4edda;color:var(--success);font-weight:bold;padding:4px 8px;border-radius:4px}
+.badge-fuera{background:#f8d7da;color:var(--danger);font-weight:bold;padding:4px 8px;border-radius:4px}
+.actions-cell button{padding:5px 10px;font-size:.8rem;margin:2px}
+.nota{font-size:.85rem;color:#666;margin-top:5px}
+</style>
 </head>
 <body>
-
 <div class="container">
-    <h2>Inventario y Control de Power Packs (PPk)</h2>
-    
-    <div class="form-grid">
-        <input type="hidden" id="editIndex" value="-1">
-        <div class="form-group">
-            <label for="ppkNombre">Nombre / Código PPk:</label>
-            <input type="text" id="ppkNombre" placeholder="Ej: 13 VERDE o #14 VERDE">
-        </div>
-        <div class="form-group">
-            <label for="ppkUbicacion">Ubicación / Bloque:</label>
-            <input type="text" id="ppkUbicacion" placeholder="Ej: CC, 1K10, 1Y">
-        </div>
-        <div class="form-group">
-            <label for="ppkNivelVal">Nivel Combustible:</label>
-            <input type="text" id="ppkNivelVal" placeholder="Ej: 50% o 130GLS">
-        </div>
-        <div class="form-group">
-            <label for="ppkEstado">Estado Operativo:</label>
-            <select id="ppkEstado">
-                <option value="OPERATIVO">Operativo</option>
-                <option value="FUERA DE SERVICIO">Fuera de Servicio</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="btn-container">
-        <button class="btn-primary" onclick="guardarPPk()">Guardar / Actualizar PPk</button>
-        <button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Enviar Correo de Abastecimiento (Outlook)</button>
-        <button class="btn-danger" onclick="limpiarFormulario()">Limpiar Formulario</button>
-    </div>
-
-    <h3>Listado General de Power Packs</h3>
-    <table>
-        <thead>
-            <tr>
-                <th>PPk</th>
-                <th>UBICACIÓN</th>
-                <th>NIVEL</th>
-                <th>ESTADO</th>
-                <th>NOVEDAD</th>
-                <th>ACCIONES</th>
-            </tr>
-        <thead id="tablaInventario">
-        </thead>
-    </table>
+<h2>Inventario y Control de Power Packs (PPk)</h2>
+<div class="form-grid">
+<input type="hidden" id="editIndex" value="-1">
+<div class="form-group">
+<label for="ppkNombre">Nombre / Código PPk:</label>
+<input type="text" id="ppkNombre" placeholder="Ej: #14 VERDE">
+</div>
+<div class="form-group">
+<label for="ppkUbicacion">Ubicación / Bloque:</label>
+<input type="text" id="ppkUbicacion" placeholder="Ej: 1K10">
+</div>
+<div class="form-group">
+<label for="ppkNivelVal">Nivel Combustible:</label>
+<input type="text" id="ppkNivelVal" placeholder="Ej: 50% o 130 GLS">
+</div>
+<div class="form-group">
+<label for="ppkEstado">Estado Operativo:</label>
+<select id="ppkEstado" onchange="actualizarCampoNovedad()">
+<option value="OPERATIVO">Operativo</option>
+<option value="FUERA DE SERVICIO">Fuera de Servicio</option>
+</select>
+</div>
+<div class="form-group">
+<label for="ppkNovedad">Novedad manual:</label>
+<input type="text" id="ppkNovedad" placeholder="Ej: Falla eléctrica / Mantenimiento" disabled>
+<div class="nota">Solo aplica cuando está fuera de servicio.</div>
+</div>
+</div>
+<div class="btn-container">
+<button class="btn-primary" onclick="guardarPPk()">Guardar / Actualizar PPk</button>
+<button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Generar Correo de Abastecimiento</button>
+<button class="btn-danger" onclick="limpiarFormulario()">Limpiar Formulario</button>
+</div>
+<h3>Listado General de Power Packs</h3>
+<table>
+<thead><tr><th>PPk</th><th>UBICACIÓN</th><th>NIVEL</th><th>ESTADO</th><th>NOVEDAD</th><th>ACCIONES</th></tr></thead>
+<tbody id="tablaInventario"></tbody>
+</table>
 </div>
 
 <script>
-    // Cargar datos almacenados o inicializar con ejemplos
-    let inventario = JSON.parse(localStorage.getItem('inventario_ppk')) || [
-        { nombre: "13 VERDE", ubicacion: "CC", nivel: "50%", estado: "OPERATIVO" },
-        { nombre: "#14 VERDE", ubicacion: "1K10", nivel: "10%", estado: "OPERATIVO" },
-        { nombre: "#02 VERDE", ubicacion: "1Y", nivel: "130GLS", estado: "OPERATIVO" },
-        { nombre: "#06 VERDE", ubicacion: "1X", nivel: "30%", estado: "OPERATIVO" }
-    ];
+/* =========================================================
+   DESTINATARIOS DE LA CAPTURA
+   La imagen muestra nombres, pero no direcciones de email.
+   Cuando tengas los emails reales, colócalos aquí.
+========================================================= */
 
-    function calcularNovedad(nivelStr) {
-        let limpio = nivelStr.trim().toUpperCase();
-        if (limpio.endsWith('%')) {
-            let num = parseInt(limpio.replace('%', ''));
-            if (!isNaN(num) && num <= 30) return "ABASTECER";
-        } else if (limpio.endsWith('GLS')) {
-            let num = parseInt(limpio.replace('GLS', ''));
-            // Criterio configurable de galones bajos, ej: menor o igual a 150 GLS
-            if (!isNaN(num) && num <= 150) return "ABASTECER";
-        }
-        return "OPERATIVO";
-    }
+const CORREOS_PARA=[
+/* "correo_maria@empresa.com",
+"correo_luis@empresa.com",
+"correo_christopher@empresa.com",
+"correo_cristian@empresa.com",
+"correo_damian@empresa.com",
+"correo_hector@empresa.com",
+"correo_ivan@empresa.com",
+"correo_jack@empresa.com",
+"correo_jose@empresa.com",
+"correo_marilyn@empresa.com",
+"correo_carlos@empresa.com",
+"correo_daniel@empresa.com",
+"correo_henry@empresa.com",
+"correo_jorge@empresa.com",
+"correo_martin@empresa.com",
+"correo_guillermo@empresa.com" */
+];
 
-    function renderizarTabla() {
-        const tbody = document.getElementById('tablaInventario');
-        tbody.innerHTML = '';
+const CORREOS_CC=[
+/* "correo_guillermo_ponce@empresa.com",
+"correo_jefferson@empresa.com",
+"correo_juan@empresa.com",
+"correo_luis@empresa.com",
+"correo_maria@empresa.com",
+"correo_wellington@empresa.com",
+"correo_katherine@empresa.com" */
+];
 
-        inventario.forEach((item, index) => {
-            let novedad = calcularNovedad(item.nivel);
-            let badgeNovedad = novedad === "ABASTECER" 
-                ? `<span class="badge-abastecer">ABASTECER</span>` 
-                : `<span class="badge-ok">OK</span>`;
-            
-            let badgeEstado = item.estado === "FUERA DE SERVICIO"
-                ? `<span class="badge-fuera">FUERA DE SERVICIO</span>`
-                : `<span class="badge-ok">OPERATIVO</span>`;
+/* =========================================================
+   INVENTARIO
+========================================================= */
 
-            let tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${item.nombre}</strong></td>
-                <td>${item.ubicacion}</td>
-                <td>${item.nivel}</td>
-                <td>${badgeEstado}</td>
-                <td>${badgeNovedad}</td>
-                <td class="actions-cell">
-                    <button class="btn-primary" onclick="editarPPk(${index})">Editar</button>
-                    <button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+let inventario=JSON.parse(localStorage.getItem('inventario_ppk'))||[
+{nombre:"13 VERDE",ubicacion:"CC",nivel:"50%",estado:"OPERATIVO",novedadManual:""},
+{nombre:"#14 VERDE",ubicacion:"1K10",nivel:"10%",estado:"OPERATIVO",novedadManual:""},
+{nombre:"#02 VERDE",ubicacion:"1Y",nivel:"130 GLS",estado:"OPERATIVO",novedadManual:""},
+{nombre:"#06 VERDE",ubicacion:"1X",nivel:"30%",estado:"OPERATIVO",novedadManual:""}
+];
 
-        localStorage.setItem('inventario_ppk', JSON.stringify(inventario));
-    }
+/* =========================================================
+   CALCULAR NOVEDAD
+========================================================= */
 
-    function guardarPPk() {
-        const index = document.getElementById('editIndex').value;
-        const nombre = document.getElementById('ppkNombre').value.trim();
-        const ubicacion = document.getElementById('ppkUbicacion').value.trim();
-        const nivel = document.getElementById('ppkNivelVal').value.trim();
-        const estado = document.getElementById('ppkEstado').value;
+function calcularNovedad(item){
+if(item.estado==="FUERA DE SERVICIO")return item.novedadManual||"NOVEDAD NO ESPECIFICADA";
+const limpio=String(item.nivel).trim().toUpperCase();
+if(limpio.endsWith("%")){
+const num=parseFloat(limpio.replace("%","").trim());
+if(!isNaN(num)&&num<=30)return"POR ABASTECER";
+}
+if(limpio.endsWith("GLS")){
+const num=parseFloat(limpio.replace("GLS","").trim());
+if(!isNaN(num)&&num<=150)return"POR ABASTECER";
+}
+return"OK";
+}
 
-        if (!nombre || !ubicacion || !nivel) {
-            alert("Por favor complete todos los campos obligatorios.");
-            return;
-        }
+/* =========================================================
+   ACTUALIZAR CAMPO NOVEDAD MANUAL
+========================================================= */
 
-        const nuevoItem = { nombre, ubicacion, nivel, estado };
+function actualizarCampoNovedad(){
+const estado=document.getElementById("ppkEstado").value;
+const campo=document.getElementById("ppkNovedad");
+if(estado==="FUERA DE SERVICIO"){
+campo.disabled=false;
+campo.required=true;
+}else{
+campo.disabled=true;
+campo.required=false;
+campo.value="";
+}
+}
 
-        if (index === "-1") {
-            inventario.push(nuevoItem);
-        } else {
-            inventario[index] = nuevoItem;
-            document.getElementById('editIndex').value = "-1";
-        }
+/* =========================================================
+   RENDERIZAR TABLA
+========================================================= */
 
-        limpiarFormulario();
-        renderizarTabla();
-    }
+function renderizarTabla(){
+const tbody=document.getElementById("tablaInventario");
+tbody.innerHTML="";
+inventario.forEach((item,index)=>{
+const novedad=calcularNovedad(item);
+let badgeNovedad="";
+if(novedad==="OK")badgeNovedad='<span class="badge-ok">OK</span>';
+else if(novedad==="POR ABASTECER")badgeNovedad='<span class="badge-abastecer">POR ABASTECER</span>';
+else badgeNovedad='<span class="badge-fuera">'+escapeHTML(novedad)+'</span>';
+const badgeEstado=item.estado==="FUERA DE SERVICIO"?'<span class="badge-fuera">FUERA DE SERVICIO</span>':'<span class="badge-ok">OPERATIVO</span>';
+const tr=document.createElement("tr");
+tr.innerHTML=`<td><strong>${escapeHTML(item.nombre)}</strong></td><td>${escapeHTML(item.ubicacion)}</td><td>${escapeHTML(item.nivel)}</td><td>${badgeEstado}</td><td>${badgeNovedad}</td><td class="actions-cell"><button class="btn-primary" onclick="editarPPk(${index})">Editar</button><button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button></td>`;
+tbody.appendChild(tr);
+});
+localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
+}
 
-    function editarPPk(index) {
-        const item = inventario[index];
-        document.getElementById('ppkNombre').value = item.nombre;
-        document.getElementById('ppkUbicacion').value = item.ubicacion;
-        document.getElementById('ppkNivelVal').value = item.nivel;
-        document.getElementById('ppkEstado').value = item.estado;
-        document.getElementById('editIndex').value = index;
-    }
+/* =========================================================
+   GUARDAR
+========================================================= */
 
-    function eliminarPPk(index) {
-        if (confirm("¿Está seguro de eliminar este Power Pack del inventario?")) {
-            inventario.splice(index, 1);
-            renderizarTabla();
-        }
-    }
+function guardarPPk(){
+const index=document.getElementById("editIndex").value;
+const nombre=document.getElementById("ppkNombre").value.trim();
+const ubicacion=document.getElementById("ppkUbicacion").value.trim();
+const nivel=document.getElementById("ppkNivelVal").value.trim();
+const estado=document.getElementById("ppkEstado").value;
+const novedadManual=document.getElementById("ppkNovedad").value.trim();
+if(!nombre||!ubicacion||!nivel){
+alert("Por favor complete PPk, ubicación y nivel.");
+return;
+}
+if(estado==="FUERA DE SERVICIO"&&!novedadManual){
+alert("Cuando el Power Pack está fuera de servicio debe ingresar la novedad manual.");
+document.getElementById("ppkNovedad").focus();
+return;
+}
+const nuevoItem={nombre,ubicacion,nivel,estado,novedadManual};
+if(index==="-1")inventario.push(nuevoItem);
+else inventario[parseInt(index)]=nuevoItem;
+limpiarFormulario();
+renderizarTabla();
+}
 
-    function limpiarFormulario() {
-        document.getElementById('ppkNombre').value = '';
-        document.getElementById('ppkUbicacion').value = '';
-        document.getElementById('ppkNivelVal').value = '';
-        document.getElementById('ppkEstado').value = 'OPERATIVO';
-        document.getElementById('editIndex').value = '-1';
-    }
+/* =========================================================
+   EDITAR
+========================================================= */
 
-    function enviarCorreoOutlook() {
-        // Filtrar aquellos que requieren abastecer y están operativos
-        const porAbastecer = inventario.filter(item => calcularNovedad(item.nivel) === "ABASTECER" && item.estado === "OPERATIVO");
+function editarPPk(index){
+const item=inventario[index];
+document.getElementById("ppkNombre").value=item.nombre;
+document.getElementById("ppkUbicacion").value=item.ubicacion;
+document.getElementById("ppkNivelVal").value=item.nivel;
+document.getElementById("ppkEstado").value=item.estado;
+document.getElementById("ppkNovedad").value=item.novedadManual||"";
+document.getElementById("editIndex").value=index;
+actualizarCampoNovedad();
+}
 
-        if (porAbastecer.length === 0) {
-            alert("No hay Power Packs operativos que requieran abastecimiento en este momento.");
-            return;
-        }
+/* =========================================================
+   ELIMINAR
+========================================================= */
 
-        // Construir el cuerpo del correo en HTML limpio compatible con Outlook
-        let cuerpoHTML = `Estimados buenos días,%0D%0A%0D%0ASu ayuda abasteciendo los siguientes PPks:%0D%0A%0D%0A`;
-        cuerpoHTML += `%3Ctable border='1' style='border-collapse:collapse; text-align:center;'%3E`;
-        cuerpoHTML += `%3Ctr style='background-color:#004080; color:white;'%3E%3Cth%3EPPk%3C/th%3E%3Cth%3EUBICACION%3C/th%3E%3CNIVEL%3C/th%3E%3CNOVEDAD%3C/th%3E%3C/tr%3E`;
+function eliminarPPk(index){
+if(confirm("¿Está seguro de eliminar este Power Pack del inventario?")){
+inventario.splice(index,1);
+renderizarTabla();
+}
+}
 
-        porAbastecer.forEach(item => {
-            cuerpoHTML += `%3Ctr%3E`;
-            cuerpoHTML += `%3Ctd%3E${item.nombre}%3C/td%3E`;
-            cupyterHTML = cuerpoHTML + `%3Ctd%3E${item.ubicacion}%3C/td%3E`;
-            cuerpoHTML += `%3Ctd style='background-color:yellow;'%3E${item.nivel}%3C/td%3E`;
-            cuerpoHTML += `%3Ctd%3EABASTECER%3C/td%3E`;
-            cuerpoHTML += `%3C/tr%3E`;
-        });
+/* =========================================================
+   LIMPIAR
+========================================================= */
 
-        cuerpoHTML += `%3C/table%3E%0D%0A%0D%0AKind regards,`;
+function limpiarFormulario(){
+document.getElementById("ppkNombre").value="";
+document.getElementById("ppkUbicacion").value="";
+document.getElementById("ppkNivelVal").value="";
+document.getElementById("ppkEstado").value="OPERATIVO";
+document.getElementById("ppkNovedad").value="";
+document.getElementById("editIndex").value="-1";
+actualizarCampoNovedad();
+}
 
-        // Asunto y enlaces del mailto para abrir Outlook directamente
-        let asunto = encodeURIComponent("ABASTECIMIENTO DE POWER PACK");
-        let mailtoLink = `mailto:?subject=${asunto}&body=${cuerpoHTML}`;
+/* =========================================================
+   SALUDO
+========================================================= */
 
-        // Abrir cliente de correo (Outlook de Escritorio o Web configurado por defecto)
-        window.location.href = mailtoLink;
-    }
+function obtenerSaludo(){
+const hora=new Date().getHours();
+if(hora>=5&&hora<12)return"Estimados buenos días,";
+if(hora>=12&&hora<19)return"Estimados buenas tardes,";
+return"Estimados buenas noches,";
+}
 
-    // Inicializar la tabla al cargar la página
-    renderizarTabla();
+/* =========================================================
+   ESCAPAR HTML
+========================================================= */
+
+function escapeHTML(text){
+return String(text)
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+
+/* =========================================================
+   CONSTRUIR TABLA PARA OUTLOOK
+========================================================= */
+
+function construirTablaCorreo(lista){
+let html=`<table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:590px;font-family:Arial,Helvetica,sans-serif;font-size:12px;text-align:center"><thead><tr style="background-color:#002060;color:#ffffff;font-weight:bold"><th style="border:1px solid #000;padding:6px">PPk</th><th style="border:1px solid #000;padding:6px">UBICACION</th><th style="border:1px solid #000;padding:6px">NIVEL</th><th style="border:1px solid #000;padding:6px">NOVEDAD</th></tr></thead><tbody>`;
+lista.forEach(item=>{
+html+=`<tr><td style="border:1px solid #000;padding:5px;font-weight:bold">${escapeHTML(item.nombre)}</td><td style="border:1px solid #000;padding:5px">${escapeHTML(item.ubicacion)}</td><td style="border:1px solid #000;padding:5px;background-color:#ffff00;font-weight:bold">${escapeHTML(item.nivel)}</td><td style="border:1px solid #000;padding:5px">POR ABASTECER</td></tr>`;
+});
+html+="</tbody></table>";
+return html;
+}
+
+/* =========================================================
+   COPIAR HTML AL PORTAPAPELES
+========================================================= */
+
+async function copiarHTML(html,texto){
+try{
+const item=new ClipboardItem({
+"text/html":new Blob([html],{type:"text/html"}),
+"text/plain":new Blob([texto],{type:"text/plain"})
+});
+await navigator.clipboard.write([item]);
+return true;
+}catch(error){
+console.error(error);
+return false;
+}
+
+/* =========================================================
+   GENERAR CORREO
+========================================================= */
+
+async function enviarCorreoOutlook(){
+
+/* Solo OPERATIVOS que necesitan abastecimiento */
+const porAbastecer=inventario.filter(item=>item.estado==="OPERATIVO"&&calcularNovedad(item)==="POR ABASTECER");
+
+if(porAbastecer.length===0){
+alert("No existen Power Packs operativos por abastecer.");
+return;
+}
+
+const tablaHTML=construirTablaCorreo(porAbastecer);
+
+const textoPlano=obtenerSaludo()+"\n\nSu ayuda abasteciendo los siguientes PPks.\n\n";
+
+const copiado=await copiarHTML(tablaHTML,textoPlano);
+
+if(!copiado){
+alert("El navegador no permitió copiar la tabla HTML. Intente nuevamente.");
+return;
+}
+
+/* Destinatarios */
+const para=CORREOS_PARA.join(",");
+const cc=CORREOS_CC.join(",");
+
+/* Asunto */
+const asunto="ABASTECIMIENTO DE POWER PACK";
+
+/* Abrir Outlook */
+let mailto="mailto:";
+const parametros=[];
+
+if(para)parametros.push("to="+encodeURIComponent(para));
+if(cc)parametros.push("cc="+encodeURIComponent(cc));
+parametros.push("subject="+encodeURIComponent(asunto));
+parametros.push("body="+encodeURIComponent(obtenerSaludo()+"\n\nSu ayuda abasteciendo los siguientes PPks.\n\n"));
+
+mailto+="?"+parametros.join("&");
+
+window.location.href=mailto;
+
+/* Aviso */
+setTimeout(()=>{
+alert("Se generó el correo.\n\nLa tabla está copiada como HTML.\n\nEn Outlook coloque el cursor después de 'Su ayuda abasteciendo los siguientes PPks.' y presione CTRL + V.\n\nSu firma de Outlook permanecerá debajo.");
+},1200);
+}
+
+/* =========================================================
+   INICIO
+========================================================= */
+
+actualizarCampoNovedad();
+renderizarTabla();
 </script>
-
 </body>
 </html>
