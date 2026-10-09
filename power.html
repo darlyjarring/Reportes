@@ -15,17 +15,22 @@ h3{color:var(--primary);margin-bottom:10px}
 .form-group{display:flex;flex-direction:column}
 label{font-weight:600;margin-bottom:5px;font-size:.9rem}
 input,select,textarea{padding:9px;border:1px solid #ccc;border-radius:4px;font-size:.95rem;font-family:inherit}
-textarea{min-height:90px;resize:vertical}
+textarea{min-height:80px;resize:vertical}
 input:disabled{background:#e9ecef}
-.email-section{background:#eef2f7;padding:15px;border-radius:6px;margin:15px 0}
+
+/* Sección de correos desplegable */
+.email-container{margin:15px 0}
+.email-panel{background:#eef2f7;padding:15px;border-radius:6px;margin-top:10px;display:none;border-left:4px solid var(--secondary)}
 .email-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 .email-help{font-size:.82rem;color:#666;margin-top:5px}
+
 .btn-container{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
 button{padding:10px 18px;border:0;border-radius:4px;cursor:pointer;font-weight:bold;font-size:.92rem}
 .btn-primary{background:var(--secondary);color:#fff}.btn-primary:hover{background:var(--primary)}
 .btn-outlook{background:#0078d4;color:#fff}.btn-outlook:hover{background:#005a9e}
 .btn-danger{background:#dc3545;color:#fff}.btn-danger:hover{background:#b02a37}
-.btn-secondary{background:#6c757d;color:#fff}
+.btn-secondary{background:#6c757d;color:#fff}.btn-secondary:hover{background:#5c636a}
+
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid #ccc;padding:9px;text-align:center;font-size:.9rem}
 th{background:var(--primary);color:#fff}
@@ -35,6 +40,12 @@ tr:nth-child(even){background:#f8f8f8}
 .badge-fuera{background:#f8d7da;color:#b02a37;font-weight:bold;padding:4px 8px;border-radius:4px}
 .actions-cell button{padding:5px 9px;font-size:.78rem;margin:2px}
 .info{background:#e8f1ff;border-left:4px solid #0066cc;padding:10px;margin-bottom:15px;font-size:.9rem}
+
+/* Celdas editables al hacer clic */
+.editable-cell{cursor:pointer;position:relative}
+.editable-cell:hover{background-color:#fff3cd}
+.editable-cell input{width:100%;padding:4px;font-size:0.9rem;text-align:center;border:2px solid var(--secondary);border-radius:3px}
+
 @media(max-width:700px){.email-grid{grid-template-columns:1fr}.container{padding:15px}body{padding:8px}table{font-size:.8rem}}
 </style>
 </head>
@@ -44,12 +55,12 @@ tr:nth-child(even){background:#f8f8f8}
 <h2>Inventario y Control de Power Packs (PPk)</h2>
 
 <div class="info">
-<strong>Instrucciones:</strong> Registra tus equipos, indica su estado y marca la casilla <strong>"Para Abastecer"</strong> de los equipos que deseas incluir en el reporte de correo.
+<strong>💡 Tips de uso:</strong> 
+<br>• Haz <strong>clic en cualquier celda</strong> de la tabla (Nombre, Ubicación o Nivel) para editarla directamente y presiona <i>Enter</i> para guardar.
+<br>• Si escribes el nombre de un PPk nuevo al agregar, se creará automáticamente.
 </div>
 
 <div class="form-grid">
-<input type="hidden" id="editIndex" value="-1">
-
 <div class="form-group">
 <label>Nombre / Código PPk:</label>
 <input type="text" id="ppkNombre" placeholder="Ej: #14 VERDE">
@@ -75,38 +86,40 @@ tr:nth-child(even){background:#f8f8f8}
 
 <div class="form-group">
 <label>Novedad manual:</label>
-<input type="text" id="ppkNovedad" placeholder="Ej: Falla eléctrica">
+<input type="text" id="ppkNovedad" placeholder="Solo si está fuera de servicio" disabled>
 </div>
 </div>
 
 <div class="btn-container">
-<button class="btn-primary" onclick="guardarPPk()">Guardar / Actualizar PPk</button>
-<button class="btn-secondary" onclick="nuevoPPk()">Nuevo PPk</button>
-<button class="btn-danger" onclick="limpiarFormulario()">Limpiar</button>
+<button class="btn-primary" onclick="guardarPPkRapido()">➕ Agregar / Actualizar Power Pack</button>
+<button class="btn-danger" onclick="limpiarFormulario()">Limpiar Formulario</button>
 </div>
 
-<div class="email-section">
-<h3>Configuración del correo</h3>
+<!-- SECCIÓN DE CORREOS DESPLEGABLE -->
+<div class="email-container">
+<button class="btn-secondary" onclick="togglePanelCorreos()">⚙️ Configurar Destinatarios (Para / CC)</button>
+<div id="panelCorreos" class="email-panel">
+<h3>Correos Guardados</h3>
 <div class="email-grid">
 <div class="form-group">
 <label>Para:</label>
-<textarea id="correosPara" placeholder="Ingrese un correo por línea o separados por ;"></textarea>
-<div class="email-help">Puede colocar varios destinatarios.</div>
+<textarea id="correosPara" placeholder="Ingrese correos separados por punto y coma (;)"></textarea>
+<div class="email-help">Destinatarios principales del reporte.</div>
 </div>
 <div class="form-group">
 <label>CC:</label>
-<textarea id="correosCC" placeholder="Ingrese un correo por línea o separados por ;"></textarea>
-<div class="email-help">Puede colocar varios destinatarios.</div>
+<textarea id="correosCC" placeholder="Ingrese correos separados por punto y coma (;)"></textarea>
+<div class="email-help">Copia del reporte.</div>
 </div>
 </div>
-<div class="btn-container">
-<button class="btn-primary" onclick="guardarCorreos()">💾 Guardar correos</button>
-<button class="btn-secondary" onclick="cargarCorreos()">↻ Recuperar correos guardados</button>
+<div class="btn-container" style="margin-top:10px">
+<button class="btn-primary" onclick="guardarCorreos()">💾 Guardar Correos</button>
+</div>
 </div>
 </div>
 
 <div class="btn-container">
-<button class="btn-secondary" onclick="marcarSugeridosAbastecer()">⚡ Marcar sugeridos (<=30% o <=150 GLS)</button>
+<button class="btn-secondary" onclick="marcarSugeridosAbastecer()">⚡ Marcar sugeridos (&lt;=30% o &lt;=150 GLS)</button>
 <button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Generar correo de abastecimiento</button>
 </div>
 
@@ -129,7 +142,7 @@ tr:nth-child(even){background:#f8f8f8}
 
 <script>
 /* =========================================================
-   INVENTARIO INICIAL DEL SISTEMA
+   INVENTARIO INICIAL
 ========================================================= */
 const inventarioInicial=[
 {nombre:"13 VERDE",ubicacion:"CC",nivel:"50%",estado:"OPERATIVO",novedadManual:"", abastecer:false},
@@ -139,32 +152,49 @@ const inventarioInicial=[
 ];
 
 let inventario=JSON.parse(localStorage.getItem("inventario_ppk"));
-
 if(!Array.isArray(inventario)){
 inventario=inventarioInicial;
 localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
 }
 
 /* =========================================================
-   CAMPO NOVEDAD MANUAL
+   PANEL DE CORREOS DESPLEGABLE
+========================================================= */
+function togglePanelCorreos(){
+const panel = document.getElementById("panelCorreos");
+panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
+
+function guardarCorreos(){
+const para=document.getElementById("correosPara").value.trim();
+const cc=document.getElementById("correosCC").value.trim();
+localStorage.setItem("ppk_correos_para",para);
+localStorage.setItem("ppk_correos_cc",cc);
+alert("Destinatarios guardados correctamente.");
+togglePanelCorreos();
+}
+
+function cargarCorreos(){
+document.getElementById("correosPara").value=localStorage.getItem("ppk_correos_para")||"";
+document.getElementById("correosCC").value=localStorage.getItem("ppk_correos_cc")||"";
+}
+
+/* =========================================================
+   NOVEDAD MANUAL
 ========================================================= */
 function actualizarNovedadManual(){
 const estado=document.getElementById("ppkEstado").value;
 const campo=document.getElementById("ppkNovedad");
-
 if(estado==="FUERA DE SERVICIO"){
 campo.disabled=false;
-campo.placeholder="Ej: Falla eléctrica / Mantenimiento / Daño";
+campo.placeholder="Ej: Falla eléctrica / Mantenimiento";
 }else{
 campo.disabled=true;
 campo.value="";
-campo.placeholder="Solo aplica fuera de servicio";
+campo.placeholder="Solo si está fuera de servicio";
 }
 }
 
-/* =========================================================
-   ESCAPAR HTML
-========================================================= */
 function escapeHTML(text){
 return String(text)
 .replace(/&/g,"&amp;")
@@ -174,17 +204,11 @@ return String(text)
 .replace(/'/g,"&#039;");
 }
 
-/* =========================================================
-   ACTUALIZAR SELECCIÓN MANUAL DE ABASTECIMIENTO
-========================================================= */
 function cambiarCheckAbastecer(index, checkbox){
 inventario[index].abastecer = checkbox.checked;
 localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
 }
 
-/* =========================================================
-   SUGERENCIA RÁPIDA (OPCIONAL)
-========================================================= */
 function marcarSugeridosAbastecer(){
 inventario.forEach(item=>{
 if(item.estado==="OPERATIVO"){
@@ -204,7 +228,7 @@ renderizarTabla();
 }
 
 /* =========================================================
-   MOSTRAR INVENTARIO
+   RENDERIZAR TABLA CON EDICIÓN EN LÍNEA (CLIC EN CELDA)
 ========================================================= */
 function renderizarTabla(){
 const tbody=document.getElementById("tablaInventario");
@@ -225,20 +249,19 @@ badgeNovedad='<span class="badge-fuera">'+escapeHTML(novedadTexto)+'</span>';
 }
 
 const badgeEstado=item.estado==="FUERA DE SERVICIO"
-?'<span class="badge-fuera">FUERA DE SERVICIO</span>'
-:'<span class="badge-ok">OPERATIVO</span>';
+?'<span class="badge-fuera" onclick="cambiarEstadoLinea('+index+')" title="Clic para cambiar estado" style="cursor:pointer">FUERA DE SERVICIO</span>'
+:'<span class="badge-ok" onclick="cambiarEstadoLinea('+index+')" title="Clic para cambiar estado" style="cursor:pointer">OPERATIVO</span>';
 
 const fila=document.createElement("tr");
 
 fila.innerHTML=`
 <td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
-<td><strong>${escapeHTML(item.nombre)}</strong></td>
-<td>${escapeHTML(item.ubicacion)}</td>
-<td>${escapeHTML(item.nivel)}</td>
+<td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')"><strong>${escapeHTML(item.nombre)}</strong></td>
+<td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
+<td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')">${escapeHTML(item.nivel)}</td>
 <td>${badgeEstado}</td>
 <td>${badgeNovedad}</td>
 <td class="actions-cell">
-<button class="btn-primary" onclick="editarPPk(${index})">Editar</button>
 <button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button>
 </td>`;
 
@@ -249,10 +272,50 @@ localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
 }
 
 /* =========================================================
-   GUARDAR / AGREGAR PPk
+   EDICIÓN DIRECTA AL HACER CLIC EN LA CELDA
 ========================================================= */
-function guardarPPk(){
-const index=document.getElementById("editIndex").value;
+function editarCelda(celda, index, propiedad){
+if(celda.querySelector("input")) return; // Ya está editando
+
+const valorActual = inventario[index][propiedad];
+celda.innerHTML = `<input type="text" value="${escapeHTML(valorActual)}" autofocus>`;
+const input = celda.querySelector("input");
+
+input.onblur = function(){
+guardarCambioCelda(index, propiedad, input.value);
+};
+
+input.onkeydown = function(e){
+if(e.key === "Enter"){
+guardarCambioCelda(index, propiedad, input.value);
+}
+};
+}
+
+function guardarCambioCelda(index, propiedad, nuevoValor){
+const val = nuevoValor.trim();
+if(val !== ""){
+inventario[index][propiedad] = val;
+}
+renderizarTabla();
+}
+
+function cambiarEstadoLinea(index){
+if(inventario[index].estado === "OPERATIVO"){
+inventario[index].estado = "FUERA DE SERVICIO";
+let nov = prompt("Ingrese la novedad o motivo de fuera de servicio:", "Falla mecánica");
+inventario[index].novedadManual = nov ? nov : "Sin novedad especificada";
+} else {
+inventario[index].estado = "OPERATIVO";
+inventario[index].novedadManual = "";
+}
+renderizarTabla();
+}
+
+/* =========================================================
+   AGREGAR / ACTUALIZAR (UPSERT INTELIGENTE)
+========================================================= */
+function guardarPPkRapido(){
 const nombre=document.getElementById("ppkNombre").value.trim();
 const ubicacion=document.getElementById("ppkUbicacion").value.trim();
 const nivel=document.getElementById("ppkNivelVal").value.trim();
@@ -260,126 +323,71 @@ const estado=document.getElementById("ppkEstado").value;
 const novedadManual=document.getElementById("ppkNovedad").value.trim();
 
 if(!nombre||!ubicacion||!nivel){
-alert("Complete PPk, ubicación y nivel de combustible.");
+alert("Por favor complete Nombre, Ubicación y Nivel.");
 return;
 }
 
 if(estado==="FUERA DE SERVICIO"&&!novedadManual){
-alert("Si está fuera de servicio debe ingresar la novedad manual.");
+alert("Indique la novedad manual para equipos fuera de servicio.");
 document.getElementById("ppkNovedad").focus();
 return;
 }
 
-const nuevo={
-nombre:nombre,
-ubicacion:ubicacion,
-nivel:nivel,
-estado:estado,
-novedadManual:estado==="FUERA DE SERVICIO"?novedadManual:"",
-abastecer: index==="-1"? false : inventario[parseInt(index)].abastecer
-};
+// Buscar si ya existe para actualizarlo o crearlo nuevo (Upsert)
+const indexExistente = inventario.findIndex(item => item.nombre.toUpperCase() === nombre.toUpperCase());
 
-if(index==="-1"){
-inventario.push(nuevo);
+if(indexExistente !== -1){
+inventario[indexExistente].ubicacion = ubicacion;
+inventario[indexExistente].nivel = nivel;
+inventario[indexExistente].estado = estado;
+inventario[indexExistente].novedadManual = estado==="FUERA DE SERVICIO" ? novedadManual : "";
+alert("Power Pack actualizado correctamente en la lista.");
+} else {
+inventario.push({
+nombre: nombre,
+ubicacion: ubicacion,
+nivel: nivel,
+estado: estado,
+novedadManual: estado==="FUERA DE SERVICIO" ? novedadManual : "",
+abastecer: false
+});
 alert("Power Pack agregado correctamente.");
-}else{
-inventario[parseInt(index)]=nuevo;
-alert("Power Pack actualizado correctamente.");
 }
 
 limpiarFormulario();
 renderizarTabla();
 }
 
-/* =========================================================
-   NUEVO PPk
-========================================================= */
-function nuevoPPk(){
-limpiarFormulario();
-document.getElementById("ppkNombre").focus();
-}
-
-/* =========================================================
-   EDITAR
-========================================================= */
-function editarPPk(index){
-const item=inventario[index];
-
-document.getElementById("ppkNombre").value=item.nombre;
-document.getElementById("ppkUbicacion").value=item.ubicacion;
-document.getElementById("ppkNivelVal").value=item.nivel;
-document.getElementById("ppkEstado").value=item.estado;
-document.getElementById("ppkNovedad").value=item.novedadManual||"";
-document.getElementById("editIndex").value=index;
-
-actualizarNovedadManual();
-
-window.scrollTo({top:0,behavior:"smooth"});
-}
-
-/* =========================================================
-   ELIMINAR
-========================================================= */
 function eliminarPPk(index){
-if(confirm("¿Desea eliminar el PPk "+inventario[index].nombre+" del inventario?")){
+if(confirm("¿Desea eliminar el PPk "+inventario[index].nombre+"?")){
 inventario.splice(index,1);
 renderizarTabla();
 }
 }
 
-/* =========================================================
-   LIMPIAR
-========================================================= */
 function limpiarFormulario(){
 document.getElementById("ppkNombre").value="";
 document.getElementById("ppkUbicacion").value="";
 document.getElementById("ppkNivelVal").value="";
 document.getElementById("ppkEstado").value="OPERATIVO";
 document.getElementById("ppkNovedad").value="";
-document.getElementById("editIndex").value="-1";
 actualizarNovedadManual();
 }
 
 /* =========================================================
-   CORREOS
+   CORREO OUTLOOK
 ========================================================= */
 function limpiarListaCorreos(texto){
-return texto
-.split(/[;\n,]+/)
-.map(c=>c.trim())
-.filter(c=>c!=="")
-.join(";");
+return texto.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="").join(";");
 }
 
-function guardarCorreos(){
-const para=document.getElementById("correosPara").value.trim();
-const cc=document.getElementById("correosCC").value.trim();
-
-localStorage.setItem("ppk_correos_para",para);
-localStorage.setItem("ppk_correos_cc",cc);
-
-alert("Los correos de Para y CC fueron guardados correctamente.");
-}
-
-function cargarCorreos(){
-document.getElementById("correosPara").value=localStorage.getItem("ppk_correos_para")||"";
-document.getElementById("correosCC").value=localStorage.getItem("ppk_correos_cc")||"";
-}
-
-/* =========================================================
-   SALUDO
-========================================================= */
 function obtenerSaludo(){
 const hora=new Date().getHours();
-
 if(hora>=5&&hora<12)return"Estimados buenos días,";
 if(hora>=12&&hora<19)return"Estimados buenas tardes,";
 return"Estimados buenas noches,";
 }
 
-/* =========================================================
-   TABLA DEL CORREO
-========================================================= */
 function construirTablaCorreo(lista){
 let html=`
 <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:590px;font-family:Arial,sans-serif;font-size:12px;text-align:center">
@@ -402,14 +410,10 @@ html+=`
 <td style="border:1px solid #000;padding:5px">POR ABASTECER</td>
 </tr>`;
 });
-
 html+=`</tbody></table>`;
 return html;
 }
 
-/* =========================================================
-   GENERAR CORREO
-========================================================= */
 async function enviarCorreoOutlook(){
 const seleccionados = inventario.filter(item => item.abastecer === true);
 
@@ -422,12 +426,10 @@ const para=limpiarListaCorreos(document.getElementById("correosPara").value);
 const cc=limpiarListaCorreos(document.getElementById("correosCC").value);
 
 if(!para){
-alert("Ingrese al menos un correo en el campo PARA.");
+alert("Configure al menos un correo en el botón de destinatarios (PARA).");
 document.getElementById("correosPara").focus();
 return;
 }
-
-guardarCorreos();
 
 const saludo=obtenerSaludo();
 const asunto="ABASTECIMIENTO DE POWER PACK";
@@ -451,7 +453,7 @@ const blobText = new Blob([textoPlano], { type: "text/plain" });
 await navigator.clipboard.write([new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText })]);
 }
 }catch(e){
-console.error("No se pudo copiar automáticamente al portapapeles:", e);
+console.error("Error al copiar portapapeles:", e);
 }
 
 let parametros=[];
@@ -464,10 +466,10 @@ window.location.href=mailto;
 setTimeout(()=>{
 alert(
 "📧 CORREO PREPARADO:\n\n" +
-"1. Se abrió Outlook con los destinatarios y el asunto.\n" +
-"2. La tabla con los PPk seleccionados ya está copiada.\n\n" +
-"👉 Haz clic en el cuerpo de tu mensaje de Outlook y presiona CTRL + V para pegar la tabla.\n\n" +
-"*(Tu firma configurada en Outlook se mantendrá intacta).*");
+"1. Se abrió Outlook con los destinatarios correctos.\n" +
+"2. La tabla de abastecimiento ya está copiada.\n\n" +
+"👉 Haz clic en el cuerpo de tu mensaje y presiona CTRL + V para pegar la tabla perfectamente.\n\n" +
+"*(Tu firma de Outlook se mantendrá intacta).*");
 }, 600);
 }
 
