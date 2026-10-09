@@ -118,7 +118,7 @@ function cambiarEstado(id){const item=inventario.find(x=>x.id===id);if(!item)ret
 function cargarEnFormulario(id){const x=inventario.find(a=>a.id===id);if(!x)return;editandoId=id;$("ppkNombre").value=x.nombre;$("ppkUbicacion").value=x.ubicacion;$("ppkNivelVal").value=x.nivel;$("ppkEstado").value=x.estado;$("ppkNovedad").value=x.novedadManual;actualizarNovedadManual();$("formTitle").textContent="Editar Power Pack";$("formMode").textContent="EDITANDO";$("btnGuardar").textContent="Guardar cambios";$("ppkNombre").focus();window.scrollTo({top:$("ppkForm").getBoundingClientRect().top+window.scrollY-20,behavior:"smooth"})}
 function limpiarFormulario(){editandoId=null;$("ppkForm").reset();$("ppkEstado").value="OPERATIVO";actualizarNovedadManual();$("sugerenciasPPk").style.display="none";$("estadoBusqueda").textContent="Si existe, selecciónalo para cargar sus datos; si no, completa el formulario.";$("formTitle").textContent="Registrar Power Pack";$("formMode").textContent="NUEVO REGISTRO";$("btnGuardar").textContent="＋ Guardar Power Pack"}
 function actualizarNovedadManual(){const fuera=$("ppkEstado").value==="FUERA DE SERVICIO";$("ppkNovedad").disabled=!fuera;$("ppkNovedad").required=fuera;$("ppkNovedad").placeholder=fuera?"Ej.: Falla eléctrica / Mantenimiento":"Solo si está fuera de servicio";if(!fuera)$("ppkNovedad").value=""}
-function guardarPPk(e){e.preventDefault();const nombre=$("ppkNombre").value.trim(),ubicacion=$("ppkUbicacion").value.trim(),nivel=$("ppkNivelVal").value.trim(),estado=$("ppkEstado").value,novedadManual=$("ppkNovedad").value.trim();if(!nombre||!ubicacion||!nivel){alert("Complete nombre, ubicación y nivel.");return}if(estado==="FUERA DE SERVICIO"&&!novedadManual){alert("Registre la novedad manual del equipo fuera de servicio.");$("ppkNovedad").focus();return}
+function guardarPPk(e){e.preventDefault();const nombre=$("ppkNombre").value.trim(),ubicacion=$("ppkUbicacion").value.trim(),nivel=$("ppkNivelVal").value.trim(),estado=$("ppkEstado").value,novedadManual=$("ppkNovedad").value.trim();if(!nombre\vert{}\vert{}!ubicacion\vert{}\vert{}!nivel){alert("Complete nombre, ubicación y nivel.");return}if(estado==="FUERA DE SERVICIO"&&!novedadManual){alert("Registre la novedad manual del equipo fuera de servicio.");$("ppkNovedad").focus();return}
  const duplicado=inventario.find(x=>normalizarBusqueda(x.nombre)===normalizarBusqueda(nombre)&&x.id!==editandoId);if(duplicado){editandoId=duplicado.id;notificar("Se actualizará el Power Pack existente, no se creará un duplicado.")}
  if(editandoId){const i=inventario.findIndex(x=>x.id===editandoId);if(i<0){notificar("No se encontró el registro que intentaba editar.");limpiarFormulario();return}const anterior=inventario[i];inventario[i]={...anterior,nombre,ubicacion,nivel,estado,novedadManual:estado==="FUERA DE SERVICIO"?novedadManual:"",abastecer:estado==="FUERA DE SERVICIO"?false:anterior.abastecer};notificar("Power Pack actualizado correctamente.")}
  else{inventario.push({id:nuevoId(),nombre,ubicacion,nivel,estado,novedadManual:estado==="FUERA DE SERVICIO"?novedadManual:"",abastecer:false});notificar("Power Pack agregado correctamente.")}
@@ -130,11 +130,35 @@ function marcarSugeridos(){inventario.forEach(x=>{if(x.estado!=="OPERATIVO"){x.a
 function limpiarListaCorreos(texto){return [...new Set(texto.split(/[;,\n]+/).map(x=>x.trim()).filter(Boolean))]}
 function validarCorreos(lista){const re=/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;return lista.filter(x=>!re.test(x))}
 function guardarCorreos(){const para=limpiarListaCorreos($("correosPara").value),cc=limpiarListaCorreos($("correosCC").value),malos=[...validarCorreos(para),...validarCorreos(cc)];if(malos.length){alert("Revisa estas direcciones de correo:\n"+malos.join("\n"));return}if(!para.length){alert("Ingresa al menos un destinatario en Para.");$("correosPara").focus();return}guardarCorreosSilencioso();$("panelCorreos").style.display="none";notificar("Destinatarios guardados correctamente.")}
-function cargarCorreos(){$("correosPara").value=localStorage.getItem(CLAVE_PARA)||"";$("correosCC").value=localStorage.getItem(CLAVE_CC)||""}
+function cargarCorreos(){$("correosPara").value=localStorage.getItem(CLAVE_PARA)\vert{}\vert{}"";$("correosCC").value=localStorage.getItem(CLAVE_CC)||""}
 function obtenerSaludo(){const h=new Date().getHours();return h>=5&&h<12?"Estimados, buenos días:":h>=12&&h<19?"Estimados, buenas tardes:":"Estimados, buenas noches:"}
-function tablaCorreo(lista){return `<table style="border-collapse:collapse;width:100%;max-width:760px;font-family:Arial,sans-serif;font-size:12px" border="1" cellpadding="0" cellspacing="0"><thead><tr style="background:#12345a;color:#fff"><th style="padding:9px;border:1px solid #9aaabd">PPk</th><th style="padding:9px;border:1px solid #9aaabd">UBICACIÓN</th><th style="padding:9px;border:1px solid #9aaabd">NIVEL</th><th style="padding:9px;border:1px solid #9aaabd">NOVEDAD</th></tr></thead><tbody>${lista.map(x=>`<tr><td style="padding:8px;border:1px solid #b8c4d2;font-weight:bold">${escapar(x.nombre)}</td><td style="padding:8px;border:1px solid #b8c4d2">${escapar(x.ubicacion)}</td><td style="padding:8px;border:1px solid #b8c4d2;background:#fff2a8;font-weight:bold">${escapar(x.nivel)}</td><td style="padding:8px;border:1px solid #b8c4d2">POR ABASTECER</td></tr>`).join("")}</tbody></table>`}
+
+/* =========================================================
+   ESTRUCTURA DE TABLA PROFESIONAL PARA CORREO (CON ESTILOS)
+========================================================= */
+function tablaCorreo(lista){
+return `
+<table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:590px;font-family:Arial,sans-serif;font-size:12px;text-align:center">
+<thead>
+<tr style="background:#002060;color:#fff;font-weight:bold">
+<th style="border:1px solid #000;padding:6px">PPk</th>
+<th style="border:1px solid #000;padding:6px">UBICACION</th>
+<th style="border:1px solid #000;padding:6px">NIVEL</th>
+<th style="border:1px solid #000;padding:6px">NOVEDAD</th>
+</tr>
+</thead>
+<tbody>`+
+lista.map(item=>`
+<tr>
+<td style="border:1px solid #000;padding:5px;font-weight:bold">${escapar(item.nombre)}</td>
+<td style="border:1px solid #000;padding:5px">${escapar(item.ubicacion)}</td>
+<td style="border:1px solid #000;padding:5px;background:#ffff00;font-weight:bold">${escapar(item.nivel)}</td>
+<td style="border:1px solid #000;padding:5px">POR ABASTECER</td>
+</tr>`).join("")+
+`</tbody></table>`;
+}
+
 async function copiarContenidoCorreo(html,texto){
-  // Método principal: copiar HTML enriquecido para pegar la tabla con Ctrl+V.
   try{
     if(navigator.clipboard && window.ClipboardItem){
       await navigator.clipboard.write([
@@ -146,48 +170,9 @@ async function copiarContenidoCorreo(html,texto){
       return true;
     }
   }catch(error){
-    console.warn("Clipboard API no disponible; se intentará el método alternativo.",error);
+    console.warn("Clipboard API no disponible",error);
   }
-  // Alternativa para páginas abiertas como archivo local o navegadores sin Clipboard API.
-  let auxiliar;
-  try{
-    auxiliar=document.createElement("div");
-    auxiliar.contentEditable="true";
-    auxiliar.style.position="fixed";
-    auxiliar.style.left="-10000px";
-    auxiliar.style.top="0";
-    auxiliar.style.width="800px";
-    auxiliar.innerHTML=html;
-    document.body.appendChild(auxiliar);
-    const rango=document.createRange();
-    rango.selectNodeContents(auxiliar);
-    const seleccion=window.getSelection();
-    seleccion.removeAllRanges();
-    seleccion.addRange(rango);
-    const correcto=document.execCommand("copy");
-    seleccion.removeAllRanges();
-    auxiliar.remove();
-    if(correcto)return true;
-  }catch(error){
-    console.warn("No se pudo copiar la tabla HTML.",error);
-    if(auxiliar)auxiliar.remove();
-  }
-  // Último respaldo: copiar texto plano si el navegador lo permite.
-  try{
-    const area=document.createElement("textarea");
-    area.value=texto;
-    area.style.position="fixed";
-    area.style.left="-10000px";
-    document.body.appendChild(area);
-    area.focus();
-    area.select();
-    const correcto=document.execCommand("copy");
-    area.remove();
-    return correcto;
-  }catch(error){
-    console.warn("No se pudo copiar el texto de respaldo.",error);
-    return false;
-  }
+  return false;
 }
 
 async function generarCorreo(){
@@ -199,6 +184,7 @@ async function generarCorreo(){
   const para=limpiarListaCorreos($("correosPara").value);
   const cc=limpiarListaCorreos($("correosCC").value);
   const malos=[...validarCorreos(para),...validarCorreos(cc)];
+  
   if(!para.length){
     $("panelCorreos").style.display="block";
     alert("Configura al menos un destinatario en Para.");
@@ -207,7 +193,7 @@ async function generarCorreo(){
   }
   if(malos.length){
     $("panelCorreos").style.display="block";
-    alert("Revisa estas direcciones de correo:\\n"+malos.join("\\n"));
+    alert("Revisa estas direcciones de correo:\n"+malos.join("\n"));
     return;
   }
   guardarCorreosSilencioso();
@@ -215,34 +201,43 @@ async function generarCorreo(){
   const saludo=obtenerSaludo();
   const asunto="ABASTECIMIENTO DE POWER PACK";
   const tabla=tablaCorreo(seleccionados);
-  const texto=`${saludo}\\n\\nSolicitamos su ayuda con el abastecimiento de los siguientes Power Packs:\\n\\n${seleccionados.map(x=>`${x.nombre} | ${x.ubicacion} | ${x.nivel} | POR ABASTECER`).join("\\n")}\\n\\nSaludos cordiales.`;
-  const html=`<div style="font-family:Arial,sans-serif;font-size:14px;color:#222"><p>${escapar(saludo)}</p><p>Solicitamos su ayuda con el abastecimiento de los siguientes Power Packs:</p>${tabla}<p>Saludos cordiales.</p></div>`;
 
-  // Importante: copiar primero y abrir Outlook después, para no perder el permiso del navegador.
-  const copiado=await copiarContenidoCorreo(html,texto);
-  const destinatarios=para.map(c=>encodeURIComponent(c)).join(";");
-  const params=new URLSearchParams();
-  params.set("subject",asunto);
-  if(cc.length)params.set("cc",cc.join(";"));
-  const mailto="mailto:"+destinatarios+"?"+params.toString();
+  const textoPlano=`${saludo}\n\nSu ayuda abasteciendo los siguientes PPks.\n\n`+
+    seleccionados.map(x=>x.nombre+" | "+x.ubicacion+" | "+x.nivel+" | POR ABASTECER").join("\n")+
+    `\n\nKind Regards,`;
 
-  // No se añade body al mailto para que Outlook conserve su firma configurada.
+  const htmlCorreo=`
+  <div style="font-family:Arial,sans-serif;font-size:14px">
+  <p>${escapar(saludo)}</p>
+  <p>Su ayuda abasteciendo los siguientes PPks.</p>
+  ${tabla}
+  </div>`;
+
+  // Copiar al portapapeles en formato HTML y Texto plano
+  const copiado=await copiarContenidoCorreo(htmlCorreo,textoPlano);
+  
+  // Generar mailto limpio solo con destinatarios y asunto para respetar la firma de Outlook
+  const destinatarios=para.join(";");
+  let parametros=[];
+  parametros.push("subject="+encodeURIComponent(asunto));
+  if(cc.length) parametros.push("cc="+encodeURIComponent(cc.join(";")));
+
+  const mailto="mailto:"+encodeURIComponent(destinatarios)+"?"+parametros.join("&");
   window.location.href=mailto;
 
   setTimeout(()=>{
     alert(
-      "Se solicitó abrir Outlook con los destinatarios y el asunto configurados.\\n\\n"+
-      (copiado
-        ? "El contenido del reporte quedó copiado. En Outlook, haz clic debajo de tu saludo o firma y presiona Ctrl+V para pegar la tabla."
-        : "El navegador no permitió copiar automáticamente. Si Outlook abre, puedes volver a generar el correo o copiar manualmente los datos de la tabla.")
-      +"\\n\\nLa firma de Outlook no se reemplaza: pega el reporte en el lugar deseado y revisa el correo antes de enviarlo."
-    );
-  },800);
+      "📧 CORREO PREPARADO:\n\n" +
+      "1. Se abrió Outlook con los destinatarios y el asunto configurados.\n" +
+      (copiado ? "2. La tabla de abastecimiento con formato ya está copiada en tu memoria.\n\n" : "2. (Aviso) No se pudo copiar automáticamente, revisa tu portapapeles.\n\n") +
+      "👉 Haz clic en el cuerpo de tu mensaje de Outlook y presiona CTRL + V para pegar la tabla perfectamente.\n\n" +
+      "*(Tu firma configurada en Outlook se mantendrá intacta).*");
+  }, 600);
 }
 
 function normalizarBusqueda(s){return String(s||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
 function buscarCoincidencias(valor){const q=normalizarBusqueda(valor);if(!q)return [];return inventario.filter(x=>normalizarBusqueda(x.nombre).includes(q)||normalizarBusqueda(x.ubicacion).includes(q)).slice(0,10)}
-function mostrarSugerencias(){const input=$("ppkNombre"),box=$("sugerenciasPPk"),valor=input.value.trim(),coincidencias=buscarCoincidencias(valor);box.innerHTML="";if(!valor||!coincidencias.length){box.style.display="none";$("estadoBusqueda").textContent=valor?"No existe coincidencia. Completa los campos para registrar un Power Pack nuevo.":"Si existe, selecciónalo para cargar sus datos; si no, completa el formulario.";return}
+function mostrarSugerencias(){const input=$("ppkNombre"),box=$("sugerenciasPPk"),valor=input.value.trim(),coincidencias=buscarCoincidencias(valor);box.innerHTML="";if(!valor\vert{}\vert{}!coincidencias.length){box.style.display="none";$("estadoBusqueda").textContent=valor?"No existe coincidencia. Completa los campos para registrar un Power Pack nuevo.":"Si existe, selecciónalo para cargar sus datos; si no, completa el formulario.";return}
  coincidencias.forEach(x=>{const b=document.createElement("button");b.type="button";b.className="suggestion";b.setAttribute("role","option");b.innerHTML=`<strong>${escapar(x.nombre)}</strong><small>Ubicación: ${escapar(x.ubicacion)} · Nivel: ${escapar(x.nivel)} · ${escapar(x.estado)}</small>`;b.addEventListener("click",()=>seleccionarPowerPack(x.id));box.appendChild(b)});box.style.display="block";$("estadoBusqueda").textContent=`${coincidencias.length} coincidencia(s). Selecciona el equipo para cargar su información.`}
 function seleccionarPowerPack(id){const x=inventario.find(a=>a.id===id);if(!x)return;editandoId=id;$("ppkNombre").value=x.nombre;$("ppkUbicacion").value=x.ubicacion;$("ppkNivelVal").value=x.nivel;$("ppkEstado").value=x.estado;$("ppkNovedad").value=x.novedadManual;actualizarNovedadManual();$("formTitle").textContent="Actualizar Power Pack existente";$("formMode").textContent="REGISTRO EXISTENTE";$("btnGuardar").textContent="Guardar actualización";$("sugerenciasPPk").style.display="none";$("estadoBusqueda").textContent="Registro existente cargado. Puedes revisar los datos y guardar cambios.";notificar("Power Pack existente cargado. No se creó un duplicado.")}
 function prepararNuevoSiNoExiste(){const nombre=$("ppkNombre").value.trim();if(!nombre)return;const existente=inventario.find(x=>normalizarBusqueda(x.nombre)===normalizarBusqueda(nombre));if(existente){seleccionarPowerPack(existente.id);return}editandoId=null;$("formTitle").textContent="Registrar Power Pack nuevo";$("formMode").textContent="NUEVO REGISTRO";$("btnGuardar").textContent="＋ Guardar Power Pack";$("estadoBusqueda").textContent="No existe este código. Completa ubicación, nivel, estado y novedad si corresponde."}
