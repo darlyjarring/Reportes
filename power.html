@@ -15,17 +15,22 @@ h3{color:var(--primary);margin-bottom:10px}
 .form-group{display:flex;flex-direction:column}
 label{font-weight:600;margin-bottom:5px;font-size:.9rem}
 input,select,textarea{padding:9px;border:1px solid #ccc;border-radius:4px;font-size:.95rem;font-family:inherit}
-textarea{min-height:90px;resize:vertical}
+textarea{min-height:80px;resize:vertical}
 input:disabled{background:#e9ecef}
-.email-section{background:#eef2f7;padding:15px;border-radius:6px;margin:15px 0}
+
+/* Panel de correos desplegable y oculto */
+.email-container{margin:15px 0}
+.email-panel{background:#eef2f7;padding:15px;border-radius:6px;margin-top:10px;display:none;border-left:4px solid var(--secondary)}
 .email-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 .email-help{font-size:.82rem;color:#666;margin-top:5px}
+
 .btn-container{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
 button{padding:10px 18px;border:0;border-radius:4px;cursor:pointer;font-weight:bold;font-size:.92rem}
 .btn-primary{background:var(--secondary);color:#fff}.btn-primary:hover{background:var(--primary)}
 .btn-outlook{background:#0078d4;color:#fff}.btn-outlook:hover{background:#005a9e}
 .btn-danger{background:#dc3545;color:#fff}.btn-danger:hover{background:#b02a37}
-.btn-secondary{background:#6c757d;color:#fff}
+.btn-secondary{background:#6c757d;color:#fff}.btn-secondary:hover{background:#5c636a}
+
 table{width:100%;border-collapse:collapse;margin-top:10px}
 th,td{border:1px solid #ccc;padding:9px;text-align:center;font-size:.9rem}
 th{background:var(--primary);color:#fff}
@@ -35,6 +40,12 @@ tr:nth-child(even){background:#f8f8f8}
 .badge-fuera{background:#f8d7da;color:#b02a37;font-weight:bold;padding:4px 8px;border-radius:4px}
 .actions-cell button{padding:5px 9px;font-size:.78rem;margin:2px}
 .info{background:#e8f1ff;border-left:4px solid #0066cc;padding:10px;margin-bottom:15px;font-size:.9rem}
+
+/* Estilo para celdas editables al hacer clic */
+.editable-cell{cursor:pointer;position:relative}
+.editable-cell:hover{background-color:#fff3cd}
+.editable-cell input{width:100%;padding:4px;font-size:0.9rem;text-align:center;border:2px solid var(--secondary);border-radius:3px}
+
 @media(max-width:700px){.email-grid{grid-template-columns:1fr}.container{padding:15px}body{padding:8px}table{font-size:.8rem}}
 </style>
 </head>
@@ -44,7 +55,9 @@ tr:nth-child(even){background:#f8f8f8}
 <h2>Inventario y Control de Power Packs (PPk)</h2>
 
 <div class="info">
-<strong>Instrucciones:</strong> Registra tus equipos, indica su estado y marca la casilla <strong>"Para Abastecer"</strong> de los equipos que deseas incluir en el reporte de correo.
+<strong>💡 Tips de uso:</strong> 
+<br>• Haz <strong>clic en cualquier celda</strong> de la tabla (Nombre, Ubicación o Nivel) para editarla directamente y presiona <i>Enter</i> para guardar.
+<br>• Si agregas un nombre nuevo desde el formulario superior y ya existe, se actualizará automáticamente.
 </div>
 
 <div class="form-grid">
@@ -75,7 +88,7 @@ tr:nth-child(even){background:#f8f8f8}
 
 <div class="form-group">
 <label>Novedad manual:</label>
-<input type="text" id="ppkNovedad" placeholder="Ej: Falla eléctrica">
+<input type="text" id="ppkNovedad" placeholder="Ej: Falla eléctrica" disabled>
 </div>
 </div>
 
@@ -85,8 +98,11 @@ tr:nth-child(even){background:#f8f8f8}
 <button class="btn-danger" onclick="limpiarFormulario()">Limpiar</button>
 </div>
 
-<div class="email-section">
-<h3>Configuración del correo</h3>
+<!-- SECCIÓN DE CORREOS OCULTA / DESPLEGABLE -->
+<div class="email-container">
+<button class="btn-secondary" onclick="togglePanelCorreos()">⚙️ Configurar Destinatarios (Para / CC)</button>
+<div id="panelCorreos" class="email-panel">
+<h3>Correos Guardados</h3>
 <div class="email-grid">
 <div class="form-group">
 <label>Para:</label>
@@ -99,9 +115,9 @@ tr:nth-child(even){background:#f8f8f8}
 <div class="email-help">Puede colocar varios destinatarios.</div>
 </div>
 </div>
-<div class="btn-container">
+<div class="btn-container" style="margin-top:10px">
 <button class="btn-primary" onclick="guardarCorreos()">💾 Guardar correos</button>
-<button class="btn-secondary" onclick="cargarCorreos()">↻ Recuperar correos guardados</button>
+</div>
 </div>
 </div>
 
@@ -143,6 +159,30 @@ let inventario=JSON.parse(localStorage.getItem("inventario_ppk"));
 if(!Array.isArray(inventario)){
 inventario=inventarioInicial;
 localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
+}
+
+/* =========================================================
+   PANEL DE CORREOS DESPLEGABLE
+========================================================= */
+function togglePanelCorreos(){
+const panel = document.getElementById("panelCorreos");
+panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
+
+function guardarCorreos(){
+const para=document.getElementById("correosPara").value.trim();
+const cc=document.getElementById("correosCC").value.trim();
+
+localStorage.setItem("ppk_correos_para",para);
+localStorage.setItem("ppk_correos_cc",cc);
+
+alert("Los correos de Para y CC fueron guardados correctamente.");
+togglePanelCorreos();
+}
+
+function cargarCorreos(){
+document.getElementById("correosPara").value=localStorage.getItem("ppk_correos_para")||"";
+document.getElementById("correosCC").value=localStorage.getItem("ppk_correos_cc")||"";
 }
 
 /* =========================================================
@@ -204,7 +244,7 @@ renderizarTabla();
 }
 
 /* =========================================================
-   MOSTRAR INVENTARIO
+   MOSTRAR INVENTARIO (CON CELDAS EDITABLES)
 ========================================================= */
 function renderizarTabla(){
 const tbody=document.getElementById("tablaInventario");
@@ -232,9 +272,9 @@ const fila=document.createElement("tr");
 
 fila.innerHTML=`
 <td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
-<td><strong>${escapeHTML(item.nombre)}</strong></td>
-<td>${escapeHTML(item.ubicacion)}</td>
-<td>${escapeHTML(item.nivel)}</td>
+<td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')" title="Clic para editar"><strong>${escapeHTML(item.nombre)}</strong></td>
+<td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')" title="Clic para editar">${escapeHTML(item.ubicacion)}</td>
+<td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')" title="Clic para editar">${escapeHTML(item.nivel)}</td>
 <td>${badgeEstado}</td>
 <td>${badgeNovedad}</td>
 <td class="actions-cell">
@@ -246,6 +286,35 @@ tbody.appendChild(fila);
 });
 
 localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
+}
+
+/* =========================================================
+   EDICIÓN DIRECTA DESDE LA TABLA
+========================================================= */
+function editarCelda(celda, index, propiedad){
+if(celda.querySelector("input")) return;
+
+const valorActual = inventario[index][propiedad];
+celda.innerHTML = `<input type="text" value="${escapeHTML(valorActual)}" autofocus>`;
+const input = celda.querySelector("input");
+
+input.onblur = function(){
+guardarCambioCelda(index, propiedad, input.value);
+};
+
+input.onkeydown = function(e){
+if(e.key === "Enter"){
+guardarCambioCelda(index, propiedad, input.value);
+}
+};
+}
+
+function guardarCambioCelda(index, propiedad, nuevoValor){
+const val = nuevoValor.trim();
+if(val !== ""){
+inventario[index][propiedad] = val;
+}
+renderizarTabla();
 }
 
 /* =========================================================
@@ -341,32 +410,6 @@ actualizarNovedadManual();
 }
 
 /* =========================================================
-   CORREOS
-========================================================= */
-function limpiarListaCorreos(texto){
-return texto
-.split(/[;\n,]+/)
-.map(c=>c.trim())
-.filter(c=>c!=="")
-.join(";");
-}
-
-function guardarCorreos(){
-const para=document.getElementById("correosPara").value.trim();
-const cc=document.getElementById("correosCC").value.trim();
-
-localStorage.setItem("ppk_correos_para",para);
-localStorage.setItem("ppk_correos_cc",cc);
-
-alert("Los correos de Para y CC fueron guardados correctamente.");
-}
-
-function cargarCorreos(){
-document.getElementById("correosPara").value=localStorage.getItem("ppk_correos_para")||"";
-document.getElementById("correosCC").value=localStorage.getItem("ppk_correos_cc")||"";
-}
-
-/* =========================================================
    SALUDO
 ========================================================= */
 function obtenerSaludo(){
@@ -408,7 +451,7 @@ return html;
 }
 
 /* =========================================================
-   GENERAR CORREO (CORREGIDO PARA OUTLOOK)
+   GENERAR CORREO (CON OUTLOOK Y PORTAPAPELES)
 ========================================================= */
 async function enviarCorreoOutlook(){
 const seleccionados = inventario.filter(item => item.abastecer === true);
@@ -425,7 +468,7 @@ const paraArray = paraOriginal.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="
 const ccArray = ccOriginal.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="");
 
 if(paraArray.length === 0){
-alert("Ingrese al menos un correo en el campo PARA.");
+alert("Ingrese al menos un correo en el campo PARA (dentro de la configuración).");
 document.getElementById("correosPara").focus();
 return;
 }
@@ -457,7 +500,6 @@ await navigator.clipboard.write([new ClipboardItem({ "text/html": blobHtml, "tex
 console.error("No se pudo copiar automáticamente al portapapeles:", e);
 }
 
-// Construcción limpia de la URL mailto utilizando punto y coma nativo sin codificar en exceso
 const toStr = paraArray.join(";");
 const ccStr = ccArray.join(";");
 
