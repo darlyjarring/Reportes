@@ -2,484 +2,262 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Inventario y Abastecimiento de Power Packs</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Control de Power Packs | Operaciones</title>
 <style>
-:root{--primary:#003b7a;--secondary:#0066cc;--accent:#ffeb00;--danger:#dc3545;--success:#198754;--bg:#f4f6f9}
-*{box-sizing:border-box}
-body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);margin:0;padding:20px;color:#333}
-.container{max-width:1250px;margin:auto;background:#fff;padding:25px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.12)}
-h2{color:var(--primary);border-bottom:2px solid var(--secondary);padding-bottom:10px;margin-top:0}
-h3{color:var(--primary);margin-bottom:10px}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px;background:#eef2f7;padding:15px;border-radius:6px;margin-bottom:15px}
-.form-group{display:flex;flex-direction:column}
-label{font-weight:600;margin-bottom:5px;font-size:.9rem}
-input,select,textarea{padding:9px;border:1px solid #ccc;border-radius:4px;font-size:.95rem;font-family:inherit}
-textarea{min-height:80px;resize:vertical}
-input:disabled{background:#e9ecef}
-
-/* Sección de correos desplegable */
-.email-container{margin:15px 0}
-.email-panel{background:#eef2f7;padding:15px;border-radius:6px;margin-top:10px;display:none;border-left:4px solid var(--secondary)}
-.email-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
-.email-help{font-size:.82rem;color:#666;margin-top:5px}
-
-.btn-container{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
-button{padding:10px 18px;border:0;border-radius:4px;cursor:pointer;font-weight:bold;font-size:.92rem}
-.btn-primary{background:var(--secondary);color:#fff}.btn-primary:hover{background:var(--primary)}
-.btn-outlook{background:#0078d4;color:#fff}.btn-outlook:hover{background:#005a9e}
-.btn-danger{background:#dc3545;color:#fff}.btn-danger:hover{background:#b02a37}
-.btn-secondary{background:#6c757d;color:#fff}.btn-secondary:hover{background:#5c636a}
-
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #ccc;padding:9px;text-align:center;font-size:.9rem}
-th{background:var(--primary);color:#fff}
-tr:nth-child(even){background:#f8f8f8}
-.badge-ok{background:#d4edda;color:#198754;font-weight:bold;padding:4px 8px;border-radius:4px}
-.badge-abastecer{background:#ffeb00;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px}
-.badge-fuera{background:#f8d7da;color:#b02a37;font-weight:bold;padding:4px 8px;border-radius:4px}
-.actions-cell button{padding:5px 9px;font-size:.78rem;margin:2px}
-.info{background:#e8f1ff;border-left:4px solid #0066cc;padding:10px;margin-bottom:15px;font-size:.9rem}
-
-/* Celdas editables al hacer clic */
-.editable-cell{cursor:pointer;position:relative}
-.editable-cell:hover{background-color:#fff3cd}
-.editable-cell input{width:100%;padding:4px;font-size:0.9rem;text-align:center;border:2px solid var(--secondary);border-radius:3px}
-
-@media(max-width:700px){.email-grid{grid-template-columns:1fr}.container{padding:15px}body{padding:8px}table{font-size:.8rem}}
+:root{--navy:#12345a;--blue:#1769aa;--blue2:#eaf3fb;--green:#168354;--greenbg:#e4f5eb;--yellow:#f3c623;--yellowbg:#fff5c9;--red:#bd3545;--redbg:#fde9ec;--bg:#f3f6fa;--ink:#243247;--muted:#69788c;--line:#dce4ed;--white:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Segoe UI,Arial,sans-serif;color:var(--ink)}button,input,select,textarea{font:inherit}button{border:0;border-radius:8px;padding:10px 14px;font-weight:650;cursor:pointer;transition:.15s}button:hover{filter:brightness(.95)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #80bfff;outline-offset:1px}
+.page{max-width:1450px;margin:auto;padding:22px}.hero{background:linear-gradient(120deg,#102e50,#1769aa);color:white;border-radius:16px;padding:24px 26px;box-shadow:0 8px 24px #153b6020}.eyebrow{font-size:.75rem;letter-spacing:.13em;text-transform:uppercase;opacity:.8;font-weight:700}.hero h1{font-size:clamp(1.45rem,3vw,2.1rem);margin:7px 0}.hero p{margin:0;color:#e0edf9}.hero-top{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}.live{border:1px solid #ffffff55;background:#ffffff14;padding:8px 12px;border-radius:30px;font-size:.85rem}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}.stat{background:white;border:1px solid var(--line);border-radius:13px;padding:17px;box-shadow:0 3px 10px #142d4610}.stat-label{color:var(--muted);font-size:.84rem}.stat-value{font-size:1.8rem;font-weight:750;margin-top:6px;color:var(--navy)}.stat-note{font-size:.78rem;color:var(--muted);margin-top:3px}
+.card{background:white;border:1px solid var(--line);border-radius:14px;padding:20px;margin:16px 0;box-shadow:0 3px 12px #142d4609}.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 15px}.section-title h2{margin:0;font-size:1.12rem;color:var(--navy)}.section-title p{margin:5px 0 0;color:var(--muted);font-size:.86rem}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:13px}.field{display:flex;flex-direction:column;gap:6px;min-width:0}.field label{font-size:.82rem;font-weight:700;color:#41536a}.field input,.field select,.field textarea{width:100%;min-width:0;border:1px solid #cbd6e2;border-radius:8px;padding:10px 11px;background:white;color:var(--ink)}.field input:disabled{background:#edf1f5;color:#7d8998}.hint{font-size:.76rem;color:var(--muted);line-height:1.4}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}.primary{background:var(--blue);color:white}.secondary{background:#e8eef5;color:#263d57}.success{background:var(--green);color:white}.warning{background:var(--yellowbg);color:#6b5200;border:1px solid #f1d96d}.danger{background:var(--redbg);color:var(--red)}.outline{background:white;border:1px solid var(--line);color:var(--navy)}
+.email-panel{display:none;border:1px solid var(--line);background:#f7faff;border-radius:11px;padding:16px;margin-top:14px}.email-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.email-grid textarea{min-height:90px;resize:vertical}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.filters input,.filters select{border:1px solid #cbd6e2;border-radius:8px;padding:9px 11px;background:white}.count{color:var(--muted);font-size:.84rem}
+.table-wrap{width:100%;overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:14px}table{border-collapse:collapse;width:100%;min-width:850px}th{background:var(--navy);color:white;text-align:left;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;padding:12px 10px;white-space:nowrap}td{padding:11px 10px;border-bottom:1px solid #e8edf3;font-size:.88rem;vertical-align:middle}tbody tr:hover{background:#f5f9fd}tbody tr:last-child td{border-bottom:0}.center{text-align:center}.check{width:18px;height:18px;accent-color:var(--blue);cursor:pointer}.badge{display:inline-block;padding:5px 9px;border-radius:30px;font-size:.73rem;font-weight:750;white-space:nowrap}.ok{color:var(--green);background:var(--greenbg)}.need{color:#715500;background:var(--yellowbg)}.down{color:var(--red);background:var(--redbg)}.editable{cursor:text;border-bottom:1px dashed #9aafc4}.editable:hover{background:#fff7d8}.cell-input{width:100%;min-width:80px;border:1px solid var(--blue);border-radius:5px;padding:6px}.row-actions{display:flex;gap:5px;white-space:nowrap}.small-btn{padding:6px 9px;font-size:.77rem}.empty{text-align:center;padding:28px;color:var(--muted)}.footnote{font-size:.8rem;color:var(--muted);margin-top:12px;line-height:1.5}.toast{position:fixed;right:20px;bottom:20px;z-index:10;background:#173a5e;color:white;padding:13px 17px;border-radius:10px;box-shadow:0 8px 30px #0002;max-width:min(420px,calc(100vw - 40px));display:none}.status-text{font-size:.82rem;color:var(--muted)}
+.autocomplete-wrap{position:relative}.suggestions{display:none;position:absolute;z-index:20;left:0;right:0;top:100%;background:#fff;border:1px solid #b9c9da;border-radius:9px;box-shadow:0 8px 22px #142d4620;max-height:230px;overflow:auto}.suggestion{display:block;width:100%;text-align:left;background:#fff;border-radius:0;padding:10px 12px;border-bottom:1px solid #edf1f5;color:var(--ink)}.suggestion:hover{background:#eaf3fb}.suggestion small{display:block;color:var(--muted);font-weight:400;margin-top:3px}.search-state{font-size:.78rem;color:var(--blue);min-height:17px}
+@media(max-width:1050px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.page{padding:10px}.hero{padding:19px}.card{padding:14px}.grid{grid-template-columns:1fr 1fr}.email-grid{grid-template-columns:1fr}.stats{gap:9px}.stat{padding:13px}.stat-value{font-size:1.5rem}.grid .field:last-child{grid-column:auto}.section-title h2{font-size:1rem}}
+@media(max-width:420px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.actions button{width:100%}}
 </style>
 </head>
 <body>
-
-<div class="container">
-<h2>Inventario y Control de Power Packs (PPk)</h2>
-
-<div class="info">
-<strong>💡 Tips de uso:</strong> 
-<br>• Haz <strong>clic en cualquier celda</strong> de la tabla (Nombre, Ubicación o Nivel) para editarla directamente y presiona <i>Enter</i> para guardar.
-<br>• Si escribes el nombre de un PPk nuevo al agregar, se creará automáticamente.
-</div>
-
-<div class="form-grid">
-<div class="form-group">
-<label>Nombre / Código PPk:</label>
-<input type="text" id="ppkNombre" placeholder="Ej: #14 VERDE">
-</div>
-
-<div class="form-group">
-<label>Ubicación / Bloque:</label>
-<input type="text" id="ppkUbicacion" placeholder="Ej: 1K10">
-</div>
-
-<div class="form-group">
-<label>Nivel de combustible:</label>
-<input type="text" id="ppkNivelVal" placeholder="Ej: 50% o 130 GLS">
-</div>
-
-<div class="form-group">
-<label>Estado:</label>
-<select id="ppkEstado" onchange="actualizarNovedadManual()">
-<option value="OPERATIVO">OPERATIVO</option>
-<option value="FUERA DE SERVICIO">FUERA DE SERVICIO</option>
-</select>
-</div>
-
-<div class="form-group">
-<label>Novedad manual:</label>
-<input type="text" id="ppkNovedad" placeholder="Solo si está fuera de servicio" disabled>
-</div>
-</div>
-
-<div class="btn-container">
-<button class="btn-primary" onclick="guardarPPkRapido()">➕ Agregar / Actualizar Power Pack</button>
-<button class="btn-danger" onclick="limpiarFormulario()">Limpiar Formulario</button>
-</div>
-
-<!-- SECCIÓN DE CORREOS DESPLEGABLE -->
-<div class="email-container">
-<button class="btn-secondary" onclick="togglePanelCorreos()">⚙️ Configurar Destinatarios (Para / CC)</button>
-<div id="panelCorreos" class="email-panel">
-<h3>Correos Guardados</h3>
-<div class="email-grid">
-<div class="form-group">
-<label>Para:</label>
-<textarea id="correosPara" placeholder="Ingrese correos separados por punto y coma (;)"></textarea>
-<div class="email-help">Destinatarios principales del reporte.</div>
-</div>
-<div class="form-group">
-<label>CC:</label>
-<textarea id="correosCC" placeholder="Ingrese correos separados por punto y coma (;)"></textarea>
-<div class="email-help">Copia del reporte.</div>
-</div>
-</div>
-<div class="btn-container" style="margin-top:10px">
-<button class="btn-primary" onclick="guardarCorreos()">💾 Guardar Correos</button>
-</div>
-</div>
-</div>
-
-<div class="btn-container">
-<button class="btn-secondary" onclick="marcarSugeridosAbastecer()">⚡ Marcar sugeridos (&lt;=30% o &lt;=150 GLS)</button>
-<button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Generar correo de abastecimiento</button>
-</div>
-
-<h3>Listado General de Power Packs</h3>
-<table>
-<thead>
-<tr>
-<th>ABASTECER?</th>
-<th>PPk</th>
-<th>UBICACIÓN</th>
-<th>NIVEL</th>
-<th>ESTADO</th>
-<th>NOVEDAD</th>
-<th>ACCIONES</th>
-</tr>
-</thead>
-<tbody id="tablaInventario"></tbody>
-</table>
-</div>
-
+<main class="page">
+<header class="hero">
+ <div class="hero-top"><div><div class="eyebrow">Centro de control operacional</div><h1>Inventario y abastecimiento de Power Packs</h1><p>Control de ubicación, combustible, disponibilidad y novedades.</p></div><div class="live">● Registro local activo</div></div>
+</header>
+<section class="stats" aria-label="Resumen del inventario">
+ <div class="stat"><div class="stat-label">Power Packs registrados</div><div class="stat-value" id="kTotal">0</div><div class="stat-note">Equipos en inventario</div></div>
+ <div class="stat"><div class="stat-label">Por abastecer</div><div class="stat-value" id="kAbastecer">0</div><div class="stat-note">Equipos operativos seleccionados</div></div>
+ <div class="stat"><div class="stat-label">Fuera de servicio</div><div class="stat-value" id="kFuera">0</div><div class="stat-note">Requieren seguimiento</div></div>
+ <div class="stat"><div class="stat-label">Operativos OK</div><div class="stat-value" id="kOk">0</div><div class="stat-note">Sin abastecimiento pendiente</div></div>
+</section>
+<section class="card">
+ <div class="section-title"><div><h2 id="formTitle">Registrar Power Pack</h2><p>Complete los datos. Si el código ya existe, se actualizará el registro.</p></div><span class="badge ok" id="formMode">NUEVO REGISTRO</span></div>
+ <form id="ppkForm">
+ <div class="grid">
+  <div class="field autocomplete-wrap"><label for="ppkNombre">Buscar / nombre del Power Pack *</label><input id="ppkNombre" autocomplete="off" placeholder="Escribe código o nombre para buscar…" required maxlength="80" aria-autocomplete="list" aria-controls="sugerenciasPPk"><div id="sugerenciasPPk" class="suggestions" role="listbox"></div><span id="estadoBusqueda" class="search-state">Si existe, selecciónalo para cargar sus datos; si no, completa el formulario.</span></div>
+  <div class="field"><label for="ppkUbicacion">Ubicación / bloque *</label><input id="ppkUbicacion" placeholder="Ej.: 1K10" required maxlength="80"></div>
+  <div class="field"><label for="ppkNivelVal">Nivel de combustible *</label><input id="ppkNivelVal" placeholder="Ej.: 30% o 150 GLS" required maxlength="40"></div>
+  <div class="field"><label for="ppkEstado">Estado *</label><select id="ppkEstado"><option value="OPERATIVO">OPERATIVO</option><option value="FUERA DE SERVICIO">FUERA DE SERVICIO</option></select></div>
+  <div class="field"><label for="ppkNovedad">Novedad manual</label><input id="ppkNovedad" placeholder="Motivo de fuera de servicio" maxlength="240" disabled><span class="hint">Obligatoria si el equipo está fuera de servicio.</span></div>
+ </div>
+ <div class="actions"><button class="primary" type="submit" id="btnGuardar">＋ Guardar Power Pack</button><button class="secondary" type="button" id="btnLimpiar">Limpiar formulario</button></div>
+ </form>
+</section>
+<section class="card">
+ <div class="section-title"><div><h2>Destinatarios del reporte</h2><p>Los correos se guardan en este navegador para próximas sesiones.</p></div><button class="secondary" type="button" id="btnPanelCorreo">⚙ Configurar Para / CC</button></div>
+ <div class="email-panel" id="panelCorreos">
+  <div class="email-grid">
+   <div class="field"><label for="correosPara">Para *</label><textarea id="correosPara" placeholder="correo@empresa.com; otro@empresa.com"></textarea><span class="hint">Puedes separar varias direcciones con punto y coma, coma o salto de línea.</span></div>
+   <div class="field"><label for="correosCC">CC</label><textarea id="correosCC" placeholder="copia@empresa.com"></textarea><span class="hint">Destinatarios en copia (opcional).</span></div>
+  </div>
+  <div class="actions"><button class="primary" type="button" id="btnGuardarCorreos">Guardar destinatarios</button><button class="secondary" type="button" id="btnCerrarCorreo">Cerrar</button></div>
+ </div>
+</section>
+<section class="card">
+ <div class="toolbar"><div class="section-title" style="margin:0"><div><h2>Listado general de Power Packs</h2><p>Marca los equipos que deben incluirse en el correo de abastecimiento.</p></div></div><div class="filters"><input id="buscar" type="search" placeholder="Buscar código o ubicación…" aria-label="Buscar inventario"><select id="filtroEstado" aria-label="Filtrar por estado"><option value="">Todos los estados</option><option value="OPERATIVO">Operativos</option><option value="FUERA DE SERVICIO">Fuera de servicio</option></select></div></div>
+ <div class="actions"><button class="warning" type="button" id="btnSugeridos">⚡ Marcar sugeridos (≤30% o ≤150 GLS)</button><button class="secondary" type="button" id="btnDesmarcar">Desmarcar todos</button><button class="success" type="button" id="btnCorreo">✉ Generar correo de abastecimiento</button></div>
+ <div class="table-wrap"><table><thead><tr><th class="center">Abastecer</th><th>PPk</th><th>Ubicación</th><th>Nivel</th><th>Estado</th><th>Novedad / condición</th><th>Acciones</th></tr></thead><tbody id="tablaInventario"></tbody></table><div id="vacio" class="empty" hidden>No hay registros que coincidan con la búsqueda.</div></div>
+ <div class="footnote">Haz clic sobre el nombre, ubicación o nivel para editar. Pulsa Enter para guardar o Escape para cancelar. Los cambios se guardan en el almacenamiento local de este navegador; no se sincronizan automáticamente con otros equipos.</div>
+</section>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</main>
 <script>
-/* =========================================================
-   INVENTARIO INICIAL
-========================================================= */
+"use strict";
+const CLAVE_INV="inventario_ppk",CLAVE_PARA="ppk_correos_para",CLAVE_CC="ppk_correos_cc";
 const inventarioInicial=[
-{nombre:"13 VERDE",ubicacion:"CC",nivel:"50%",estado:"OPERATIVO",novedadManual:"", abastecer:false},
-{nombre:"#14 VERDE",ubicacion:"1K10",nivel:"10%",estado:"OPERATIVO",novedadManual:"", abastecer:true},
-{nombre:"#02 VERDE",ubicacion:"1Y",nivel:"130 GLS",estado:"OPERATIVO",novedadManual:"", abastecer:false},
-{nombre:"#06 VERDE",ubicacion:"1X",nivel:"30%",estado:"OPERATIVO",novedadManual:"", abastecer:true}
+ {nombre:"13 VERDE",ubicacion:"CC",nivel:"50%",estado:"OPERATIVO",novedadManual:"",abastecer:false},
+ {nombre:"#14 VERDE",ubicacion:"1K10",nivel:"10%",estado:"OPERATIVO",novedadManual:"",abastecer:true},
+ {nombre:"#02 VERDE",ubicacion:"1Y",nivel:"130 GLS",estado:"OPERATIVO",novedadManual:"",abastecer:false},
+ {nombre:"#06 VERDE",ubicacion:"1X",nivel:"30%",estado:"OPERATIVO",novedadManual:"",abastecer:true}
 ];
-
-let inventario=JSON.parse(localStorage.getItem("inventario_ppk"));
-if(!Array.isArray(inventario)){
-inventario=inventarioInicial;
-localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
-}
-
-/* =========================================================
-   PANEL DE CORREOS DESPLEGABLE
-========================================================= */
-function togglePanelCorreos(){
-const panel = document.getElementById("panelCorreos");
-panel.style.display = panel.style.display === "block" ? "none" : "block";
-}
-
-function guardarCorreos(){
-const para=document.getElementById("correosPara").value.trim();
-const cc=document.getElementById("correosCC").value.trim();
-localStorage.setItem("ppk_correos_para",para);
-localStorage.setItem("ppk_correos_cc",cc);
-alert("Destinatarios guardados correctamente.");
-togglePanelCorreos();
-}
-
-function cargarCorreos(){
-document.getElementById("correosPara").value=localStorage.getItem("ppk_correos_para")||"";
-document.getElementById("correosCC").value=localStorage.getItem("ppk_correos_cc")||"";
-}
-
-/* =========================================================
-   NOVEDAD MANUAL
-========================================================= */
-function actualizarNovedadManual(){
-const estado=document.getElementById("ppkEstado").value;
-const campo=document.getElementById("ppkNovedad");
-if(estado==="FUERA DE SERVICIO"){
-campo.disabled=false;
-campo.placeholder="Ej: Falla eléctrica / Mantenimiento";
-}else{
-campo.disabled=true;
-campo.value="";
-campo.placeholder="Solo si está fuera de servicio";
-}
-}
-
-function escapeHTML(text){
-return String(text)
-.replace(/&/g,"&amp;")
-.replace(/</g,"&lt;")
-.replace(/>/g,"&gt;")
-.replace(/"/g,"&quot;")
-.replace(/'/g,"&#039;");
-}
-
-function cambiarCheckAbastecer(index, checkbox){
-inventario[index].abastecer = checkbox.checked;
-localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
-}
-
-function marcarSugeridosAbastecer(){
-inventario.forEach(item=>{
-if(item.estado==="OPERATIVO"){
-const nivel=String(item.nivel).trim().toUpperCase();
-let sugerir=false;
-if(nivel.endsWith("%")){
-const num=parseFloat(nivel.replace("%","").trim());
-if(!isNaN(num)&&num<=30) sugerir=true;
-}else if(nivel.endsWith("GLS")){
-const num=parseFloat(nivel.replace("GLS","").trim());
-if(!isNaN(num)&&num<=150) sugerir=true;
-}
-item.abastecer=sugerir;
-}
-});
-renderizarTabla();
-}
-
-/* =========================================================
-   RENDERIZAR TABLA CON EDICIÓN EN LÍNEA (CLIC EN CELDA)
-========================================================= */
+const $=id=>document.getElementById(id);
+let inventario=cargarInventario(),editandoId=null,toastTimer=null;
+function nuevoId(){return "ppk_"+Date.now().toString(36)+"_"+Math.random().toString(36).slice(2,8)}
+function normalizarItem(x){return {id:x.id||nuevoId(),nombre:String(x.nombre||""),ubicacion:String(x.ubicacion||""),nivel:String(x.nivel||""),estado:x.estado==="FUERA DE SERVICIO"?"FUERA DE SERVICIO":"OPERATIVO",novedadManual:String(x.novedadManual||""),abastecer:Boolean(x.abastecer)&&x.estado!=="FUERA DE SERVICIO"}}
+function cargarInventario(){try{const d=JSON.parse(localStorage.getItem(CLAVE_INV));if(Array.isArray(d))return d.map(normalizarItem)}catch(e){console.warn("No se pudo leer el inventario guardado",e)}return inventarioInicial.map(x=>normalizarItem(x))}
+function persistir(){try{localStorage.setItem(CLAVE_INV,JSON.stringify(inventario));return true}catch(e){notificar("No se pudo guardar. Revisa el almacenamiento del navegador.");return false}}
+function notificar(m){const t=$("toast");t.textContent=m;t.style.display="block";clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display="none",3500)}
+function escapar(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function obtenerCondicion(item){if(item.estado==="FUERA DE SERVICIO")return item.novedadManual.trim()||"SIN NOVEDAD REGISTRADA";return item.abastecer?"POR ABASTECER":"OK"}
+function guardarCorreosSilencioso(){try{localStorage.setItem(CLAVE_PARA,$("correosPara").value.trim());localStorage.setItem(CLAVE_CC,$("correosCC").value.trim())}catch(e){}}
 function renderizarTabla(){
-const tbody=document.getElementById("tablaInventario");
-tbody.innerHTML="";
-
-inventario.forEach((item,index)=>{
-const novedadTexto = item.estado==="FUERA DE SERVICIO"
-?(item.novedadManual&&item.novedadManual.trim()?item.novedadManual.trim():"SIN NOVEDAD REGISTRADA")
-:(item.abastecer?"POR ABASTECER":"OK");
-
-let badgeNovedad;
-if(novedadTexto==="OK"){
-badgeNovedad='<span class="badge-ok">OK</span>';
-}else if(novedadTexto==="POR ABASTECER"){
-badgeNovedad='<span class="badge-abastecer">POR ABASTECER</span>';
-}else{
-badgeNovedad='<span class="badge-fuera">'+escapeHTML(novedadTexto)+'</span>';
+ const tbody=$("tablaInventario"),q=$("buscar").value.trim().toLocaleLowerCase("es"),f=$("filtroEstado").value;tbody.innerHTML="";
+ const lista=inventario.map((item,index)=>({item,index})).filter(({item})=>(!q||(item.nombre+" "+item.ubicacion+" "+item.nivel+" "+item.novedadManual).toLocaleLowerCase("es").includes(q))&&(!f||item.estado===f));
+ $("vacio").hidden=lista.length>0;
+ for(const {item,index} of lista){
+  const tr=document.createElement("tr"),cond=obtenerCondicion(item),estadoFuera=item.estado==="FUERA DE SERVICIO";
+  const badgeCond=cond==="OK"?"ok":cond==="POR ABASTECER"?"need":"down";
+  tr.innerHTML=`<td class="center"><input class="check" type="checkbox" aria-label="Seleccionar ${escapar(item.nombre)} para abastecer" ${item.abastecer&&!estadoFuera?"checked":""} ${estadoFuera?"disabled":""}></td>
+  <td><strong class="editable" data-prop="nombre" title="Clic para editar">${escapar(item.nombre)}</strong></td>
+  <td class="editable" data-prop="ubicacion" title="Clic para editar">${escapar(item.ubicacion)}</td>
+  <td class="editable" data-prop="nivel" title="Clic para editar">${escapar(item.nivel)}</td>
+  <td><button type="button" class="badge ${estadoFuera?"down":"ok"}" data-action="estado" title="Cambiar estado">${estadoFuera?"FUERA DE SERVICIO":"OPERATIVO"}</button></td>
+  <td><span class="badge ${badgeCond}">${escapar(cond)}</span></td>
+  <td><div class="row-actions"><button class="secondary small-btn" type="button" data-action="editar">Editar</button><button class="danger small-btn" type="button" data-action="eliminar">Eliminar</button></div></td>`;
+  tr.querySelector("input[type=checkbox]").addEventListener("change",e=>{item.abastecer=e.target.checked;persistir();renderizarTabla()});
+  tr.querySelectorAll("[data-prop]").forEach(el=>el.addEventListener("click",()=>editarCelda(el,item.id,el.dataset.prop)));
+  tr.querySelector('[data-action="estado"]').addEventListener("click",()=>cambiarEstado(item.id));
+  tr.querySelector('[data-action="editar"]').addEventListener("click",()=>cargarEnFormulario(item.id));
+  tr.querySelector('[data-action="eliminar"]').addEventListener("click",()=>eliminarPPk(item.id));
+  tbody.appendChild(tr);
+ }
+ actualizarKPIs();
+}
+function actualizarKPIs(){$("kTotal").textContent=inventario.length;$("kAbastecer").textContent=inventario.filter(x=>x.estado==="OPERATIVO"&&x.abastecer).length;$("kFuera").textContent=inventario.filter(x=>x.estado==="FUERA DE SERVICIO").length;$("kOk").textContent=inventario.filter(x=>x.estado==="OPERATIVO"&&!x.abastecer).length}
+function editarCelda(el,id,prop){
+ if(el.querySelector("input"))return;const item=inventario.find(x=>x.id===id);if(!item)return;
+ const anterior=item[prop],input=document.createElement("input");input.className="cell-input";input.value=anterior;input.setAttribute("aria-label","Editar "+prop);el.textContent="";el.appendChild(input);input.focus();input.select();let terminado=false;
+ const finalizar=guardar=>{if(terminado)return;terminado=true;const val=input.value.trim();if(guardar&&val){if(prop==="nombre"&&inventario.some(x=>x.id!==id&&x.nombre.toLocaleLowerCase("es")===val.toLocaleLowerCase("es"))){notificar("Ya existe otro Power Pack con ese código.");}else{item[prop]=val;persistir()}}renderizarTabla()};
+ input.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();finalizar(true)}if(e.key==="Escape"){e.preventDefault();finalizar(false)}});input.addEventListener("blur",()=>finalizar(true));
+}
+function cambiarEstado(id){const item=inventario.find(x=>x.id===id);if(!item)return;
+ if(item.estado==="OPERATIVO"){const nov=prompt("Escriba la novedad o motivo de fuera de servicio:",item.novedadManual||"");if(nov===null)return;if(!nov.trim()){alert("Debe registrar la novedad para dejar el equipo fuera de servicio.");return}item.estado="FUERA DE SERVICIO";item.novedadManual=nov.trim();item.abastecer=false}
+ else{if(!confirm("¿Confirmas que el Power Pack vuelve a estar OPERATIVO?"))return;item.estado="OPERATIVO";item.novedadManual=""}
+ persistir();renderizarTabla();
+}
+function cargarEnFormulario(id){const x=inventario.find(a=>a.id===id);if(!x)return;editandoId=id;$("ppkNombre").value=x.nombre;$("ppkUbicacion").value=x.ubicacion;$("ppkNivelVal").value=x.nivel;$("ppkEstado").value=x.estado;$("ppkNovedad").value=x.novedadManual;actualizarNovedadManual();$("formTitle").textContent="Editar Power Pack";$("formMode").textContent="EDITANDO";$("btnGuardar").textContent="Guardar cambios";$("ppkNombre").focus();window.scrollTo({top:$("ppkForm").getBoundingClientRect().top+window.scrollY-20,behavior:"smooth"})}
+function limpiarFormulario(){editandoId=null;$("ppkForm").reset();$("ppkEstado").value="OPERATIVO";actualizarNovedadManual();$("sugerenciasPPk").style.display="none";$("estadoBusqueda").textContent="Si existe, selecciónalo para cargar sus datos; si no, completa el formulario.";$("formTitle").textContent="Registrar Power Pack";$("formMode").textContent="NUEVO REGISTRO";$("btnGuardar").textContent="＋ Guardar Power Pack"}
+function actualizarNovedadManual(){const fuera=$("ppkEstado").value==="FUERA DE SERVICIO";$("ppkNovedad").disabled=!fuera;$("ppkNovedad").required=fuera;$("ppkNovedad").placeholder=fuera?"Ej.: Falla eléctrica / Mantenimiento":"Solo si está fuera de servicio";if(!fuera)$("ppkNovedad").value=""}
+function guardarPPk(e){e.preventDefault();const nombre=$("ppkNombre").value.trim(),ubicacion=$("ppkUbicacion").value.trim(),nivel=$("ppkNivelVal").value.trim(),estado=$("ppkEstado").value,novedadManual=$("ppkNovedad").value.trim();if(!nombre||!ubicacion||!nivel){alert("Complete nombre, ubicación y nivel.");return}if(estado==="FUERA DE SERVICIO"&&!novedadManual){alert("Registre la novedad manual del equipo fuera de servicio.");$("ppkNovedad").focus();return}
+ const duplicado=inventario.find(x=>normalizarBusqueda(x.nombre)===normalizarBusqueda(nombre)&&x.id!==editandoId);if(duplicado){editandoId=duplicado.id;notificar("Se actualizará el Power Pack existente, no se creará un duplicado.")}
+ if(editandoId){const i=inventario.findIndex(x=>x.id===editandoId);if(i<0){notificar("No se encontró el registro que intentaba editar.");limpiarFormulario();return}const anterior=inventario[i];inventario[i]={...anterior,nombre,ubicacion,nivel,estado,novedadManual:estado==="FUERA DE SERVICIO"?novedadManual:"",abastecer:estado==="FUERA DE SERVICIO"?false:anterior.abastecer};notificar("Power Pack actualizado correctamente.")}
+ else{inventario.push({id:nuevoId(),nombre,ubicacion,nivel,estado,novedadManual:estado==="FUERA DE SERVICIO"?novedadManual:"",abastecer:false});notificar("Power Pack agregado correctamente.")}
+ persistir();limpiarFormulario();renderizarTabla();
+}
+function eliminarPPk(id){const x=inventario.find(a=>a.id===id);if(!x)return;if(!confirm("¿Desea eliminar el Power Pack "+x.nombre+"? Esta acción no se puede deshacer."))return;inventario=inventario.filter(a=>a.id!==id);persistir();if(editandoId===id)limpiarFormulario();renderizarTabla();notificar("Registro eliminado.")}
+function parseNivel(nivel){const s=String(nivel).trim().toUpperCase().replace(",",".");const m=s.match(/^(\d+(?:\.\d+)?)\s*(%|GLS?|GALONES?)$/);if(!m)return null;return {valor:Number(m[1]),unidad:m[2].startsWith("%")?"%":"GLS"}}
+function marcarSugeridos(){inventario.forEach(x=>{if(x.estado!=="OPERATIVO"){x.abastecer=false;return}const n=parseNivel(x.nivel);x.abastecer=!!n&&(n.unidad==="%"?n.valor<=30:n.valor<=150)});persistir();renderizarTabla();notificar("Se actualizaron las sugerencias según el nivel registrado.")}
+function limpiarListaCorreos(texto){return [...new Set(texto.split(/[;,\n]+/).map(x=>x.trim()).filter(Boolean))]}
+function validarCorreos(lista){const re=/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/;return lista.filter(x=>!re.test(x))}
+function guardarCorreos(){const para=limpiarListaCorreos($("correosPara").value),cc=limpiarListaCorreos($("correosCC").value),malos=[...validarCorreos(para),...validarCorreos(cc)];if(malos.length){alert("Revisa estas direcciones de correo:\n"+malos.join("\n"));return}if(!para.length){alert("Ingresa al menos un destinatario en Para.");$("correosPara").focus();return}guardarCorreosSilencioso();$("panelCorreos").style.display="none";notificar("Destinatarios guardados correctamente.")}
+function cargarCorreos(){$("correosPara").value=localStorage.getItem(CLAVE_PARA)||"";$("correosCC").value=localStorage.getItem(CLAVE_CC)||""}
+function obtenerSaludo(){const h=new Date().getHours();return h>=5&&h<12?"Estimados, buenos días:":h>=12&&h<19?"Estimados, buenas tardes:":"Estimados, buenas noches:"}
+function tablaCorreo(lista){return `<table style="border-collapse:collapse;width:100%;max-width:760px;font-family:Arial,sans-serif;font-size:12px" border="1" cellpadding="0" cellspacing="0"><thead><tr style="background:#12345a;color:#fff"><th style="padding:9px;border:1px solid #9aaabd">PPk</th><th style="padding:9px;border:1px solid #9aaabd">UBICACIÓN</th><th style="padding:9px;border:1px solid #9aaabd">NIVEL</th><th style="padding:9px;border:1px solid #9aaabd">NOVEDAD</th></tr></thead><tbody>${lista.map(x=>`<tr><td style="padding:8px;border:1px solid #b8c4d2;font-weight:bold">${escapar(x.nombre)}</td><td style="padding:8px;border:1px solid #b8c4d2">${escapar(x.ubicacion)}</td><td style="padding:8px;border:1px solid #b8c4d2;background:#fff2a8;font-weight:bold">${escapar(x.nivel)}</td><td style="padding:8px;border:1px solid #b8c4d2">POR ABASTECER</td></tr>`).join("")}</tbody></table>`}
+async function copiarContenidoCorreo(html,texto){
+  // Método principal: copiar HTML enriquecido para pegar la tabla con Ctrl+V.
+  try{
+    if(navigator.clipboard && window.ClipboardItem){
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html":new Blob([html],{type:"text/html"}),
+          "text/plain":new Blob([texto],{type:"text/plain"})
+        })
+      ]);
+      return true;
+    }
+  }catch(error){
+    console.warn("Clipboard API no disponible; se intentará el método alternativo.",error);
+  }
+  // Alternativa para páginas abiertas como archivo local o navegadores sin Clipboard API.
+  let auxiliar;
+  try{
+    auxiliar=document.createElement("div");
+    auxiliar.contentEditable="true";
+    auxiliar.style.position="fixed";
+    auxiliar.style.left="-10000px";
+    auxiliar.style.top="0";
+    auxiliar.style.width="800px";
+    auxiliar.innerHTML=html;
+    document.body.appendChild(auxiliar);
+    const rango=document.createRange();
+    rango.selectNodeContents(auxiliar);
+    const seleccion=window.getSelection();
+    seleccion.removeAllRanges();
+    seleccion.addRange(rango);
+    const correcto=document.execCommand("copy");
+    seleccion.removeAllRanges();
+    auxiliar.remove();
+    if(correcto)return true;
+  }catch(error){
+    console.warn("No se pudo copiar la tabla HTML.",error);
+    if(auxiliar)auxiliar.remove();
+  }
+  // Último respaldo: copiar texto plano si el navegador lo permite.
+  try{
+    const area=document.createElement("textarea");
+    area.value=texto;
+    area.style.position="fixed";
+    area.style.left="-10000px";
+    document.body.appendChild(area);
+    area.focus();
+    area.select();
+    const correcto=document.execCommand("copy");
+    area.remove();
+    return correcto;
+  }catch(error){
+    console.warn("No se pudo copiar el texto de respaldo.",error);
+    return false;
+  }
 }
 
-const badgeEstado=item.estado==="FUERA DE SERVICIO"
-?'<span class="badge-fuera" onclick="cambiarEstadoLinea('+index+')" title="Clic para cambiar estado" style="cursor:pointer">FUERA DE SERVICIO</span>'
-:'<span class="badge-ok" onclick="cambiarEstadoLinea('+index+')" title="Clic para cambiar estado" style="cursor:pointer">OPERATIVO</span>';
+async function generarCorreo(){
+  const seleccionados=inventario.filter(x=>x.abastecer && x.estado==="OPERATIVO");
+  if(!seleccionados.length){
+    alert("Selecciona al menos un Power Pack operativo marcando la casilla ABASTECER.");
+    return;
+  }
+  const para=limpiarListaCorreos($("correosPara").value);
+  const cc=limpiarListaCorreos($("correosCC").value);
+  const malos=[...validarCorreos(para),...validarCorreos(cc)];
+  if(!para.length){
+    $("panelCorreos").style.display="block";
+    alert("Configura al menos un destinatario en Para.");
+    $("correosPara").focus();
+    return;
+  }
+  if(malos.length){
+    $("panelCorreos").style.display="block";
+    alert("Revisa estas direcciones de correo:\\n"+malos.join("\\n"));
+    return;
+  }
+  guardarCorreosSilencioso();
 
-const fila=document.createElement("tr");
+  const saludo=obtenerSaludo();
+  const asunto="ABASTECIMIENTO DE POWER PACK";
+  const tabla=tablaCorreo(seleccionados);
+  const texto=`${saludo}\\n\\nSolicitamos su ayuda con el abastecimiento de los siguientes Power Packs:\\n\\n${seleccionados.map(x=>`${x.nombre} | ${x.ubicacion} | ${x.nivel} | POR ABASTECER`).join("\\n")}\\n\\nSaludos cordiales.`;
+  const html=`<div style="font-family:Arial,sans-serif;font-size:14px;color:#222"><p>${escapar(saludo)}</p><p>Solicitamos su ayuda con el abastecimiento de los siguientes Power Packs:</p>${tabla}<p>Saludos cordiales.</p></div>`;
 
-fila.innerHTML=`
-<td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
-<td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')"><strong>${escapeHTML(item.nombre)}</strong></td>
-<td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
-<td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')">${escapeHTML(item.nivel)}</td>
-<td>${badgeEstado}</td>
-<td>${badgeNovedad}</td>
-<td class="actions-cell">
-<button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button>
-</td>`;
+  // Importante: copiar primero y abrir Outlook después, para no perder el permiso del navegador.
+  const copiado=await copiarContenidoCorreo(html,texto);
+  const destinatarios=para.map(c=>encodeURIComponent(c)).join(";");
+  const params=new URLSearchParams();
+  params.set("subject",asunto);
+  if(cc.length)params.set("cc",cc.join(";"));
+  const mailto="mailto:"+destinatarios+"?"+params.toString();
 
-tbody.appendChild(fila);
-});
+  // No se añade body al mailto para que Outlook conserve su firma configurada.
+  window.location.href=mailto;
 
-localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
+  setTimeout(()=>{
+    alert(
+      "Se solicitó abrir Outlook con los destinatarios y el asunto configurados.\\n\\n"+
+      (copiado
+        ? "El contenido del reporte quedó copiado. En Outlook, haz clic debajo de tu saludo o firma y presiona Ctrl+V para pegar la tabla."
+        : "El navegador no permitió copiar automáticamente. Si Outlook abre, puedes volver a generar el correo o copiar manualmente los datos de la tabla.")
+      +"\\n\\nLa firma de Outlook no se reemplaza: pega el reporte en el lugar deseado y revisa el correo antes de enviarlo."
+    );
+  },800);
 }
 
-/* =========================================================
-   EDICIÓN DIRECTA AL HACER CLIC EN LA CELDA
-========================================================= */
-function editarCelda(celda, index, propiedad){
-if(celda.querySelector("input")) return; // Ya está editando
+function normalizarBusqueda(s){return String(s||"").toLocaleLowerCase("es").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim()}
+function buscarCoincidencias(valor){const q=normalizarBusqueda(valor);if(!q)return [];return inventario.filter(x=>normalizarBusqueda(x.nombre).includes(q)||normalizarBusqueda(x.ubicacion).includes(q)).slice(0,10)}
+function mostrarSugerencias(){const input=$("ppkNombre"),box=$("sugerenciasPPk"),valor=input.value.trim(),coincidencias=buscarCoincidencias(valor);box.innerHTML="";if(!valor||!coincidencias.length){box.style.display="none";$("estadoBusqueda").textContent=valor?"No existe coincidencia. Completa los campos para registrar un Power Pack nuevo.":"Si existe, selecciónalo para cargar sus datos; si no, completa el formulario.";return}
+ coincidencias.forEach(x=>{const b=document.createElement("button");b.type="button";b.className="suggestion";b.setAttribute("role","option");b.innerHTML=`<strong>${escapar(x.nombre)}</strong><small>Ubicación: ${escapar(x.ubicacion)} · Nivel: ${escapar(x.nivel)} · ${escapar(x.estado)}</small>`;b.addEventListener("click",()=>seleccionarPowerPack(x.id));box.appendChild(b)});box.style.display="block";$("estadoBusqueda").textContent=`${coincidencias.length} coincidencia(s). Selecciona el equipo para cargar su información.`}
+function seleccionarPowerPack(id){const x=inventario.find(a=>a.id===id);if(!x)return;editandoId=id;$("ppkNombre").value=x.nombre;$("ppkUbicacion").value=x.ubicacion;$("ppkNivelVal").value=x.nivel;$("ppkEstado").value=x.estado;$("ppkNovedad").value=x.novedadManual;actualizarNovedadManual();$("formTitle").textContent="Actualizar Power Pack existente";$("formMode").textContent="REGISTRO EXISTENTE";$("btnGuardar").textContent="Guardar actualización";$("sugerenciasPPk").style.display="none";$("estadoBusqueda").textContent="Registro existente cargado. Puedes revisar los datos y guardar cambios.";notificar("Power Pack existente cargado. No se creó un duplicado.")}
+function prepararNuevoSiNoExiste(){const nombre=$("ppkNombre").value.trim();if(!nombre)return;const existente=inventario.find(x=>normalizarBusqueda(x.nombre)===normalizarBusqueda(nombre));if(existente){seleccionarPowerPack(existente.id);return}editandoId=null;$("formTitle").textContent="Registrar Power Pack nuevo";$("formMode").textContent="NUEVO REGISTRO";$("btnGuardar").textContent="＋ Guardar Power Pack";$("estadoBusqueda").textContent="No existe este código. Completa ubicación, nivel, estado y novedad si corresponde."}
+$("ppkNombre").addEventListener("input",()=>{if(editandoId){const actual=inventario.find(x=>x.id===editandoId);if(actual&&normalizarBusqueda($("ppkNombre").value)!==normalizarBusqueda(actual.nombre)){editandoId=null;$("formTitle").textContent="Registrar Power Pack nuevo";$("formMode").textContent="NUEVO REGISTRO";$("btnGuardar").textContent="＋ Guardar Power Pack"}}mostrarSugerencias()});
+$("ppkNombre").addEventListener("focus",mostrarSugerencias);
+$("ppkNombre").addEventListener("change",prepararNuevoSiNoExiste);
+$("ppkNombre").addEventListener("keydown",e=>{if(e.key==="Escape")$("sugerenciasPPk").style.display="none";if(e.key==="Enter"&&$("sugerenciasPPk").style.display==="block"){const first=$("sugerenciasPPk").querySelector("button");if(first){e.preventDefault();first.click()}}});
+document.addEventListener("click",e=>{if(!e.target.closest(".autocomplete-wrap"))$("sugerenciasPPk").style.display="none"});
 
-const valorActual = inventario[index][propiedad];
-celda.innerHTML = `<input type="text" value="${escapeHTML(valorActual)}" autofocus>`;
-const input = celda.querySelector("input");
-
-input.onblur = function(){
-guardarCambioCelda(index, propiedad, input.value);
-};
-
-input.onkeydown = function(e){
-if(e.key === "Enter"){
-guardarCambioCelda(index, propiedad, input.value);
-}
-};
-}
-
-function guardarCambioCelda(index, propiedad, nuevoValor){
-const val = nuevoValor.trim();
-if(val !== ""){
-inventario[index][propiedad] = val;
-}
-renderizarTabla();
-}
-
-function cambiarEstadoLinea(index){
-if(inventario[index].estado === "OPERATIVO"){
-inventario[index].estado = "FUERA DE SERVICIO";
-let nov = prompt("Ingrese la novedad o motivo de fuera de servicio:", "Falla mecánica");
-inventario[index].novedadManual = nov ? nov : "Sin novedad especificada";
-} else {
-inventario[index].estado = "OPERATIVO";
-inventario[index].novedadManual = "";
-}
-renderizarTabla();
-}
-
-/* =========================================================
-   AGREGAR / ACTUALIZAR (UPSERT INTELIGENTE)
-========================================================= */
-function guardarPPkRapido(){
-const nombre=document.getElementById("ppkNombre").value.trim();
-const ubicacion=document.getElementById("ppkUbicacion").value.trim();
-const nivel=document.getElementById("ppkNivelVal").value.trim();
-const estado=document.getElementById("ppkEstado").value;
-const novedadManual=document.getElementById("ppkNovedad").value.trim();
-
-if(!nombre||!ubicacion||!nivel){
-alert("Por favor complete Nombre, Ubicación y Nivel.");
-return;
-}
-
-if(estado==="FUERA DE SERVICIO"&&!novedadManual){
-alert("Indique la novedad manual para equipos fuera de servicio.");
-document.getElementById("ppkNovedad").focus();
-return;
-}
-
-// Buscar si ya existe para actualizarlo o crearlo nuevo (Upsert)
-const indexExistente = inventario.findIndex(item => item.nombre.toUpperCase() === nombre.toUpperCase());
-
-if(indexExistente !== -1){
-inventario[indexExistente].ubicacion = ubicacion;
-inventario[indexExistente].nivel = nivel;
-inventario[indexExistente].estado = estado;
-inventario[indexExistente].novedadManual = estado==="FUERA DE SERVICIO" ? novedadManual : "";
-alert("Power Pack actualizado correctamente en la lista.");
-} else {
-inventario.push({
-nombre: nombre,
-ubicacion: ubicacion,
-nivel: nivel,
-estado: estado,
-novedadManual: estado==="FUERA DE SERVICIO" ? novedadManual : "",
-abastecer: false
-});
-alert("Power Pack agregado correctamente.");
-}
-
-limpiarFormulario();
-renderizarTabla();
-}
-
-function eliminarPPk(index){
-if(confirm("¿Desea eliminar el PPk "+inventario[index].nombre+"?")){
-inventario.splice(index,1);
-renderizarTabla();
-}
-}
-
-function limpiarFormulario(){
-document.getElementById("ppkNombre").value="";
-document.getElementById("ppkUbicacion").value="";
-document.getElementById("ppkNivelVal").value="";
-document.getElementById("ppkEstado").value="OPERATIVO";
-document.getElementById("ppkNovedad").value="";
-actualizarNovedadManual();
-}
-
-/* =========================================================
-   CORREO OUTLOOK
-========================================================= */
-function limpiarListaCorreos(texto){
-return texto.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="").join(";");
-}
-
-function obtenerSaludo(){
-const hora=new Date().getHours();
-if(hora>=5&&hora<12)return"Estimados buenos días,";
-if(hora>=12&&hora<19)return"Estimados buenas tardes,";
-return"Estimados buenas noches,";
-}
-
-function construirTablaCorreo(lista){
-let html=`
-<table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:590px;font-family:Arial,sans-serif;font-size:12px;text-align:center">
-<thead>
-<tr style="background:#002060;color:#fff;font-weight:bold">
-<th style="border:1px solid #000;padding:6px">PPk</th>
-<th style="border:1px solid #000;padding:6px">UBICACION</th>
-<th style="border:1px solid #000;padding:6px">NIVEL</th>
-<th style="border:1px solid #000;padding:6px">NOVEDAD</th>
-</tr>
-</thead>
-<tbody>`;
-
-lista.forEach(item=>{
-html+=`
-<tr>
-<td style="border:1px solid #000;padding:5px;font-weight:bold">${escapeHTML(item.nombre)}</td>
-<td style="border:1px solid #000;padding:5px">${escapeHTML(item.ubicacion)}</td>
-<td style="border:1px solid #000;padding:5px;background:#ffff00;font-weight:bold">${escapeHTML(item.nivel)}</td>
-<td style="border:1px solid #000;padding:5px">POR ABASTECER</td>
-</tr>`;
-});
-html+=`</tbody></table>`;
-return html;
-}
-
-async function enviarCorreoOutlook(){
-const seleccionados = inventario.filter(item => item.abastecer === true);
-
-if(seleccionados.length === 0){
-alert("No ha seleccionado ningún Power Pack para abastecer en la tabla.");
-return;
-}
-
-const para=limpiarListaCorreos(document.getElementById("correosPara").value);
-const cc=limpiarListaCorreos(document.getElementById("correosCC").value);
-
-if(!para){
-alert("Configure al menos un correo en el botón de destinatarios (PARA).");
-document.getElementById("correosPara").focus();
-return;
-}
-
-const saludo=obtenerSaludo();
-const asunto="ABASTECIMIENTO DE POWER PACK";
-const tabla=construirTablaCorreo(seleccionados);
-
-const textoPlano=`${saludo}\n\nSu ayuda abasteciendo los siguientes PPks.\n\n`+
-seleccionados.map(x=>x.nombre+" | "+x.ubicacion+" | "+x.nivel+" | POR ABASTECER").join("\n")+
-`\n\nKind Regards,`;
-
-const htmlCorreo=`
-<div style="font-family:Arial,sans-serif;font-size:14px">
-<p>${saludo}</p>
-<p>Su ayuda abasteciendo los siguientes PPks.</p>
-${tabla}
-</div>`;
-
-try{
-if(navigator.clipboard && window.ClipboardItem){
-const blobHtml = new Blob([htmlCorreo], { type: "text/html" });
-const blobText = new Blob([textoPlano], { type: "text/plain" });
-await navigator.clipboard.write([new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText })]);
-}
-}catch(e){
-console.error("Error al copiar portapapeles:", e);
-}
-
-let parametros=[];
-parametros.push("subject="+encodeURIComponent(asunto));
-if(cc)parametros.push("cc="+encodeURIComponent(cc));
-
-const mailto="mailto:"+encodeURIComponent(para)+"?"+parametros.join("&");
-window.location.href=mailto;
-
-setTimeout(()=>{
-alert(
-"📧 CORREO PREPARADO:\n\n" +
-"1. Se abrió Outlook con los destinatarios correctos.\n" +
-"2. La tabla de abastecimiento ya está copiada.\n\n" +
-"👉 Haz clic en el cuerpo de tu mensaje y presiona CTRL + V para pegar la tabla perfectamente.\n\n" +
-"*(Tu firma de Outlook se mantendrá intacta).*");
-}, 600);
-}
-
-/* =========================================================
-   INICIALIZAR
-========================================================= */
-cargarCorreos();
-actualizarNovedadManual();
-renderizarTabla();
+$("ppkForm").addEventListener("submit",guardarPPk);$("ppkEstado").addEventListener("change",actualizarNovedadManual);$("btnLimpiar").addEventListener("click",limpiarFormulario);
+$("btnPanelCorreo").addEventListener("click",()=>{$("panelCorreos").style.display=$("panelCorreos").style.display==="block"?"none":"block"});
+$("btnCerrarCorreo").addEventListener("click",()=>$("panelCorreos").style.display="none");$("btnGuardarCorreos").addEventListener("click",guardarCorreos);
+$("btnSugeridos").addEventListener("click",marcarSugeridos);$("btnDesmarcar").addEventListener("click",()=>{inventario.forEach(x=>x.abastecer=false);persistir();renderizarTabla();notificar("Se desmarcaron todos los equipos.")});
+$("btnCorreo").addEventListener("click",generarCorreo);$("buscar").addEventListener("input",renderizarTabla);$("filtroEstado").addEventListener("change",renderizarTabla);
+cargarCorreos();actualizarNovedadManual();renderizarTabla();
 </script>
-
 </body>
 </html>
