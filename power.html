@@ -133,9 +133,6 @@ function guardarCorreos(){const para=limpiarListaCorreos($("correosPara").value)
 function cargarCorreos(){$("correosPara").value=localStorage.getItem(CLAVE_PARA)\vert{}\vert{}"";$("correosCC").value=localStorage.getItem(CLAVE_CC)||""}
 function obtenerSaludo(){const h=new Date().getHours();return h>=5&&h<12?"Estimados, buenos días:":h>=12&&h<19?"Estimados, buenas tardes:":"Estimados, buenas noches:"}
 
-/* =========================================================
-   ESTRUCTURA DE TABLA PROFESIONAL PARA CORREO (CON ESTILOS)
-========================================================= */
 function tablaCorreo(lista){
 return `
 <table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:590px;font-family:Arial,sans-serif;font-size:12px;text-align:center">
@@ -213,24 +210,25 @@ async function generarCorreo(){
   ${tabla}
   </div>`;
 
-  // Copiar al portapapeles en formato HTML y Texto plano
   const copiado=await copiarContenidoCorreo(htmlCorreo,textoPlano);
   
-  // Generar mailto limpio solo con destinatarios y asunto para respetar la firma de Outlook
-  const destinatarios=para.join(";");
-  let parametros=[];
-  parametros.push("subject="+encodeURIComponent(asunto));
-  if(cc.length) parametros.push("cc="+encodeURIComponent(cc.join(";")));
+  // Construcción robusta del enlace mailto usando codificación estándar directa
+  const emailTo = para.join(";");
+  const emailCc = cc.length > 0 ? cc.join(";") : "";
+  
+  let mailtoUrl = "mailto:" + encodeURIComponent(emailTo) + "?subject=" + encodeURIComponent(asunto);
+  if (emailCc) {
+    mailtoUrl += "&cc=" + encodeURIComponent(emailCc);
+  }
 
-  const mailto="mailto:"+encodeURIComponent(destinatarios)+"?"+parametros.join("&");
-  window.location.href=mailto;
+  window.location.href = mailtoUrl;
 
   setTimeout(()=>{
     alert(
       "📧 CORREO PREPARADO:\n\n" +
-      "1. Se abrió Outlook con los destinatarios y el asunto configurados.\n" +
-      (copiado ? "2. La tabla de abastecimiento con formato ya está copiada en tu memoria.\n\n" : "2. (Aviso) No se pudo copiar automáticamente, revisa tu portapapeles.\n\n") +
-      "👉 Haz clic en el cuerpo de tu mensaje de Outlook y presiona CTRL + V para pegar la tabla perfectamente.\n\n" +
+      "1. Se abrió Outlook con los destinatarios y el asunto.\n" +
+      (copiado ? "2. La tabla de abastecimiento ya está copiada.\n\n" : "2. (Aviso) No se pudo copiar automáticamente.\n\n") +
+      "👉 Haz clic en el cuerpo de tu mensaje de Outlook y presiona CTRL + V para pegar la tabla.\n\n" +
       "*(Tu firma configurada en Outlook se mantendrá intacta).*");
   }, 600);
 }
