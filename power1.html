@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Inventario y Abastecimiento de Power Packs</title>
+<style>
+:root{--primary:#003b7a;--secondary:#0066cc;--accent:#ffeb00;--danger:#dc3545;--success:#198754;--bg:#f4f6f9}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);margin:0;padding:20px;color:#333}
+.container{max-width:1250px;margin:auto;background:#fff;padding:25px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.12)}
+h2{color:var(--primary);border-bottom:2px solid var(--secondary);padding-bottom:10px;margin-top:0}
+h3{color:var(--primary);margin-bottom:10px}
+
+/* Sistema de Pestañas */
+.tabs{display:flex;gap:5px;border-bottom:2px solid var(--secondary);margin-bottom:20px;flex-wrap:wrap}
+.tab-btn{padding:10px 20px;background:#eef2f7;border:none;border-radius:6px 6px 0 0;cursor:pointer;font-weight:bold;color:var(--primary);font-size:.95rem;transition:background 0.2s}
+.tab-btn.active{background:var(--secondary);color:#fff}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:15px;background:#eef2f7;padding:15px;border-radius:6px;margin-bottom:15px}
+.form-group{display:flex;flex-direction:column}
+label{font-weight:600;margin-bottom:5px;font-size:.9rem}
+input,select,textarea{padding:9px;border:1px solid #ccc;border-radius:4px;font-size:.95rem;font-family:inherit}
+textarea{min-height:80px;resize:vertical}
+input:disabled{background:#e9ecef}
+
+/* Panel de correos desplegable */
+.email-container{margin:15px 0}
+.email-panel{background:#eef2f7;padding:15px;border-radius:6px;margin-top:10px;display:none;border-left:4px solid var(--secondary)}
+.email-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.email-help{font-size:.82rem;color:#666;margin-top:5px}
+
+.btn-container{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}
+button{padding:10px 18px;border:0;border-radius:4px;cursor:pointer;font-weight:bold;font-size:.92rem}
+.btn-primary{background:var(--secondary);color:#fff}.btn-primary:hover{background:var(--primary)}
+.btn-outlook{background:#0078d4;color:#fff}.btn-outlook:hover{background:#005a9e}
+.btn-danger{background:#dc3545;color:#fff}.btn-danger:hover{background:#b02a37}
+.btn-secondary{background:#6c757d;color:#fff}.btn-secondary:hover{background:#5c636a}
+
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #ccc;padding:9px;text-align:center;font-size:.9rem}
+th{background:var(--primary);color:#fff}
+tr:nth-child(even){background:#f8f8f8}
+.badge-ok{background:#d4edda;color:#198754;font-weight:bold;padding:4px 8px;border-radius:4px}
+.badge-abastecer{background:#ffeb00;color:#000;font-weight:bold;padding:4px 8px;border-radius:4px}
+.badge-fuera{background:#f8d7da;color:#b02a37;font-weight:bold;padding:4px 8px;border-radius:4px}
+.actions-cell button{padding:5px 9px;font-size:.78rem;margin:2px}
+.info{background:#e8f1ff;border-left:4px solid #0066cc;padding:10px;margin-bottom:15px;font-size:.9rem}
+
+/* Tarjetas de Resumen */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;margin-bottom:20px}
+.summary-card{background:#fff;padding:20px;border-radius:8px;border:1px solid #ddd;box-shadow:0 2px 5px rgba(0,0,0,.05);text-align:center}
+.summary-card h4{margin:0 0 10px 0;color:var(--primary);font-size:1rem}
+.summary-card .number{font-size:1.8rem;font-weight:bold}
+.card-operativo{border-top:4px solid var(--success)}
+.card-abastecer{border-top:4px solid #ffc107}
+.card-fuera{border-top:4px solid var(--danger)}
+
+/* Celdas editables */
+.editable-cell{cursor:pointer;position:relative}
+.editable-cell:hover{background-color:#fff3cd}
+.editable-cell input{width:100%;padding:4px;font-size:0.9rem;text-align:center;border:2px solid var(--secondary);border-radius:3px}
+
+@media(max-width:700px){.email-grid{grid-template-columns:1fr}.container{padding:15px}body{padding:8px}table{font-size:.8rem}}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Inventario y Control de Power Packs (PPk)</h2>
+
+<div class="info">
+<strong>💡 Tips de uso:</strong> 
+<br>• Haz <strong>clic en cualquier celda</strong> de la tabla general para editarla directamente y presiona <i>Enter</i>.
+<br>• La pestaña inicial muestra únicamente los Power Packs que deben abastecerse para un control rápido.
+</div>
+
+<!-- NAVEGACIÓN POR PESTAÑAS -->
+<div class="tabs">
+<button class="tab-btn active" onclick="cambiarPestana('abastecer', event)">⚡ Por Abastecer (Principal)</button>
+<button class="tab-btn" onclick="cambiarPestana('todos', event)">📋 Todos los Power Packs</button>
+<button class="tab-btn" onclick="cambiarPestana('resumen', event)">📊 Resumen del Día</button>
+</div>
+
+<!-- PESTAÑA 1: POR ABASTECER -->
+<div id="tab-abastecer" class="tab-content active">
+<h3>Power Packs Pendientes de Abastecimiento</h3>
+<div class="btn-container" style="margin-top:0; margin-bottom:15px;">
+<button class="btn-secondary" onclick="marcarSugeridosAbastecer()">⚡ Marcar sugeridos (&lt;=30% o &lt;=150 GLS)</button>
+<button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Generar correo de abastecimiento</button>
+</div>
+<table>
+<thead>
+<tr>
+<th>ABASTECER?</th>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL</th>
+<th>ESTADO</th>
+<th>NOVEDAD</th>
+</tr>
+</thead>
+<tbody id="tablaAbastecer"></tbody>
+</table>
+</div>
+
+<!-- PESTAÑA 2: TODOS LOS POWER PACKS -->
+<div id="tab-todos" class="tab-content">
+<h3>Gestión y Listado General</h3>
+
+<div class="form-grid">
+<input type="hidden" id="editIndex" value="-1">
+<div class="form-group">
+<label>Nombre / Código PPk:</label>
+<input type="text" id="ppkNombre" placeholder="Ej: #14 VERDE">
+</div>
+<div class="form-group">
+<label>Ubicación / Bloque:</label>
+<input type="text" id="ppkUbicacion" placeholder="Ej: 1K10">
+</div>
+<div class="form-group">
+<label>Nivel de combustible:</label>
+<input type="text" id="ppkNivelVal" placeholder="Ej: 50% o 130 GLS">
+</div>
+<div class="form-group">
+<label>Estado:</label>
+<select id="ppkEstado" onchange="actualizarNovedadManual()">
+<option value="OPERATIVO">OPERATIVO</option>
+<option value="FUERA DE SERVICIO">FUERA DE SERVICIO</option>
+</select>
+</div>
+<div class="form-group">
+<label>Novedad manual:</label>
+<input type="text" id="ppkNovedad" placeholder="Ej: Falla eléctrica" disabled>
+</div>
+</div>
+
+<div class="btn-container">
+<button class="btn-primary" onclick="guardarPPk()">Guardar / Actualizar PPk</button>
+<button class="btn-secondary" onclick="nuevoPPk()">Nuevo PPk</button>
+<button class="btn-danger" onclick="limpiarFormulario()">Limpiar</button>
+</div>
+
+<!-- PANEL DE CORREOS -->
+<div class="email-container">
+<button class="btn-secondary" onclick="togglePanelCorreos()">⚙️ Configurar Destinatarios (Para / CC)</button>
+<div id="panelCorreos" class="email-panel">
+<h3>Correos Guardados</h3>
+<div class="email-grid">
+<div class="form-group">
+<label>Para:</label>
+<textarea id="correosPara" placeholder="Ingrese un correo por línea o separados por ;"></textarea>
+</div>
+<div class="form-group">
+<label>CC:</label>
+<textarea id="correosCC" placeholder="Ingrese un correo por línea o separados por ;"></textarea>
+</div>
+</div>
+<div class="btn-container" style="margin-top:10px">
+<button class="btn-primary" onclick="guardarCorreos()">💾 Guardar correos</button>
+</div>
+</div>
+</div>
+
+<h3>Listado Completo</h3>
+<table>
+<thead>
+<tr>
+<th>ABASTECER?</th>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL</th>
+<th>ESTADO</th>
+<th>NOVEDAD</th>
+<th>ACCIONES</th>
+</tr>
+</thead>
+<tbody id="tablaInventario"></tbody>
+</table>
+</div>
+
+<!-- PESTAÑA 3: RESUMEN DEL DÍA -->
+<div id="tab-resumen" class="tab-content">
+<h3>📊 Resumen Operativo del Día</h3>
+<div class="summary-grid">
+<div class="summary-card card-operativo">
+<h4>Operativos</h4>
+<div class="number" id="countOperativos">0</div>
+</div>
+<div class="summary-card card-abastecer">
+<h4>Por Abastecer</h4>
+<div class="number" id="countAbastecer">0</div>
+</div>
+<div class="summary-card card-fuera">
+<h4>Fuera de Servicio</h4>
+<div class="number" id="countFuera">0</div>
+</div>
+</div>
+
+<h3 style="margin-top:25px;">Power Packs Fuera de Servicio (Con Fecha de Reporte)</h3>
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>ESTADO</th>
+<th>NOVEDAD / MOTIVO</th>
+<th>FECHA DE REPORTE</th>
+</tr>
+</thead>
+<tbody id="tablaFueraServicio"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+const inventarioInicial=[
+{nombre:"13 VERDE",ubicacion:"CC",nivel:"50%",estado:"OPERATIVO",novedadManual:"",fechaReporte:"",abastecer:false},
+{nombre:"#14 VERDE",ubicacion:"1K10",nivel:"10%",estado:"OPERATIVO",novedadManual:"",fechaReporte:"",abastecer:true},
+{nombre:"#02 VERDE",ubicacion:"1Y",nivel:"130 GLS",estado:"OPERATIVO",novedadManual:"",fechaReporte:"",abastecer:false},
+{nombre:"#06 VERDE",ubicacion:"1X",nivel:"30%",estado:"OPERATIVO",novedadManual:"",fechaReporte:"",abastecer:true}
+];
+
+let inventario=JSON.parse(localStorage.getItem("inventario_ppk"));
+if(!Array.isArray(inventario)){
+inventario=inventarioInicial;
+localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
+}
+
+function cambiarPestana(idTab, evento){
+document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+document.getElementById('tab-' + idTab).classList.add('active');
+evento.currentTarget.classList.add('active');
+}
+
+function togglePanelCorreos(){
+const panel = document.getElementById("panelCorreos");
+panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
+
+function guardarCorreos(){
+const para=document.getElementById("correosPara").value.trim();
+const cc=document.getElementById("correosCC").value.trim();
+localStorage.setItem("ppk_correos_para",para);
+localStorage.setItem("ppk_correos_cc",cc);
+alert("Correos guardados correctamente.");
+togglePanelCorreos();
+}
+
+function cargarCorreos(){
+document.getElementById("correosPara").value=localStorage.getItem("ppk_correos_para")||"";
+document.getElementById("correosCC").value=localStorage.getItem("ppk_correos_cc")||"";
+}
+
+function actualizarNovedadManual(){
+const estado=document.getElementById("ppkEstado").value;
+const campo=document.getElementById("ppkNovedad");
+if(estado==="FUERA DE SERVICIO"){
+campo.disabled=false;
+campo.placeholder="Ej: Falla eléctrica / Mantenimiento";
+}else{
+campo.disabled=true;
+campo.value="";
+campo.placeholder="Solo aplica fuera de servicio";
+}
+}
+
+function escapeHTML(text){
+return String(text||"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+
+function cambiarCheckAbastecer(index, checkbox){
+inventario[index].abastecer = checkbox.checked;
+localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
+actualizarTodo();
+}
+
+function marcarSugeridosAbastecer(){
+inventario.forEach(item=>{
+if(item.estado==="OPERATIVO"){
+const nivel=String(item.nivel).trim().toUpperCase();
+let sugerir=false;
+if(nivel.endsWith("%")){
+const num=parseFloat(nivel.replace("%","").trim());
+if(!isNaN(num)&&num<=30) sugerir=true;
+}else if(nivel.endsWith("GLS")){
+const num=parseFloat(nivel.replace("GLS","").trim());
+if(!isNaN(num)&&num<=150) sugerir=true;
+}
+item.abastecer=sugerir;
+}
+});
+actualizarTodo();
+}
+
+function actualizarTodo(){
+renderizarTablas();
+actualizarResumen();
+localStorage.setItem("inventario_ppk",JSON.stringify(inventario));
+}
+
+function renderizarTablas(){
+const tbodyGeneral=document.getElementById("tablaInventario");
+const tbodyAbastecer=document.getElementById("tablaAbastecer");
+const tbodyFuera=document.getElementById("tablaFueraServicio");
+
+tbodyGeneral.innerHTML="";
+tbodyAbastecer.innerHTML="";
+tbodyFuera.innerHTML="";
+
+let countOp=0, countAbast=0, countFuera=0;
+
+inventario.forEach((item,index)=>{
+if(item.estado === "FUERA DE SERVICIO"){
+countFuera++;
+} else if(item.abastecer){
+countAbast++;
+} else {
+countOp++;
+}
+
+const novedadTexto = item.estado==="FUERA DE SERVICIO"
+?(item.novedadManual&&item.novedadManual.trim()?item.novedadManual.trim():"SIN NOVEDAD REGISTRADA")
+:(item.abastecer?"POR ABASTECER":"OK");
+
+let badgeNovedad = novedadTexto==="OK" ? '<span class="badge-ok">OK</span>' :
+(novedadTexto==="POR ABASTECER" ? '<span class="badge-abastecer">POR ABASTECER</span>' : '<span class="badge-fuera">'+escapeHTML(novedadTexto)+'</span>');
+
+let badgeEstado = item.estado==="FUERA DE SERVICIO" ? '<span class="badge-fuera">FUERA DE SERVICIO</span>' : '<span class="badge-ok">OPERATIVO</span>';
+
+// Fila General
+const filaGen=document.createElement("tr");
+filaGen.innerHTML=`
+<td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
+<td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')"><strong>${escapeHTML(item.nombre)}</strong></td>
+<td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
+<td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')">${escapeHTML(item.nivel)}</td>
+<td>${badgeEstado}</td>
+<td>${badgeNovedad}</td>
+<td class="actions-cell">
+<button class="btn-primary" onclick="editarPPk(${index})">Editar</button>
+<button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button>
+</td>`;
+tbodyGeneral.appendChild(filaGen);
+
+// Fila solo Abastecer
+if(item.abastecer){
+const filaAbast=document.createElement("tr");
+filaAbast.innerHTML=`
+<td><input type="checkbox" checked onchange="cambiarCheckAbastecer(${index}, this)"></td>
+<td><strong>${escapeHTML(item.nombre)}</strong></td>
+<td>${escapeHTML(item.ubicacion)}</td>
+<td>${escapeHTML(item.nivel)}</td>
+<td>${badgeEstado}</td>
+<td>${badgeNovedad}</td>`;
+tbodyAbastecer.appendChild(filaAbast);
+}
+
+// Fila Fuera de Servicio
+if(item.estado==="FUERA DE SERVICIO"){
+const filaFuera=document.createElement("tr");
+filaFuera.innerHTML=`
+<td><strong>${escapeHTML(item.nombre)}</strong></td>
+<td>${escapeHTML(item.ubicacion)}</td>
+<td>${badgeEstado}</td>
+<td>${escapeHTML(item.novedadManual || "Sin novedad")}</td>
+<td><strong>${escapeHTML(item.fechaReporte || "No registrada")}</strong></td>`;
+tbodyFuera.appendChild(filaFuera);
+}
+});
+
+if(tbodyAbastecer.innerHTML===""){
+tbodyAbastecer.innerHTML=`<tr><td colspan="6" style="padding:20px;color:#666;">¡Excelente! No hay Power Packs pendientes de abastecer.</td></tr>`;
+}
+
+document.getElementById("countOperativos").innerText = countOp;
+document.getElementById("countAbastecer").innerText = countAbast;
+document.getElementById("countFuera").innerText = countFuera;
+}
+
+function actualizarResumen(){
+// Ya manejado en renderizarTablas
+}
+
+function editarCelda(celda, index, propiedad){
+if(celda.querySelector("input")) return;
+const valorActual = inventario[index][propiedad];
+celda.innerHTML = `<input type="text" value="${escapeHTML(valorActual)}" autofocus>`;
+const input = celda.querySelector("input");
+input.onblur = function(){ guardarCambioCelda(index, propiedad, input.value); };
+input.onkeydown = function(e){ if(e.key === "Enter") guardarCambioCelda(index, propiedad, input.value); };
+}
+
+function guardarCambioCelda(index, propiedad, nuevoValor){
+const val = nuevoValor.trim();
+if(val !== "") inventario[index][propiedad] = val;
+actualizarTodo();
+}
+
+function guardarPPk(){
+const index=document.getElementById("editIndex").value;
+const nombre=document.getElementById("ppkNombre").value.trim();
+const ubicacion=document.getElementById("ppkUbicacion").value.trim();
+const nivel=document.getElementById("ppkNivelVal").value.trim();
+const estado=document.getElementById("ppkEstado").value;
+const novedadManual=document.getElementById("ppkNovedad").value.trim();
+
+if(!nombre||!ubicacion||!nivel){
+alert("Complete nombre, ubicación y nivel.");
+return;
+}
+if(estado==="FUERA DE SERVICIO"&&!novedadManual){
+alert("Si está fuera de servicio debe ingresar la novedad.");
+document.getElementById("ppkNovedad").focus();
+return;
+}
+
+// Obtener fecha actual formateada si se marca fuera de servicio o se crea con falla
+let fechaActual = "";
+if(estado==="FUERA DE SERVICIO"){
+const d = new Date();
+fechaActual = d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+const nuevo={
+nombre:nombre,
+ubicacion:ubicacion,
+nivel:nivel,
+estado:estado,
+novedadManual:estado==="FUERA DE SERVICIO"?novedadManual:"",
+fechaReporte: estado==="FUERA DE SERVICIO" ? (index==="-1" ? fechaActual : (inventario[parseInt(index)].fechaReporte || fechaActual)) : "",
+abastecer: index==="-1"? false : inventario[parseInt(index)].abastecer
+};
+
+if(index==="-1"){
+inventario.push(nuevo);
+alert("Power Pack agregado.");
+}else{
+inventario[parseInt(index)]=nuevo;
+alert("Power Pack actualizado.");
+}
+
+limpiarFormulario();
+actualizarTodo();
+}
+
+function nuevoPPk(){
+limpiarFormulario();
+document.getElementById("ppkNombre").focus();
+}
+
+function editarPPk(index){
+const item=inventario[index];
+document.getElementById("ppkNombre").value=item.nombre;
+document.getElementById("ppkUbicacion").value=item.ubicacion;
+document.getElementById("ppkNivelVal").value=item.nivel;
+document.getElementById("ppkEstado").value=item.estado;
+document.getElementById("ppkNovedad").value=item.novedadManual||"";
+document.getElementById("editIndex").value=index;
+actualizarNovedadManual();
+// Cambiar a la pestaña de todos para ver el formulario
+document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+document.getElementById('tab-todos').classList.add('active');
+document.querySelectorAll('.tab-btn')[1].classList.add('active');
+window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function eliminarPPk(index){
+if(confirm("¿Desea eliminar el PPk "+inventario[index].nombre+"?")){
+inventario.splice(index,1);
+actualizarTodo();
+}
+}
+
+function limpiarFormulario(){
+document.getElementById("ppkNombre").value="";
+document.getElementById("ppkUbicacion").value="";
+document.getElementById("ppkNivelVal").value="";
+document.getElementById("ppkEstado").value="OPERATIVO";
+document.getElementById("ppkNovedad").value="";
+document.getElementById("editIndex").value="-1";
+actualizarNovedadManual();
+}
+
+function obtenerSaludo(){
+const hora=new Date().getHours();
+if(hora>=5&&hora<12)return"Estimados buenos días,";
+if(hora>=12&&hora<19)return"Estimados buenas tardes,";
+return"Estimados buenas noches,";
+}
+
+function construirTablaCorreo(lista){
+let html=`<table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:590px;font-family:Arial,sans-serif;font-size:12px;text-align:center">
+<thead><tr style="background:#002060;color:#fff;font-weight:bold">
+<th style="border:1px solid #000;padding:6px">PPk</th>
+<th style="border:1px solid #000;padding:6px">UBICACION</th>
+<th style="border:1px solid #000;padding:6px">NIVEL</th>
+<th style="border:1px solid #000;padding:6px">NOVEDAD</th>
+</tr></thead><tbody>`;
+lista.forEach(item=>{
+html+=`<tr>
+<td style="border:1px solid #000;padding:5px;font-weight:bold">${escapeHTML(item.nombre)}</td>
+<td style="border:1px solid #000;padding:5px">${escapeHTML(item.ubicacion)}</td>
+<td style="border:1px solid #000;padding:5px;background:#ffff00;font-weight:bold">${escapeHTML(item.nivel)}</td>
+<td style="border:1px solid #000;padding:5px">POR ABASTECER</td>
+</tr>`;
+});
+html+=`</tbody></table>`;
+return html;
+}
+
+async function enviarCorreoOutlook(){
+const seleccionados = inventario.filter(item => item.abastecer === true);
+if(seleccionados.length === 0){
+alert("No hay ningún Power Pack seleccionado para abastecer.");
+return;
+}
+const paraOriginal=document.getElementById("correosPara").value.trim();
+const ccOriginal=document.getElementById("correosCC").value.trim();
+const paraArray = paraOriginal.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="");
+const ccArray = ccOriginal.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="");
+
+if(paraArray.length === 0){
+alert("Configure al menos un correo en PARA antes de enviar.");
+return;
+}
+guardarCorreos();
+
+const saludo=obtenerSaludo();
+const asunto="ABASTECIMIENTO DE POWER PACK";
+const tabla=construirTablaCorreo(seleccionados);
+const textoPlano=`${saludo}\n\nSu ayuda abasteciendo los siguientes PPks.\n\n`+
+seleccionados.map(x=>x.nombre+" | "+x.ubicacion+" | "+x.nivel+" | POR ABASTECER").join("\n")+`\n\nKind Regards,`;
+const htmlCorreo=`<div style="font-family:Arial,sans-serif;font-size:14px"><p>${escapeHTML(saludo)}</p><p>Su ayuda abasteciendo los siguientes PPks.</p>${tabla}</div>`;
+
+try{
+if(navigator.clipboard && window.ClipboardItem){
+const blobHtml = new Blob([htmlCorreo], { type: "text/html" });
+const blobText = new Blob([textoPlano], { type: "text/plain" });
+await navigator.clipboard.write([new ClipboardItem({ "text/html": blobHtml, "text/plain": blobText })]);
+}
+}catch(e){ console.error(e); }
+
+let mailto = "mailto:" + encodeURIComponent(paraArray.join(";")) + "?subject=" + encodeURIComponent(asunto);
+if(ccArray.length > 0) mailto += "&cc=" + encodeURIComponent(ccArray.join(";"));
+window.location.href = mailto;
+
+setTimeout(()=>{
+alert("📧 CORREO PREPARADO:\n\n1. Outlook abierto.\n2. La tabla ya fue copiada.\n\n👉 Haz clic en el cuerpo de tu mensaje en Outlook y presiona CTRL + V.");
+}, 600);
+}
+
+// Inicializar
+cargarCorreos();
+actualizarNovedadManual();
+actualizarTodo();
+</script>
+
+</body>
+</html>
