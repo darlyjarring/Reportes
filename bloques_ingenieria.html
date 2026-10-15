@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Unidades Reefer - Terminal</title>
+    <!-- Tailwind CSS para un diseño profesional -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS para leer archivos Excel en el navegador -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- ENCABEZADO -->
+        <header class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-400">Control y Análisis de Unidades Reefer</h1>
+                <p class="text-slate-400 text-sm mt-1">Sube tu archivo Excel para procesar bloques, bahías, temperaturas y toma de decisiones de desconexión.</p>
+            </div>
+            <div class="flex items-center gap-3 w-full md:w-auto">
+                <label for="excelFile" class="cursor-pointer bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-lg shadow transition flex items-center gap-2 w-full md:w-auto justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Seleccionar Archivo Excel
+                </label>
+                <input type="file" id="excelFile" accept=".xlsx, .xls, .xlsm" class="hidden" />
+            </div>
+        </header>
+
+        <!-- CONTENEDOR DE RESULTADOS -->
+        <div id="resultsContainer" class="hidden space-y-6">
+            
+            <!-- RESUMEN GENERAL -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow">
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Unidades CA</span>
+                    <h2 id="valCA" class="text-3xl font-extrabold text-blue-400 mt-2">0</h2>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow">
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Unidades COLD</span>
+                    <h2 id="valCold" class="text-3xl font-extrabold text-cyan-400 mt-2">0</h2>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow">
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">CA a 5 de Alto</span>
+                    <h2 id="valCA5" class="text-3xl font-extrabold text-amber-400 mt-2">0</h2>
+                </div>
+                <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow">
+                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total CA + COLD</span>
+                    <h2 id="valTotalCACold" class="text-3xl font-extrabold text-emerald-400 mt-2">0</h2>
+                </div>
+            </div>
+
+            <!-- TABLAS DETALLADAS -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Tabla CA -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                    <div class="bg-blue-900/60 px-4 py-3 border-b border-slate-700 font-bold text-blue-200">
+                        Unidades de Bloque CA
+                    </div>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-900/80 text-slate-300 sticky top-0">
+                                <tr>
+                                    <th class="p-3">Bloques</th>
+                                    <th class="p-3">Bahías</th>
+                                    <th class="p-3 text-right">Unidades</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyCA" class="divide-y divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabla COLD -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                    <div class="bg-cyan-900/60 px-4 py-3 border-b border-slate-700 font-bold text-cyan-200">
+                        Unidades de Bloque Cold Treatment
+                    </div>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-900/80 text-slate-300 sticky top-0">
+                                <tr>
+                                    <th class="p-3">Bloques</th>
+                                    <th class="p-3">Bahías</th>
+                                    <th class="p-3 text-right">Unidades</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyCold" class="divide-y divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Tabla Temperaturas -->
+                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                    <div class="bg-amber-900/60 px-4 py-3 border-b border-slate-700 font-bold text-amber-200">
+                        Temp. Requerida (-5 a 7 °C)
+                    </div>
+                    <div class="overflow-x-auto max-h-96">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-900/80 text-slate-300 sticky top-0">
+                                <tr>
+                                    <th class="p-3">Bloques</th>
+                                    <th class="p-3">Bahías</th>
+                                    <th class="p-3 text-right">Unidades</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBodyTemp" class="divide-y divide-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- TOMA DE DECISIONES / DESCONEXIÓN -->
+            <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
+                <div class="bg-orange-900/60 px-6 py-4 border-b border-slate-700 font-bold text-orange-200 flex justify-between items-center">
+                    <span>Toma de Decisiones - Bahías Aptas para Desconectar</span>
+                    <span class="text-xs bg-orange-700/50 px-2.5 py-1 rounded-full text-orange-200">Análisis Automatizado</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-900/80 text-slate-300">
+                            <tr>
+                                <th class="p-3.5">Bloque</th>
+                                <th class="p-3.5">Bahías sin Carga (Apto para Desconectar) / Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBodyDecision" class="divide-y divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- SCRIPT DE PROCESAMIENTO -->
+    <script>
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    processWorkbook(workbook);
+                } catch (err) {
+                    alert('Error al procesar el archivo Excel: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function processWorkbook(workbook) {
+            let ws = null;
+            let colGradeIdx = -1;
+            let colPosIdx = -1;
+            let colTempIdx = -1;
+            let headerRowIndex = 4; // Fila 5 en base 0
+
+            // Buscar la hoja correcta que contenga GradeID y Position en la fila 5
+            for (let name of workbook.SheetNames) {
+                let sheet = workbook.Sheets[name];
+                let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                
+                if (json.length > headerRowIndex) {
+                    let headers = json[headerRowIndex].map(h => h ? h.toString().trim() : '');
+                    let gIdx = headers.indexOf("GradeID");
+                    let pIdx = headers.indexOf("Position");
+                    if (gIdx !== -1 && pIdx !== -1) {
+                        ws = sheet;
+                        colGradeIdx = gIdx;
+                        colPosIdx = pIdx;
+                        colTempIdx = headers.indexOf("Temp Required (C)");
+                        break;
+                    }
+                }
+            }
+
+            if (!ws) {
+                alert("No se encontró ninguna hoja con los encabezados 'GradeID' y 'Position' en la fila 5.");
+                return;
+            }
+
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+            
+            let totalCA = 0;
+            let totalCold = 0;
+            let ca5Alto = 0;
+            let totalTemp = 0;
+
+            let dictCA_Unidades = {};
+            let dictCA_Bahias = {};
+            let dictCold_Unidades = {};
+            let dictCold_Bahias = {};
+            let dictTemp_Unidades = {};
+            let dictTemp_Bahias = {};
+
+            // Recorrer datos desde la fila 6 (índice 5)
+            for (let i = 5; i < rows.length; i++) {
+                let row = rows[i];
+                if (!row) continue;
+
+                let gradeID = row[colGradeIdx] ? row[colGradeIdx].toString().trim().toUpperCase() : '';
+                let posicion = row[colPosIdx] ? row[colPosIdx].toString().trim() : '';
+
+                // Evaluar Temperatura Requerida (-5 a 7)
+                let esTempValida = false;
+                if (colTempIdx !== -1 && row[colTempIdx] !== undefined && row[colTempIdx] !== '') {
+                    let valTemp = parseFloat(row[colTempIdx]);
+                    if (!isNaN(valTemp) && valTemp >= -5 && valTemp <= 7) {
+                        esTempValida = true;
+                    }
+                }
+
+                let bloque = obtenerBloque(posicion);
+                let bahia = obtenerBahia(posicion);
+
+                if (esTempValida) {
+                    totalTemp++;
+                    if (!dictTemp_Unidades[bloque]) {
+                        dictTemp_Unidades[bloque] = 1;
+                        dictTemp_Bahias[bloque] = bahia;
+                    } else {
+                        dictTemp_Unidades[bloque]++;
+                        if (!verificarBahiaEnLista(dictTemp_Bahias[bloque], bahia)) {
+                            dictTemp_Bahias[bloque] += "-" + bahia;
+                        }
+                    }
+                }
+
+                if (gradeID === "CA" || gradeID === "COLD") {
+                    let altura = obtenerAltura(posicion);
+
+                    if (gradeID === "CA") {
+                        totalCA++;
+                        if (altura === "5") ca5Alto++;
+
+                        if (!dictCA_Unidades[bloque]) {
+                            dictCA_Unidades[bloque] = 1;
+                            dictCA_Bahias[bloque] = bahia;
+                        } else {
+                            dictCA_Unidades[bloque]++;
+                            if (!verificarBahiaEnLista(dictCA_Bahias[bloque], bahia)) {
+                                dictCA_Bahias[bloque] += "-" + bahia;
+                            }
+                        }
+                    }
+
+                    if (gradeID === "COLD") {
+                        totalCold++;
+
+                        if (!dictCold_Unidades[bloque]) {
+                            dictCold_Unidades[bloque] = 1;
+                            dictCold_Bahias[bloque] = bahia;
+                        } else {
+                            dictCold_Unidades[bloque]++;
+                            if (!verificarBahiaEnLista(dictCold_Bahias[bloque], bahia)) {
+                                dictCold_Bahias[bloque] += "-" + bahia;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Mostrar resultados en la interfaz
+            document.getElementById('valCA').innerText = totalCA;
+            document.getElementById('valCold').innerText = totalCold;
+            document.getElementById('valCA5').innerText = ca5Alto;
+            document.getElementById('valTotalCACold').innerText = totalCA + totalCold;
+
+            renderTable('tableBodyCA', dictCA_Unidades, dictCA_Bahias, totalCA);
+            renderTable('tableBodyCold', dictCold_Unidades, dictCold_Bahias, totalCold);
+            renderTable('tableBodyTemp', dictTemp_Unidades, dictTemp_Bahias, totalTemp);
+            renderDecisionTable(dictCA_Bahias, dictCold_Bahias, dictTemp_Bahias, dictCA_Unidades, dictCold_Unidades, dictTemp_Unidades);
+
+            document.getElementById('resultsContainer').classList.remove('hidden');
+        }
+
+        function obtenerBloque(pos) {
+            if (!pos) return "OTROS";
+            let up = pos.toUpperCase();
+            if (up.includes("REP")) return "Depot";
+            let partes = pos.split("-");
+            if (partes.length >= 3) {
+                let sub = partes[2];
+                let uSub = sub.toUpperCase();
+                if (uSub.startsWith("S") || uSub.startsWith("1X") || uSub.startsWith("1Y")) {
+                    return sub.substring(0, 2);
+                }
+                return sub.substring(0, 2);
+            }
+            return "OTROS";
+        }
+
+        function obtenerBahia(pos) {
+            if (!pos) return "00";
+            let up = pos.toUpperCase();
+            let partes = pos.split("-");
+            if (partes.length >= 3) {
+                let sub = partes[2];
+                let limpia = sub.includes(".") ? sub.split(".")[0] : sub;
+                if (up.includes("REP")) {
+                    return limpia.length >= 5 ? limpia.substring(3, 5) : "02";
+                }
+                if (sub.toUpperCase().startsWith("S") || sub.toUpperCase().startsWith("1X") || sub.toUpperCase().startsWith("1Y")) {
+                    return limpia.length >= 4 ? limpia.substring(2, 4) : "00";
+                }
+                if (limpia.length >= 4) {
+                    return limpia.substring(2, 4);
+                }
+            }
+            return "00";
+        }
+
+        function obtenerAltura(pos) {
+            if (!pos) return "";
+            let idx = pos.lastIndexOf(".");
+            return idx !== -1 ? pos.substring(idx + 1).trim() : "";
+        }
+
+        function verificarBahiaEnLista(listaStr, bahia) {
+            let arr = listaStr.split("-");
+            return arr.includes(bahia);
+        }
+
+        function renderTable(elementId, unidadesObj, bahiasObj, total) {
+            let tbody = document.getElementById(elementId);
+            tbody.innerHTML = "";
+            let keys = Object.keys(unidadesObj).sort();
+
+            keys.forEach(k => {
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-700/50 transition";
+                tr.innerHTML = `
+                    <td class="p-3 font-medium text-slate-200">${k}</td>
+                    <td class="p-3 text-slate-300">${bahiasObj[k]}</td>
+                    <td class="p-3 text-right font-semibold text-blue-300">${unidadesObj[k]}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            let trTotal = document.createElement('tr');
+            trTotal.className = "bg-slate-900/60 font-bold border-t border-slate-700";
+            trTotal.innerHTML = `
+                <td class="p-3">TOTAL</td>
+                <td class="p-3">-</td>
+                <td class="p-3 text-right text-emerald-400">${total}</td>
+            `;
+            tbody.appendChild(trTotal);
+        }
+
+        function renderDecisionTable(cBahias, coBahias, tBahias, cUni, coUni, tUni) {
+            let tbody = document.getElementById('tableBodyDecision');
+            tbody.innerHTML = "";
+
+            let allBlocksObj = {};
+            Object.keys(cUni).forEach(k => allBlocksObj[k] = true);
+            Object.keys(coUni).forEach(k => allBlocksObj[k] = true);
+            Object.keys(tUni).forEach(k => allBlocksObj[k] = true);
+
+            let keys = Object.keys(allBlocksObj).sort();
+            let bahiasStandard = ["48", "52", "56", "60", "64", "68", "72", "76", "80", "84", "88", "92", "96"];
+
+            keys.forEach(k => {
+                let upK = k.toUpperCase();
+                let esEspecial = upK.includes("DEPOT") || upK.startsWith("S") || upK.startsWith("1X") || upK.startsWith("1Y");
+
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-700/50 transition";
+
+                let estadoTexto = "";
+                if (esEspecial) {
+                    estadoTexto = "<span class='text-amber-300 font-semibold'>BLOQUE ESPECIAL (REVISAR LOCALMENTE)</span>";
+                } else {
+                    let ocupadas = "-";
+                    if (cBahias[k]) ocupadas += cBahias[k] + "-";
+                    if (coBahias[k]) ocupadas += coBahias[k] + "-";
+                    if (tBahias[k]) ocupadas += tBahias[k] + "-";
+
+                    let libresArr = [];
+                    bahiasStandard.forEach(b => {
+                        if (!ocupadas.includes("-" + b + "-")) {
+                            libresArr.push(b);
+                        }
+                    });
+
+                    if (libresArr.length > 0) {
+                        estadoTexto = `<span class='text-emerald-400 font-bold'>${libresArr.join("-")} -> APTO PARA DESCONECTAR</span>`;
+                    } else {
+                        estadoTexto = `<span class='text-slate-400'>TODAS LAS BAHÍAS ESTÁN OCUPADAS</span>`;
+                    }
+                }
+
+                tr.innerHTML = `
+                    <td class="p-3.5 font-medium text-slate-200">${k}</td>
+                    <td class="p-3.5">${estadoTexto}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
