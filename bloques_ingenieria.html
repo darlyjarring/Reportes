@@ -3,111 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Análisis de Unidades Reefer - Terminal</title>
-    <!-- Tailwind CSS para un diseño profesional -->
+    <title>Control y Análisis de Unidades Reefer</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS para leer archivos Excel en el navegador -->
+    <!-- SheetJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-6">
-    <div class="max-w-7xl mx-auto space-y-6">
+<body class="bg-slate-100 text-slate-800 min-h-screen p-4 md:p-6">
+    <div class="max-w-7xl mx-auto space-y-5">
         
-        <!-- ENCABEZADO -->
-        <header class="bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-xl flex flex-col md:flex-row justify-between items-center gap-4">
+        <!-- ENCABEZADO COMPACTO -->
+        <header class="bg-white border border-slate-300 rounded-lg p-4 shadow-sm flex flex-col sm:flex-row justify-between items-center gap-3">
             <div>
-                <h1 class="text-2xl font-bold text-blue-400">Control y Análisis de Unidades Reefer</h1>
-                <p class="text-slate-400 text-sm mt-1">Sube tu archivo Excel para procesar bloques, bahías, temperaturas y toma de decisiones de desconexión.</p>
+                <h1 class="text-xl font-bold text-[#1f4e79]">Análisis de Unidades Reefer</h1>
+                <p class="text-slate-500 text-xs mt-0.5">Control portuario de bloques, bahías y toma de decisiones de desconexión.</p>
             </div>
-            <div class="flex items-center gap-3 w-full md:w-auto">
-                <label for="excelFile" class="cursor-pointer bg-blue-600 hover:bg-blue-500 text-white font-semibold px-5 py-2.5 rounded-lg shadow transition flex items-center gap-2 w-full md:w-auto justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                    </svg>
-                    Seleccionar Archivo Excel
-                </label>
-                <input type="file" id="excelFile" accept=".xlsx, .xls, .xlsm" class="hidden" />
-            </div>
+            <label for="excelFile" class="cursor-pointer bg-[#2f5597] hover:bg-[#1f4e79] text-white font-semibold text-sm px-4 py-2 rounded shadow transition flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Subir Reporte Excel
+            </label>
+            <input type="file" id="excelFile" accept=".xlsx, .xls, .xlsm" class="hidden" />
         </header>
 
         <!-- CONTENEDOR DE RESULTADOS -->
-        <div id="resultsContainer" class="hidden space-y-6">
+        <div id="resultsContainer" class="hidden space-y-5">
             
-            <!-- RESUMEN GENERAL -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Unidades CA</span>
-                    <h2 id="valCA" class="text-3xl font-extrabold text-blue-400 mt-2">0</h2>
+            <!-- RESUMEN GENERAL COMPACTO -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-white border border-slate-300 p-3.5 rounded-lg shadow-sm border-l-4 border-l-[#4472c4]">
+                    <span class="text-slate-500 text-[11px] font-bold uppercase">Total CA</span>
+                    <h2 id="valCA" class="text-2xl font-black text-[#1f4e79] mt-1">0</h2>
                 </div>
-                <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Unidades COLD</span>
-                    <h2 id="valCold" class="text-3xl font-extrabold text-cyan-400 mt-2">0</h2>
+                <div class="bg-white border border-slate-300 p-3.5 rounded-lg shadow-sm border-l-4 border-l-[#00b0f0]">
+                    <span class="text-slate-500 text-[11px] font-bold uppercase">Total Cold</span>
+                    <h2 id="valCold" class="text-2xl font-black text-[#0070c0] mt-1">0</h2>
                 </div>
-                <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">CA a 5 de Alto</span>
-                    <h2 id="valCA5" class="text-3xl font-extrabold text-amber-400 mt-2">0</h2>
+                <div class="bg-white border border-slate-300 p-3.5 rounded-lg shadow-sm border-l-4 border-l-[#ffc000]">
+                    <span class="text-slate-500 text-[11px] font-bold uppercase">CA a 5 de Alto</span>
+                    <h2 id="valCA5" class="text-2xl font-black text-[#b25900] mt-1">0</h2>
                 </div>
-                <div class="bg-slate-800 border border-slate-700 p-5 rounded-xl shadow">
-                    <span class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total CA + COLD</span>
-                    <h2 id="valTotalCACold" class="text-3xl font-extrabold text-emerald-400 mt-2">0</h2>
+                <div class="bg-white border border-slate-300 p-3.5 rounded-lg shadow-sm border-l-4 border-l-[#548235]">
+                    <span class="text-slate-500 text-[11px] font-bold uppercase">Total CA + Cold</span>
+                    <h2 id="valTotalCACold" class="text-2xl font-black text-[#385723] mt-1">0</h2>
                 </div>
             </div>
 
-            <!-- TABLAS DETALLADAS -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- ALERTA CRÍTICA PARA COLD A 5 DE ALTO -->
+            <div id="coldAlertBox" class="hidden bg-[#ffeb9c] border border-[#ffc000] text-[#9c6500] p-3 rounded-lg text-sm font-semibold flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#9c6500]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span id="coldAlertText">¡Atención! Se detectaron unidades COLD ubicadas a 5 de alto (requieren revisión).</span>
+                </div>
+            </div>
+
+            <!-- TABLAS ESTILO EXCEL (3 COLUMNAS) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 
                 <!-- Tabla CA -->
-                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
-                    <div class="bg-blue-900/60 px-4 py-3 border-b border-slate-700 font-bold text-blue-200">
+                <div class="bg-white border border-slate-300 rounded-lg overflow-hidden shadow-sm">
+                    <div class="bg-[#4472c4] text-white px-3.5 py-2 font-bold text-xs uppercase tracking-wide">
                         Unidades de Bloque CA
                     </div>
-                    <div class="overflow-x-auto max-h-96">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-900/80 text-slate-300 sticky top-0">
+                    <div class="overflow-x-auto max-h-72">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-[#d9e1f2] text-[#1f4e79] sticky top-0 border-b border-slate-300 font-bold">
                                 <tr>
-                                    <th class="p-3">Bloques</th>
-                                    <th class="p-3">Bahías</th>
-                                    <th class="p-3 text-right">Unidades</th>
+                                    <th class="p-2">Bloque</th>
+                                    <th class="p-2">Bahías</th>
+                                    <th class="p-2 text-right">Unid.</th>
                                 </tr>
                             </thead>
-                            <tbody id="tableBodyCA" class="divide-y divide-slate-700"></tbody>
+                            <tbody id="tableBodyCA" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
 
                 <!-- Tabla COLD -->
-                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
-                    <div class="bg-cyan-900/60 px-4 py-3 border-b border-slate-700 font-bold text-cyan-200">
-                        Unidades de Bloque Cold Treatment
+                <div class="bg-white border border-slate-300 rounded-lg overflow-hidden shadow-sm">
+                    <div class="bg-[#0070c0] text-white px-3.5 py-2 font-bold text-xs uppercase tracking-wide">
+                        Unidades Cold Treatment
                     </div>
-                    <div class="overflow-x-auto max-h-96">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-900/80 text-slate-300 sticky top-0">
+                    <div class="overflow-x-auto max-h-72">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-[#d9e1f2] text-[#1f4e79] sticky top-0 border-b border-slate-300 font-bold">
                                 <tr>
-                                    <th class="p-3">Bloques</th>
-                                    <th class="p-3">Bahías</th>
-                                    <th class="p-3 text-right">Unidades</th>
+                                    <th class="p-2">Bloque</th>
+                                    <th class="p-2">Bahías</th>
+                                    <th class="p-2 text-right">Unid.</th>
                                 </tr>
                             </thead>
-                            <tbody id="tableBodyCold" class="divide-y divide-slate-700"></tbody>
+                            <tbody id="tableBodyCold" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
 
                 <!-- Tabla Temperaturas -->
-                <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
-                    <div class="bg-amber-900/60 px-4 py-3 border-b border-slate-700 font-bold text-amber-200">
+                <div class="bg-white border border-slate-300 rounded-lg overflow-hidden shadow-sm">
+                    <div class="bg-[#ed7d31] text-white px-3.5 py-2 font-bold text-xs uppercase tracking-wide">
                         Temp. Requerida (-5 a 7 °C)
                     </div>
-                    <div class="overflow-x-auto max-h-96">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-slate-900/80 text-slate-300 sticky top-0">
+                    <div class="overflow-x-auto max-h-72">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-[#fce4d6] text-[#c65911] sticky top-0 border-b border-slate-300 font-bold">
                                 <tr>
-                                    <th class="p-3">Bloques</th>
-                                    <th class="p-3">Bahías</th>
-                                    <th class="p-3 text-right">Unidades</th>
+                                    <th class="p-2">Bloque</th>
+                                    <th class="p-2">Bahías</th>
+                                    <th class="p-2 text-right">Unid.</th>
                                 </tr>
                             </thead>
-                            <tbody id="tableBodyTemp" class="divide-y divide-slate-700"></tbody>
+                            <tbody id="tableBodyTemp" class="divide-y divide-slate-200"></tbody>
                         </table>
                     </div>
                 </div>
@@ -115,20 +126,20 @@
             </div>
 
             <!-- TOMA DE DECISIONES / DESCONEXIÓN -->
-            <div class="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden shadow">
-                <div class="bg-orange-900/60 px-6 py-4 border-b border-slate-700 font-bold text-orange-200 flex justify-between items-center">
+            <div class="bg-white border border-slate-300 rounded-lg overflow-hidden shadow-sm">
+                <div class="bg-[#2f5597] text-white px-4 py-2.5 font-bold text-xs uppercase tracking-wide flex justify-between items-center">
                     <span>Toma de Decisiones - Bahías Aptas para Desconectar</span>
-                    <span class="text-xs bg-orange-700/50 px-2.5 py-1 rounded-full text-orange-200">Análisis Automatizado</span>
+                    <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded text-white font-normal">Análisis Automático</span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-900/80 text-slate-300">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-[#d9e1f2] text-[#1f4e79] border-b border-slate-300 font-bold">
                             <tr>
-                                <th class="p-3.5">Bloque</th>
-                                <th class="p-3.5">Bahías sin Carga (Apto para Desconectar) / Estado</th>
+                                <th class="p-2.5 w-32">Bloque</th>
+                                <th class="p-2.5">Bahías sin Carga (Apto para Desconectar) / Estado</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBodyDecision" class="divide-y divide-slate-700"></tbody>
+                        <tbody id="tableBodyDecision" class="divide-y divide-slate-200"></tbody>
                     </table>
                 </div>
             </div>
@@ -137,7 +148,7 @@
 
     </div>
 
-    <!-- SCRIPT DE PROCESAMIENTO INTELIGENTE -->
+    <!-- SCRIPT DE PROCESAMIENTO -->
     <script>
         document.getElementById('excelFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -163,7 +174,6 @@
             let colTempIdx = -1;
             let headerRowIndex = -1;
 
-            // Búsqueda inteligente de columnas en las primeras 15 filas de todas las hojas
             for (let name of workbook.SheetNames) {
                 let sheet = workbook.Sheets[name];
                 let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
@@ -198,6 +208,7 @@
             let totalCA = 0;
             let totalCold = 0;
             let ca5Alto = 0;
+            let cold5Alto = 0;
             let totalTemp = 0;
 
             let dictCA_Unidades = {};
@@ -207,7 +218,6 @@
             let dictTemp_Unidades = {};
             let dictTemp_Bahias = {};
 
-            // Recorrer datos desde la fila inmediatamente posterior a los encabezados encontrados
             for (let i = headerRowIndex + 1; i < rows.length; i++) {
                 let row = rows[i];
                 if (!row) continue;
@@ -217,7 +227,6 @@
 
                 if (!posicion) continue;
 
-                // Evaluar Temperatura Requerida (-5 a 7)
                 let esTempValida = false;
                 if (colTempIdx !== -1 && row[colTempIdx] !== undefined && row[colTempIdx] !== '') {
                     let valTemp = parseFloat(row[colTempIdx]);
@@ -228,6 +237,7 @@
 
                 let bloque = obtenerBloque(posicion);
                 let bahia = obtenerBahia(posicion);
+                let altura = obtenerAltura(posicion);
 
                 if (esTempValida) {
                     totalTemp++;
@@ -243,8 +253,6 @@
                 }
 
                 if (gradeID === "CA" || gradeID === "COLD") {
-                    let altura = obtenerAltura(posicion);
-
                     if (gradeID === "CA") {
                         totalCA++;
                         if (altura === "5") ca5Alto++;
@@ -262,6 +270,7 @@
 
                     if (gradeID === "COLD") {
                         totalCold++;
+                        if (altura === "5") cold5Alto++;
 
                         if (!dictCold_Unidades[bloque]) {
                             dictCold_Unidades[bloque] = 1;
@@ -276,15 +285,24 @@
                 }
             }
 
-            // Mostrar resultados en la interfaz
+            // Actualizar interfaz
             document.getElementById('valCA').innerText = totalCA;
             document.getElementById('valCold').innerText = totalCold;
             document.getElementById('valCA5').innerText = ca5Alto;
             document.getElementById('valTotalCACold').innerText = totalCA + totalCold;
 
-            renderTable('tableBodyCA', dictCA_Unidades, dictCA_Bahias, totalCA);
-            renderTable('tableBodyCold', dictCold_Unidades, dictCold_Bahias, totalCold);
-            renderTable('tableBodyTemp', dictTemp_Unidades, dictTemp_Bahias, totalTemp);
+            // Alerta de Cold a 5 de alto
+            let alertBox = document.getElementById('coldAlertBox');
+            if (cold5Alto > 0) {
+                document.getElementById('coldAlertText').innerText = `¡ALERTA! Se detectaron ${cold5Alto} unidades COLD ubicadas a 5 de alto (Las unidades de tratamiento no deben estar a 5 de alto).`;
+                alertBox.classList.remove('hidden');
+            } else {
+                alertBox.classList.add('hidden');
+            }
+
+            renderTable('tableBodyCA', dictCA_Unidades, dictCA_Bahias, totalCA, false);
+            renderTable('tableBodyCold', dictCold_Unidades, dictCold_Bahias, totalCold, false);
+            renderTable('tableBodyTemp', dictTemp_Unidades, dictTemp_Bahias, totalTemp, true);
             renderDecisionTable(dictCA_Bahias, dictCold_Bahias, dictTemp_Bahias, dictCA_Unidades, dictCold_Unidades, dictTemp_Unidades);
 
             document.getElementById('resultsContainer').classList.remove('hidden');
@@ -337,28 +355,28 @@
             return arr.includes(bahia);
         }
 
-        function renderTable(elementId, unidadesObj, bahiasObj, total) {
+        function renderTable(elementId, unidadesObj, bahiasObj, total, isOrange) {
             let tbody = document.getElementById(elementId);
             tbody.innerHTML = "";
             let keys = Object.keys(unidadesObj).sort();
 
             keys.forEach(k => {
                 let tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-700/50 transition";
+                tr.className = "hover:bg-slate-50";
                 tr.innerHTML = `
-                    <td class="p-3 font-medium text-slate-200">${k}</td>
-                    <td class="p-3 text-slate-300">${bahiasObj[k]}</td>
-                    <td class="p-3 text-right font-semibold text-blue-300">${unidadesObj[k]}</td>
+                    <td class="p-2 font-medium text-slate-700">${k}</td>
+                    <td class="p-2 text-slate-600">${bahiasObj[k]}</td>
+                    <td class="p-2 text-right font-bold text-slate-700">${unidadesObj[k]}</td>
                 `;
                 tbody.appendChild(tr);
             });
 
             let trTotal = document.createElement('tr');
-            trTotal.className = "bg-slate-900/60 font-bold border-t border-slate-700";
+            trTotal.className = "bg-slate-100 font-bold border-t border-slate-300 text-slate-800";
             trTotal.innerHTML = `
-                <td class="p-3">TOTAL</td>
-                <td class="p-3">-</td>
-                <td class="p-3 text-right text-emerald-400">${total}</td>
+                <td class="p-2">TOTAL</td>
+                <td class="p-2">-</td>
+                <td class="p-2 text-right ${isOrange ? 'text-[#c65911]' : 'text-[#1f4e79]'}">${total}</td>
             `;
             tbody.appendChild(trTotal);
         }
@@ -380,11 +398,11 @@
                 let esEspecial = upK.includes("DEPOT") || upK.startsWith("S") || upK.startsWith("1X") || upK.startsWith("1Y");
 
                 let tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-700/50 transition";
+                tr.className = "hover:bg-slate-50";
 
                 let estadoTexto = "";
                 if (esEspecial) {
-                    estadoTexto = "<span class='text-amber-300 font-semibold'>BLOQUE ESPECIAL (REVISAR LOCALMENTE)</span>";
+                    estadoTexto = "<span class='text-amber-700 font-semibold bg-amber-50 px-2 py-0.5 rounded border border-amber-200'>BLOQUE ESPECIAL (REVISAR LOCALMENTE)</span>";
                 } else {
                     let ocupadas = "-";
                     if (cBahias[k]) ocupadas += cBahias[k] + "-";
@@ -399,15 +417,15 @@
                     });
 
                     if (libresArr.length > 0) {
-                        estadoTexto = `<span class='text-emerald-400 font-bold'>${libresArr.join("-")} -> APTO PARA DESCONECTAR</span>`;
+                        estadoTexto = `<span class='text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200'>${libresArr.join("-")} -> APTO PARA DESCONECTAR</span>`;
                     } else {
-                        estadoTexto = `<span class='text-slate-400'>TODAS LAS BAHÍAS ESTÁN OCUPADAS</span>`;
+                        estadoTexto = `<span class='text-slate-500 italic'>TODAS LAS BAHÍAS ESTÁN OCUPADAS</span>`;
                     }
                 }
 
                 tr.innerHTML = `
-                    <td class="p-3.5 font-medium text-slate-200">${k}</td>
-                    <td class="p-3.5">${estadoTexto}</td>
+                    <td class="p-2.5 font-medium text-slate-700">${k}</td>
+                    <td class="p-2.5">${estadoTexto}</td>
                 `;
                 tbody.appendChild(tr);
             });
