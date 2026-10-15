@@ -60,7 +60,7 @@
             <!-- ALERTAS DINÁMICAS PARA UNIDADES A 5 DE ALTO (CA Y COLD) -->
             <div id="alertContainer" class="space-y-2"></div>
 
-            <!-- TABLAS ESTILO EXCEL (ESTÁTICAS Y COMPLETAS) -->
+            <!-- TABLAS ESTILO EXCEL -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 
                 <!-- Tabla CA -->
@@ -258,17 +258,21 @@
 
                 if (!posicion) continue;
 
-                let esTempValida = false;
-                if (colTempIdx !== -1 && row[colTempIdx] !== undefined && row[colTempIdx] !== '') {
-                    let valTemp = parseFloat(row[colTempIdx]);
-                    if (!isNaN(valTemp) && valTemp >= -5 && valTemp <= 7) {
-                        esTempValida = true;
-                    }
-                }
-
                 let bloque = obtenerBloque(posicion);
                 let bahia = obtenerBahia(posicion);
                 let altura = obtenerAltura(posicion);
+
+                // --- FILTRO ESTRICTO TEMPERATURA (-5 A 7) EXCLUYENDO CA Y COLD ---
+                let esTempValida = false;
+                if (colTempIdx !== -1 && row[colTempIdx] !== undefined && row[colTempIdx] !== '') {
+                    let tempStr = row[colTempIdx].toString().trim().replace(',', '.');
+                    let valTemp = parseFloat(tempStr);
+                    if (!isNaN(valTemp) && valTemp >= -5 && valTemp <= 7) {
+                        if (gradeID !== "CA" && gradeID !== "COLD") {
+                            esTempValida = true;
+                        }
+                    }
+                }
 
                 if (esTempValida) {
                     totalTemp++;
@@ -277,12 +281,11 @@
                         dictTemp_Bahias[bloque] = bahia;
                     } else {
                         dictTemp_Unidades[bloque]++;
-                        if (!verificarBahiaEnLista(dictTemp_Bahias[bloque], bahia)) {
-                            dictTemp_Bahias[bloque] += "-" + bahia;
-                        }
+                        dictTemp_Bahias[bloque] = agregarBahiaOrdenada(dictTemp_Bahias[bloque], bahia);
                     }
                 }
 
+                // --- PROCESAMIENTO CA Y COLD ---
                 if (gradeID === "CA" || gradeID === "COLD") {
                     if (gradeID === "CA") {
                         totalCA++;
@@ -296,9 +299,7 @@
                             dictCA_Bahias[bloque] = bahia;
                         } else {
                             dictCA_Unidades[bloque]++;
-                            if (!verificarBahiaEnLista(dictCA_Bahias[bloque], bahia)) {
-                                dictCA_Bahias[bloque] += "-" + bahia;
-                            }
+                            dictCA_Bahias[bloque] = agregarBahiaOrdenada(dictCA_Bahias[bloque], bahia);
                         }
                     }
 
@@ -314,9 +315,7 @@
                             dictCold_Bahias[bloque] = bahia;
                         } else {
                             dictCold_Unidades[bloque]++;
-                            if (!verificarBahiaEnLista(dictCold_Bahias[bloque], bahia)) {
-                                dictCold_Bahias[bloque] += "-" + bahia;
-                            }
+                            dictCold_Bahias[bloque] = agregarBahiaOrdenada(dictCold_Bahias[bloque], bahia);
                         }
                     }
                 }
@@ -339,11 +338,20 @@
             document.getElementById('resultsContainer').classList.remove('hidden');
         }
 
+        // Función para ordenar bahías numéricamente de izquierda a derecha
+        function agregarBahiaOrdenada(cadenaActual, nuevaBahia) {
+            if (!cadenaActual) return nuevaBahia;
+            let arr = cadenaActual.split("-");
+            if (arr.includes(nuevaBahia)) return cadenaActual;
+            arr.push(nuevaBahia);
+            arr.sort((a, b) => parseFloat(a) - parseFloat(b));
+            return arr.join("-");
+        }
+
         function renderAlerts() {
             let container = document.getElementById('alertContainer');
             container.innerHTML = "";
 
-            // Alerta CA a 5 de alto
             if (globalListCA5.length > 0) {
                 let div = document.createElement('div');
                 div.className = "bg-[#ffeb9c] border border-[#ffc000] text-[#9c6500] p-3 rounded-lg text-sm font-semibold flex items-center justify-between shadow-sm";
@@ -359,7 +367,6 @@
                 container.appendChild(div);
             }
 
-            // Alerta COLD a 5 de alto
             if (globalListCold5.length > 0) {
                 let div = document.createElement('div');
                 div.className = "bg-[#fce4d6] border border-[#ed7d31] text-[#c65911] p-3 rounded-lg text-sm font-semibold flex items-center justify-between shadow-sm";
@@ -446,14 +453,11 @@
             return idx !== -1 ? pos.substring(idx + 1).trim() : "";
         }
 
-        function verificarBahiaEnLista(listaStr, bahia) {
-            let arr = listaStr.split("-");
-            return arr.includes(bahia);
-        }
-
         function renderTable(elementId, unidadesObj, bahiasObj, total, isOrange) {
             let tbody = document.getElementById(elementId);
             tbody.innerHTML = "";
+            
+            // Ordenar bloques ascendentemente de arriba hacia abajo
             let keys = Object.keys(unidadesObj).sort();
 
             keys.forEach(k => {
@@ -486,6 +490,7 @@
             Object.keys(coUni).forEach(k => allBlocksObj[k] = true);
             Object.keys(tUni).forEach(k => allBlocksObj[k] = true);
 
+            // Ordenar bloques ascendentemente
             let keys = Object.keys(allBlocksObj).sort();
             let bahiasStandard = ["48", "52", "56", "60", "64", "68", "72", "76", "80", "84", "88", "92", "96"];
 
