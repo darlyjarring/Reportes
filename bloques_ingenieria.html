@@ -137,7 +137,7 @@
 
     </div>
 
-    <!-- SCRIPT DE PROCESAMIENTO -->
+    <!-- SCRIPT DE PROCESAMIENTO INTELIGENTE -->
     <script>
         document.getElementById('excelFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -161,29 +161,35 @@
             let colGradeIdx = -1;
             let colPosIdx = -1;
             let colTempIdx = -1;
-            let headerRowIndex = 4; // Fila 5 en base 0
+            let headerRowIndex = -1;
 
-            // Buscar la hoja correcta que contenga GradeID y Position en la fila 5
+            // Búsqueda inteligente de columnas en las primeras 15 filas de todas las hojas
             for (let name of workbook.SheetNames) {
                 let sheet = workbook.Sheets[name];
                 let json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
                 
-                if (json.length > headerRowIndex) {
-                    let headers = json[headerRowIndex].map(h => h ? h.toString().trim() : '');
+                let limit = Math.min(json.length, 15);
+                for (let r = 0; r < limit; r++) {
+                    let row = json[r];
+                    if (!row) continue;
+                    let headers = row.map(h => h ? h.toString().trim() : '');
                     let gIdx = headers.indexOf("GradeID");
                     let pIdx = headers.indexOf("Position");
+                    
                     if (gIdx !== -1 && pIdx !== -1) {
                         ws = sheet;
                         colGradeIdx = gIdx;
                         colPosIdx = pIdx;
                         colTempIdx = headers.indexOf("Temp Required (C)");
+                        headerRowIndex = r;
                         break;
                     }
                 }
+                if (ws) break;
             }
 
             if (!ws) {
-                alert("No se encontró ninguna hoja con los encabezados 'GradeID' y 'Position' en la fila 5.");
+                alert("No se encontró ninguna columna 'GradeID' y 'Position' en las primeras 15 filas del archivo.");
                 return;
             }
 
@@ -201,13 +207,15 @@
             let dictTemp_Unidades = {};
             let dictTemp_Bahias = {};
 
-            // Recorrer datos desde la fila 6 (índice 5)
-            for (let i = 5; i < rows.length; i++) {
+            // Recorrer datos desde la fila inmediatamente posterior a los encabezados encontrados
+            for (let i = headerRowIndex + 1; i < rows.length; i++) {
                 let row = rows[i];
                 if (!row) continue;
 
                 let gradeID = row[colGradeIdx] ? row[colGradeIdx].toString().trim().toUpperCase() : '';
                 let posicion = row[colPosIdx] ? row[colPosIdx].toString().trim() : '';
+
+                if (!posicion) continue;
 
                 // Evaluar Temperatura Requerida (-5 a 7)
                 let esTempValida = false;
