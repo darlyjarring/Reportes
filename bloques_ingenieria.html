@@ -53,17 +53,10 @@
                 </div>
             </div>
 
-            <!-- ALERTA CRÍTICA PARA COLD A 5 DE ALTO -->
-            <div id="coldAlertBox" class="hidden bg-[#ffeb9c] border border-[#ffc000] text-[#9c6500] p-3 rounded-lg text-sm font-semibold flex items-center justify-between shadow-sm">
-                <div class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#9c6500]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <span id="coldAlertText">¡Atención! Se detectaron unidades COLD ubicadas a 5 de alto (requieren revisión).</span>
-                </div>
-            </div>
+            <!-- ALERTAS DINÁMICAS PARA UNIDADES A 5 DE ALTO (CA Y COLD) -->
+            <div id="alertContainer" class="space-y-2"></div>
 
-            <!-- TABLAS ESTILO EXCEL (3 COLUMNAS) -->
+            <!-- TABLAS ESTILO EXCEL (ESTÁTICAS Y COMPLETAS) -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 
                 <!-- Tabla CA -->
@@ -71,9 +64,9 @@
                     <div class="bg-[#4472c4] text-white px-3.5 py-2 font-bold text-xs uppercase tracking-wide">
                         Unidades de Bloque CA
                     </div>
-                    <div class="overflow-x-auto max-h-72">
+                    <div>
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-[#d9e1f2] text-[#1f4e79] sticky top-0 border-b border-slate-300 font-bold">
+                            <thead class="bg-[#d9e1f2] text-[#1f4e79] border-b border-slate-300 font-bold">
                                 <tr>
                                     <th class="p-2">Bloque</th>
                                     <th class="p-2">Bahías</th>
@@ -90,9 +83,9 @@
                     <div class="bg-[#0070c0] text-white px-3.5 py-2 font-bold text-xs uppercase tracking-wide">
                         Unidades Cold Treatment
                     </div>
-                    <div class="overflow-x-auto max-h-72">
+                    <div>
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-[#d9e1f2] text-[#1f4e79] sticky top-0 border-b border-slate-300 font-bold">
+                            <thead class="bg-[#d9e1f2] text-[#1f4e79] border-b border-slate-300 font-bold">
                                 <tr>
                                     <th class="p-2">Bloque</th>
                                     <th class="p-2">Bahías</th>
@@ -109,9 +102,9 @@
                     <div class="bg-[#ed7d31] text-white px-3.5 py-2 font-bold text-xs uppercase tracking-wide">
                         Temp. Requerida (-5 a 7 °C)
                     </div>
-                    <div class="overflow-x-auto max-h-72">
+                    <div>
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-[#fce4d6] text-[#c65911] sticky top-0 border-b border-slate-300 font-bold">
+                            <thead class="bg-[#fce4d6] text-[#c65911] border-b border-slate-300 font-bold">
                                 <tr>
                                     <th class="p-2">Bloque</th>
                                     <th class="p-2">Bahías</th>
@@ -131,7 +124,7 @@
                     <span>Toma de Decisiones - Bahías Aptas para Desconectar</span>
                     <span class="text-[10px] bg-white/20 px-2 py-0.5 rounded text-white font-normal">Análisis Automático</span>
                 </div>
-                <div class="overflow-x-auto">
+                <div>
                     <table class="w-full text-left text-xs">
                         <thead class="bg-[#d9e1f2] text-[#1f4e79] border-b border-slate-300 font-bold">
                             <tr>
@@ -148,8 +141,35 @@
 
     </div>
 
+    <!-- VENTANA EMERGENTE (MODAL) PARA DETALLE DE CONTENEDORES A 5 DE ALTO -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full overflow-hidden border border-slate-300">
+            <div class="bg-[#1f4e79] text-white px-4 py-3 font-bold text-sm flex justify-between items-center">
+                <span id="modalTitle">Detalle de Contenedores</span>
+                <button onclick="closeModal()" class="text-white hover:text-slate-200 text-lg font-bold">&times;</button>
+            </div>
+            <div class="p-4 max-h-96 overflow-y-auto">
+                <table class="w-full text-left text-xs border border-slate-200">
+                    <thead class="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                        <tr>
+                            <th class="p-2.5">Unit Nbr (Contenedor)</th>
+                            <th class="p-2.5">Position (Ubicación)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody" class="divide-y divide-slate-200"></tbody>
+                </table>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 text-right">
+                <button onclick="closeModal()" class="bg-slate-600 hover:bg-slate-700 text-white text-xs font-semibold px-4 py-2 rounded">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- SCRIPT DE PROCESAMIENTO -->
     <script>
+        let globalListCA5 = [];
+        let globalListCold5 = [];
+
         document.getElementById('excelFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -172,6 +192,7 @@
             let colGradeIdx = -1;
             let colPosIdx = -1;
             let colTempIdx = -1;
+            let colUnitIdx = -1;
             let headerRowIndex = -1;
 
             for (let name of workbook.SheetNames) {
@@ -185,11 +206,13 @@
                     let headers = row.map(h => h ? h.toString().trim() : '');
                     let gIdx = headers.indexOf("GradeID");
                     let pIdx = headers.indexOf("Position");
+                    let uIdx = headers.indexOf("Unit Nbr");
                     
                     if (gIdx !== -1 && pIdx !== -1) {
                         ws = sheet;
                         colGradeIdx = gIdx;
                         colPosIdx = pIdx;
+                        colUnitIdx = uIdx;
                         colTempIdx = headers.indexOf("Temp Required (C)");
                         headerRowIndex = r;
                         break;
@@ -208,8 +231,10 @@
             let totalCA = 0;
             let totalCold = 0;
             let ca5Alto = 0;
-            let cold5Alto = 0;
             let totalTemp = 0;
+
+            globalListCA5 = [];
+            globalListCold5 = [];
 
             let dictCA_Unidades = {};
             let dictCA_Bahias = {};
@@ -224,6 +249,7 @@
 
                 let gradeID = row[colGradeIdx] ? row[colGradeIdx].toString().trim().toUpperCase() : '';
                 let posicion = row[colPosIdx] ? row[colPosIdx].toString().trim() : '';
+                let unitNbr = colUnitIdx !== -1 && row[colUnitIdx] ? row[colUnitIdx].toString().trim() : 'N/D';
 
                 if (!posicion) continue;
 
@@ -255,7 +281,10 @@
                 if (gradeID === "CA" || gradeID === "COLD") {
                     if (gradeID === "CA") {
                         totalCA++;
-                        if (altura === "5") ca5Alto++;
+                        if (altura === "5") {
+                            ca5Alto++;
+                            globalListCA5.push({ unit: unitNbr, pos: posicion });
+                        }
 
                         if (!dictCA_Unidades[bloque]) {
                             dictCA_Unidades[bloque] = 1;
@@ -270,7 +299,9 @@
 
                     if (gradeID === "COLD") {
                         totalCold++;
-                        if (altura === "5") cold5Alto++;
+                        if (altura === "5") {
+                            globalListCold5.push({ unit: unitNbr, pos: posicion });
+                        }
 
                         if (!dictCold_Unidades[bloque]) {
                             dictCold_Unidades[bloque] = 1;
@@ -291,14 +322,7 @@
             document.getElementById('valCA5').innerText = ca5Alto;
             document.getElementById('valTotalCACold').innerText = totalCA + totalCold;
 
-            // Alerta de Cold a 5 de alto
-            let alertBox = document.getElementById('coldAlertBox');
-            if (cold5Alto > 0) {
-                document.getElementById('coldAlertText').innerText = `¡ALERTA! Se detectaron ${cold5Alto} unidades COLD ubicadas a 5 de alto (Las unidades de tratamiento no deben estar a 5 de alto).`;
-                alertBox.classList.remove('hidden');
-            } else {
-                alertBox.classList.add('hidden');
-            }
+            renderAlerts();
 
             renderTable('tableBodyCA', dictCA_Unidades, dictCA_Bahias, totalCA, false);
             renderTable('tableBodyCold', dictCold_Unidades, dictCold_Bahias, totalCold, false);
@@ -306,6 +330,68 @@
             renderDecisionTable(dictCA_Bahias, dictCold_Bahias, dictTemp_Bahias, dictCA_Unidades, dictCold_Unidades, dictTemp_Unidades);
 
             document.getElementById('resultsContainer').classList.remove('hidden');
+        }
+
+        function renderAlerts() {
+            let container = document.getElementById('alertContainer');
+            container.innerHTML = "";
+
+            // Alerta CA a 5 de alto
+            if (globalListCA5.length > 0) {
+                let div = document.createElement('div');
+                div.className = "bg-[#ffeb9c] border border-[#ffc000] text-[#9c6500] p-3 rounded-lg text-sm font-semibold flex items-center justify-between shadow-sm";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#9c6500]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>Se detectaron <b>${globalListCA5.length}</b> unidades CA ubicadas a 5 de alto.</span>
+                    </div>
+                    <button onclick="showDetailModal('CA')" class="bg-[#9c6500] hover:bg-[#7a5000] text-white text-xs px-3 py-1.5 rounded transition font-bold shadow">Ver Detalle</button>
+                `;
+                container.appendChild(div);
+            }
+
+            // Alerta COLD a 5 de alto
+            if (globalListCold5.length > 0) {
+                let div = document.createElement('div');
+                div.className = "bg-[#fce4d6] border border-[#ed7d31] text-[#c65911] p-3 rounded-lg text-sm font-semibold flex items-center justify-between shadow-sm";
+                div.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#c65911]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span><b>¡CRÍTICO!</b> Se detectaron <b>${globalListCold5.length}</b> unidades COLD (Tratamiento) ubicadas a 5 de alto.</span>
+                    </div>
+                    <button onclick="showDetailModal('COLD')" class="bg-[#c65911] hover:bg-[#9e460d] text-white text-xs px-3 py-1.5 rounded transition font-bold shadow">Ver Detalle</button>
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function showDetailModal(type) {
+            let title = document.getElementById('modalTitle');
+            let tbody = document.getElementById('modalTableBody');
+            tbody.innerHTML = "";
+
+            let list = (type === 'CA') ? globalListCA5 : globalListCold5;
+            title.innerText = `Detalle de Unidades ${type} a 5 de Alto (${list.length} unidades)`;
+
+            list.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-2.5 font-bold text-slate-700">${item.unit}</td>
+                    <td class="p-2.5 text-slate-600">${item.pos}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
         }
 
         function obtenerBloque(pos) {
