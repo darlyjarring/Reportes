@@ -404,12 +404,15 @@
         function obtenerBloque(pos) {
             if (!pos) return "OTROS";
             let up = pos.toUpperCase();
-            if (up.includes("REP")) return "Depot";
+            if (up.includes("REP") || up.includes("CC")) {
+                if (up.includes("REP")) return "Depot";
+                if (up.includes("CC")) return "CC";
+            }
             let partes = pos.split("-");
             if (partes.length >= 3) {
                 let sub = partes[2];
                 let uSub = sub.toUpperCase();
-                if (uSub.startsWith("S") || uSub.startsWith("1X") || uSub.startsWith("1Y")) {
+                if (uSub.startsWith("S") || uSub.startsWith("1X") || uSub.startsWith("1Y") || uSub.startsWith("CC")) {
                     return sub.substring(0, 2);
                 }
                 return sub.substring(0, 2);
@@ -424,10 +427,10 @@
             if (partes.length >= 3) {
                 let sub = partes[2];
                 let limpia = sub.includes(".") ? sub.split(".")[0] : sub;
-                if (up.includes("REP")) {
+                if (up.includes("REP") || up.includes("CC")) {
                     return limpia.length >= 5 ? limpia.substring(3, 5) : "02";
                 }
-                if (sub.toUpperCase().startsWith("S") || sub.toUpperCase().startsWith("1X") || sub.toUpperCase().startsWith("1Y")) {
+                if (sub.toUpperCase().startsWith("S") || sub.toUpperCase().startsWith("1X") || sub.toUpperCase().startsWith("1Y") || sub.toUpperCase().startsWith("CC")) {
                     return limpia.length >= 4 ? limpia.substring(2, 4) : "00";
                 }
                 if (limpia.length >= 4) {
@@ -488,7 +491,7 @@
 
             keys.forEach(k => {
                 let upK = k.toUpperCase();
-                let esEspecial = upK.includes("DEPOT") || upK.startsWith("S") || upK.startsWith("1X") || upK.startsWith("1Y");
+                let esEspecial = upK.includes("DEPOT") || upK.includes("CC") || upK.startsWith("S") || upK.startsWith("1X") || upK.startsWith("1Y");
 
                 let tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50";
