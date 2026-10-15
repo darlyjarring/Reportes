@@ -33,8 +33,8 @@
         <!-- CONTENEDOR DE RESULTADOS -->
         <div id="resultsContainer" class="hidden space-y-5">
             
-            <!-- RESUMEN GENERAL COMPACTO -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <!-- RESUMEN GENERAL (5 TARJETAS) -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                 <div class="bg-white border border-slate-300 p-3.5 rounded-lg shadow-sm border-l-4 border-l-[#4472c4]">
                     <span class="text-slate-500 text-[11px] font-bold uppercase">Total CA</span>
                     <h2 id="valCA" class="text-2xl font-black text-[#1f4e79] mt-1">0</h2>
@@ -47,7 +47,11 @@
                     <span class="text-slate-500 text-[11px] font-bold uppercase">CA a 5 de Alto</span>
                     <h2 id="valCA5" class="text-2xl font-black text-[#b25900] mt-1">0</h2>
                 </div>
-                <div class="bg-white border border-slate-300 p-3.5 rounded-lg shadow-sm border-l-4 border-l-[#548235]">
+                <div class="bg-white border border-slate-300 p-3.5 rounded-lg shadow-sm border-l-4 border-l-[#ed7d31]">
+                    <span class="text-slate-500 text-[11px] font-bold uppercase">Cold a 5 de Alto</span>
+                    <h2 id="valCold5" class="text-2xl font-black text-[#c65911] mt-1">0</h2>
+                </div>
+                <div class="bg-white border border-slate-300 p-3.5 rounded-lg shadow-sm border-l-4 border-l-[#548235] col-span-2 md:col-span-1">
                     <span class="text-slate-500 text-[11px] font-bold uppercase">Total CA + Cold</span>
                     <h2 id="valTotalCACold" class="text-2xl font-black text-[#385723] mt-1">0</h2>
                 </div>
@@ -231,6 +235,7 @@
             let totalCA = 0;
             let totalCold = 0;
             let ca5Alto = 0;
+            let cold5Alto = 0;
             let totalTemp = 0;
 
             globalListCA5 = [];
@@ -300,6 +305,7 @@
                     if (gradeID === "COLD") {
                         totalCold++;
                         if (altura === "5") {
+                            cold5Alto++;
                             globalListCold5.push({ unit: unitNbr, pos: posicion });
                         }
 
@@ -320,6 +326,7 @@
             document.getElementById('valCA').innerText = totalCA;
             document.getElementById('valCold').innerText = totalCold;
             document.getElementById('valCA5').innerText = ca5Alto;
+            document.getElementById('valCold5').innerText = cold5Alto;
             document.getElementById('valTotalCACold').innerText = totalCA + totalCold;
 
             renderAlerts();
