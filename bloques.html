@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Definidor de Bloques y Bahías - Puerto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #003366;
+            margin-bottom: 3px;
+            font-size: 22px;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #666;
+            margin-top: 0;
+            font-size: 13px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+        /* Lienzo Ampliado */
+        .croquis-canvas {
+            flex: 4;
+            background: #eef2f7;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            position: relative;
+            height: 750px;
+            overflow: auto;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        .muelle-banner {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            background-color: #003366;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            z-index: 1;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        /* Estilo de los bloques */
+        .bloque-item {
+            position: absolute;
+            border-radius: 6px;
+            padding: 8px;
+            cursor: move;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        .bloque-item.reefer { background-color: #cce5ff; border: 2px solid #004085; color: #004085; }
+        .bloque-item.estandar { background-color: #e2e3e5; border: 2px solid #383d41; color: #383d41; }
+        .bloque-item.servicio { background-color: #d4edda; border: 2px solid #155724; color: #155724; }
+        .bloque-item.coldchamber { background-color: #fff3cd; border: 2px solid #856404; color: #856404; }
+
+        .bloque-item span { font-size: 12px; font-weight: bold; pointer-events: none; }
+        .bloque-item small { font-size: 9px; pointer-events: none; margin-top: 2px; }
+
+        /* Manijas de Transformación */
+        .bloque-item.seleccionado { border: 2px dashed #ff9800 !important; box-shadow: 0 0 8px rgba(255, 152, 0, 0.6); }
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #ff9800;
+            border: 1px solid #fff;
+            display: none;
+            z-index: 10;
+        }
+        .bloque-item.seleccionado .resize-handle { display: block; }
+        .handle-se { bottom: -5px; right: -5px; cursor: se-resize; }
+        .handle-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+        .handle-ne { top: -5px; right: -5px; cursor: ne-resize; }
+        .handle-nw { top: -5px; left: -5px; cursor: nw-resize; }
+
+        /* Panel de Control */
+        .panel-control {
+            flex: 1.2;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-height: 750px;
+            overflow-y: auto;
+        }
+        .panel-control h3 { margin-top: 0; color: #003366; font-size: 16px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { display: block; margin-bottom: 3px; font-weight: bold; font-size: 12px; }
+        .form-group input, .form-group select { width: 100%; padding: 5px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 12px; }
+        
+        .btn {
+            background-color: #003366; color: white; border: none; padding: 8px;
+            border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 5px; font-size: 12px;
+        }
+        .btn:hover { background-color: #002244; }
+        .btn-danger { background-color: #dc3545; }
+        .btn-danger:hover { background-color: #bd2130; }
+        .btn-secundario { background-color: #6c757d; }
+        .btn-secundario:hover { background-color: #5a6268; }
+        .btn-success { background-color: #28a745; }
+        .btn-success:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+
+    <h1>Definidor de Bloques, Bahías y Zonas Portuarias</h1>
+    <p class="subtitle">Distribución con asignación de bahías configurables, zonas CC, S1, S2 y áreas de transformación libre.</p>
+
+    <div class="container">
+        <!-- LIENZO AMPLIADO -->
+        <div class="croquis-canvas" id="canvas">
+            <div class="muelle-banner">MUELLE / ZONA DE ATRAQUE (700m - 800m)</div>
+        </div>
+
+        <!-- PANEL DE CONTROL Y CONFIGURACIÓN DE BAHÍAS -->
+        <div class="panel-control">
+            <h3>Propiedades del Elemento</h3>
+            <div id="infoEdicion">
+                <p style="font-size: 12px; color: #666;">Selecciona un bloque en el croquis para configurar sus bahías, sentido, dimensiones o nombre.</p>
+            </div>
+            
+            <div id="formularioEdicion" style="display: none;">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label>Nombre del Bloque / Zona:</label>
+                    <input type="text" id="editNombre" oninput="actualizarDesdeInputs()">
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Zona:</label>
+                    <select id="editTipo" onchange="actualizarDesdeInputs()">
+                        <option value="estandar">Bloque Estándar</option>
+                        <option value="reefer">Bloque Reefer</option>
+                        <option value="coldchamber">Cold Chamber (CC) / Insp. Preembarque</option>
+                        <option value="servicio">Zona de Aforo / Servicio (S1, S2...)</option>
+                    </select>
+                </div>
+                <hr style="margin: 10px 0; border: 0; border-top: 1px solid #ddd;">
+                <div class="form-group">
+                    <label>Bahía Inicial (Ej: 92):</label>
+                    <input type="number" id="editBayInicio" oninput="actualizarDesdeInputs()">
+                </div>
+                <div class="form-group">
+                    <label>Bahía Final (Ej: 48):</label>
+                    <input type="number" id="editBayFin" oninput="actualizarDesdeInputs()">
+                </div>
+                <div class="form-group">
+                    <label>Sentido de Numeración:</label>
+                    <select id="editSentido" onchange="actualizarDesdeInputs()">
+                        <option value="izq-der">Izquierda a Derecha (Horizontal)</option>
+                        <option value="der-izq">Derecha a Izquierda (Horizontal)</option>
+                        <option value="arriba-abajo">Arriba hacia Abajo (Vertical - Ej: Bloque K)</option>
+                        <option value="abajo-arriba">Abajo hacia Arriba (Vertical)</option>
+                    </select>
+                </div>
+                <button class="btn btn-danger" onclick="eliminarBloqueSelected()">Eliminar Elemento</button>
+            </div>
+
+            <hr style="margin: 15px 0;">
+            <button class="btn btn-secundario" onclick="agregarBloque()">+ Añadir Nuevo Bloque / Zona</button>
+            <button class="btn btn-success" onclick="exportarConfig()">Exportar Configuración (JSON)</button>
+        </div>
+    </div>
+
+    <script>
+        // Estructura inicial reflejando distribución de bloques I, H, G, F, E, D, Zonas CC y S1, S2 de aforo
+        let bloques = [
+            { id: 1, nombre: "Bloque I (Reefer)", tipo: "reefer", x: 30, y: 70, ancho: 130, alto: 100, bayInicio: 92, bayFin: 48, sentido: "izq-der" },
+            { id: 2, nombre: "Bloque H (Reefer)", tipo: "reefer", x: 175, y: 70, ancho: 130, alto: 100, bayInicio: 92, bayFin: 48, sentido: "izq-der" },
+            { id: 3, nombre: "Bloque G", tipo: "estandar", x: 320, y: 70, ancho: 130, alto: 100, bayInicio: 92, bayFin: 48, sentido: "izq-der" },
+            { id: 4, nombre: "Bloque F", tipo: "estandar", x: 465, y: 70, ancho: 130, alto: 100, bayInicio: 92, bayFin: 48, sentido: "izq-der" },
+            { id: 5, nombre: "Bloque E", tipo: "estandar", x: 610, y: 70, ancho: 130, alto: 100, bayInicio: 92, bayFin: 48, sentido: "izq-der" },
+            { id: 6, nombre: "Bloque D", tipo: "estandar", x: 755, y: 70, ancho: 130, alto: 100, bayInicio: 92, bayFin: 48, sentido: "izq-der" },
+            { id: 7, nombre: "Bloque K (Vertical)", tipo: "estandar", x: 910, y: 70, ancho: 110, alto: 220, bayInicio: 1, bayFin: 20, sentido: "arriba-abajo" },
+            { id: 8, nombre: "Cold Chamber (CC)", tipo: "coldchamber", x: 30, y: 320, ancho: 150, alto: 80, bayInicio: 0, bayFin: 0, sentido: "izq-der" },
+            { id: 9, nombre: "Zona S1 (Service/Aforo)", tipo: "servicio", x: 195, y: 320, ancho: 140, alto: 80, bayInicio: 0, bayFin: 0, sentido: "izq-der" },
+            { id: 10, nombre: "Zona S2 (Service/Aforo)", tipo: "servicio", x: 350, y: 320, ancho: 140, alto: 80, bayInicio: 0, bayFin: 0, sentido: "izq-der" }
+        ];
+
+        let idSeleccionado = null;
+        const canvas = document.getElementById("canvas");
+
+        function renderizarCroquis() {
+            const banner = canvas.querySelector(".muelle-banner");
+            canvas.innerHTML = "";
+            canvas.appendChild(banner);
+
+            bloques.forEach(bloque => {
+                const div = document.createElement("div");
+                div.className = `bloque-item ${bloque.tipo}`;
+                if (bloque.id === idSeleccionado) div.classList.add("seleccionado");
+
+                div.style.left = bloque.x + "px";
+                div.style.top = bloque.y + "px";
+                div.style.width = bloque.ancho + "px";
+                div.style.height = bloque.alto + "px";
+
+                let infoBahias = bloque.bayInicio > 0 ? `<small>Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin} (${bloque.sentido})</small>` : `<small>Área de Servicio</small>`;
+
+                div.innerHTML = `
+                    <span>${bloque.nombre}</span>
+                    ${infoBahias}
+                    <div class="resize-handle handle-se" data-handle="se"></div>
+                    <div class="resize-handle handle-sw" data-handle="sw"></div>
+                    <div class="resize-handle handle-ne" data-handle="ne"></div>
+                    <div class="resize-handle handle-nw" data-handle="nw"></div>
+                `;
+
+                div.onmousedown = (e) => {
+                    if (e.target.classList.contains('resize-handle')) return;
+                    iniciarArrastre(e, bloque.id);
+                };
+
+                const handles = div.querySelectorAll('.resize-handle');
+                handles.forEach(h => {
+                    h.onmousedown = (e) => iniciarRedimensionado(e, bloque.id, h.dataset.handle);
+                });
+
+                canvas.appendChild(div);
+            });
+        }
+
+        // --- LÓGICA DE MOVIMIENTO Y REDIMENSIONAMIENTO ---
+        let modoAccion = null; 
+        let bloqueActualId = null;
+        let startX, startY, initX, initY, initW, initH, resizeHandleType;
+
+        function iniciarArrastre(e, id) {
+            e.stopPropagation();
+            modoAccion = 'drag';
+            bloqueActualId = id;
+            seleccionarBloque(id);
+
+            const bloque = bloques.find(b => b.id === id);
+            startX = e.clientX; startY = e.clientY;
+            initX = bloque.x; initY = bloque.y;
+        }
+
+        function iniciarRedimensionado(e, id, handleType) {
+            e.stopPropagation();
+            modoAccion = 'resize';
+            bloqueActualId = id;
+            resizeHandleType = handleType;
+            seleccionarBloque(id);
+
+            const bloque = bloques.find(b => b.id === id);
+            startX = e.clientX; startY = e.clientY;
+            initX = bloque.x; initY = bloque.y;
+            initW = bloque.ancho; initH = bloque.alto;
+        }
+
+        document.onmousemove = (e) => {
+            if (!modoAccion || bloqueActualId === null) return;
+            const bloque = bloques.find(b => b.id === bloqueActualId);
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+
+            if (modoAccion === 'drag') {
+                bloque.x = Math.max(0, initX + dx);
+                bloque.y = Math.max(50, initY + dy);
+            } else if (modoAccion === 'resize') {
+                if (resizeHandleType === 'se') {
+                    bloque.ancho = Math.max(60, initW + dx);
+                    bloque.alto = Math.max(50, initH + dy);
+                } else if (resizeHandleType === 'sw') {
+                    let nuevoAncho = initW - dx;
+                    if (nuevoAncho >= 60) { bloque.x = initX + dx; bloque.ancho = nuevoAncho; }
+                    bloque.alto = Math.max(50, initH + dy);
+                } else if (resizeHandleType === 'ne') {
+                    bloque.ancho = Math.max(60, initW + dx);
+                    let nuevoAlto = initH - dy;
+                    if (nuevoAlto >= 50) { bloque.y = initY + dy; bloque.alto = nuevoAlto; }
+                } else if (resizeHandleType === 'nw') {
+                    let nuevoAncho = initW - dx;
+                    if (nuevoAncho >= 60) { bloque.x = initX + dx; bloque.ancho = nuevoAncho; }
+                    let nuevoAlto = initH - dy;
+                    if (nuevoAlto >= 50) { bloque.y = initY + dy; bloque.alto = nuevoAlto; }
+                }
+            }
+            renderizarCroquis();
+            sincronizarInputsFormulario(bloque);
+        };
+
+        document.onmouseup = () => { modoAccion = null; bloqueActualId = null; };
+
+        function seleccionarBloque(id) {
+            idSeleccionado = id;
+            const bloque = bloques.find(b => b.id === id);
+            document.getElementById("infoEdicion").style.display = "none";
+            document.getElementById("formularioEdicion").style.display = "block";
+            sincronizarInputsFormulario(bloque);
+            renderizarCroquis();
+        }
+
+        function sincronizarInputsFormulario(bloque) {
+            document.getElementById("editId").value = bloque.id;
+            document.getElementById("editNombre").value = bloque.nombre;
+            document.getElementById("editTipo").value = bloque.tipo;
+            document.getElementById("editBayInicio").value = bloque.bayInicio;
+            document.getElementById("editBayFin").value = bloque.bayFin;
+            document.getElementById("editSentido").value = bloque.sentido;
+        }
+
+        function actualizarDesdeInputs() {
+            if (idSeleccionado === null) return;
+            const bloque = bloques.find(b => b.id === idSeleccionado);
+            bloque.nombre = document.getElementById("editNombre").value;
+            bloque.tipo = document.getElementById("editTipo").value;
+            bloque.bayInicio = parseInt(document.getElementById("editBayInicio").value) || 0;
+            bloque.bayFin = parseInt(document.getElementById("editBayFin").value) || 0;
+            bloque.sentido = document.getElementById("editSentido").value;
+            renderizarCroquis();
+        }
+
+        function agregarBloque() {
+            const nuevoId = bloques.length > 0 ? Math.max(...bloques.map(b => b.id)) + 1 : 1;
+            bloques.push({
+                id: nuevoId,
+                nombre: `Nuevo Bloque ${nuevoId}`,
+                tipo: "estandar",
+                x: 50,
+                y: 420,
+                ancho: 120,
+                alto: 90,
+                bayInicio: 1,
+                bayFin: 20,
+                sentido: "izq-der"
+            });
+            seleccionarBloque(nuevoId);
+        }
+
+        function eliminarBloqueSelected() {
+            if (idSeleccionado === null) return;
+            bloques = bloques.filter(b => b.id !== idSeleccionado);
+            idSeleccionado = null;
+            document.getElementById("formularioEdicion").style.display = "none";
+            document.getElementById("infoEdicion").style.display = "block";
+            renderizarCroquis();
+        }
+
+        function exportarConfig() {
+            console.log(JSON.stringify(bloques, null, 2));
+            alert("Configuración de bloques y bahías exportada correctamente a la consola del navegador (Presiona F12 para ver el JSON).");
+        }
+
+        renderizarCroquis();
+    </script>
+</body>
+</html>
