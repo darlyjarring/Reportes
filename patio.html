@@ -3,230 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Personal por Bloque - Puerto</title>
+    <title>Reporte de Personal por Bloque - DP World</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f6f9;
-            color: #333;
-        }
-        h1 {
-            text-align: center;
-            color: #003366;
-            margin-bottom: 5px;
-        }
-        p.subtitle {
-            text-align: center;
-            color: #666;
-            margin-top: 0;
-            font-size: 13px;
-        }
-        .container {
-            display: flex;
-            gap: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        /* Contenedor Principal de Tarjetas por Bloque */
-        .bloques-grid {
-            flex: 3;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-            max-height: 750px;
-            overflow-y: auto;
-            padding: 5px;
-        }
-        .card-bloque {
-            background: #fff;
-            border-top: 4px solid #003366;
-            border-radius: 6px;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        .card-bloque.reefer { border-top-color: #004085; background-color: #f8fbff; }
-        .card-bloque.servicio { border-top-color: #155724; background-color: #f4faf4; }
-        .card-bloque.coldchamber { border-top-color: #856404; background-color: #fdfefe; }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
-        }
-        .card-header h3 { margin: 0; font-size: 15px; color: #003366; }
-        .badge-bay { font-size: 11px; background: #e2e8f0; padding: 2px 6px; border-radius: 4px; color: #4a5568; }
-
-        /* Lista de Personal en el Bloque */
-        .personal-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 10px 0;
-            min-height: 50px;
-            max-height: 120px;
-            overflow-y: auto;
-        }
-        .personal-item {
-            background: #edf2f7;
-            padding: 5px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-bottom: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .personal-item button {
-            background: none; border: none; color: #e53e3e; cursor: pointer; font-weight: bold; font-size: 14px;
-        }
-
-        /* Inputs para agregar personal */
-        .add-personal-box {
-            display: flex;
-            gap: 5px;
-        }
-        .add-personal-box input {
-            flex: 1; padding: 5px; font-size: 12px; border: 1px solid #cbd5e0; border-radius: 4px;
-        }
-        .btn-add {
-            background-color: #003366; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;
-        }
-        .btn-add:hover { background-color: #002244; }
-
-        /* Panel Lateral de Control y Resumen Flotante */
-        .panel-lateral {
-            flex: 1;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            max-height: 750px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .panel-lateral h3 { margin-top: 0; color: #003366; font-size: 16px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 15px; background-color: #f4f6f9; color: #333; }
+        h1 { text-align: center; color: #003366; margin-bottom: 3px; font-size: 20px; }
+        p.subtitle { text-align: center; color: #666; margin-top: 0; font-size: 12px; }
+        .main-layout { display: flex; gap: 15px; max-width: 1600px; margin: 0 auto; }
         
-        .btn-flotante {
-            background-color: #2b6cb0; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; font-size: 13px;
-        }
-        .btn-flotante:hover { background-color: #2c5282; }
+        .croquis-canvas { flex: 3.5; background: #eef2f7; border: 2px solid #ccc; border-radius: 8px; position: relative; height: 750px; overflow: auto; box-shadow: inset 0 0 10px rgba(0,0,0,0.05); }
+        .muelle-banner { position: absolute; top: 10px; left: 10px; right: 10px; background-color: #003366; color: white; text-align: center; padding: 8px; font-weight: bold; border-radius: 4px; z-index: 1; font-size: 13px; }
 
-        /* Modal o Resumen Flotante */
-        .resumen-box {
-            background: #f7fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 12px;
-        }
+        .bloque-item { position: absolute; border-radius: 6px; padding: 6px; display: flex; flex-direction: column; box-sizing: border-box; user-select: none; background-color: #e2e3e5; border: 2px solid #383d41; }
+        .bloque-item.reefer { background-color: #cce5ff; border: 2px solid #004085; color: #004085; }
+        .bloque-item.estandar { background-color: #e2e3e5; border: 2px solid #383d41; color: #383d41; }
+        .bloque-item.servicio { background-color: #d4edda; border: 2px solid #155724; color: #155724; }
+        .bloque-item.coldchamber { background-color: #fff3cd; border: 2px solid #856404; color: #856404; }
+
+        .bloque-titulo { font-size: 11px; font-weight: bold; text-align: center; }
+        .bloque-sub { font-size: 9px; text-align: center; margin-bottom: 4px; }
+
+        .bloque-personal-dropzone { flex-grow: 1; background: rgba(255, 255, 255, 0.8); border: 1px dashed rgba(0,0,0,0.3); border-radius: 4px; padding: 4px; overflow-y: auto; min-height: 40px; display: flex; flex-direction: column; gap: 3px; }
+        
+        .ficha-personal { background: #ffffff; border: 1px solid #cbd5e0; border-left: 4px solid #2b6cb0; padding: 3px 6px; border-radius: 4px; font-size: 11px; cursor: grab; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .ficha-personal:active { cursor: grabbing; }
+
+        .panel-lateral { flex: 1.2; background: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-height: 750px; overflow-y: auto; }
+        .panel-lateral h3 { margin-top: 0; color: #003366; font-size: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        .form-group { margin-bottom: 8px; }
+        .form-group label { display: block; margin-bottom: 2px; font-weight: bold; font-size: 11px; }
+        .form-group input { width: 100%; padding: 4px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 11px; }
+        
+        .btn { background-color: #003366; color: white; border: none; padding: 7px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 4px; font-size: 11px; text-align: center; display: block; text-decoration: none;}
+        .btn:hover { background-color: #002244; }
+        .btn-success { background-color: #28a745; }
+        .btn-secundario { background-color: #6c757d; }
+
+        .resumen-box { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; font-size: 11px; margin-top: 10px; }
         .resumen-box table { width: 100%; border-collapse: collapse; margin-top: 5px; }
-        .resumen-box th, .resumen-box td { border: 1px solid #cbd5e0; padding: 5px; text-align: left; }
+        .resumen-box th, .resumen-box td { border: 1px solid #cbd5e0; padding: 4px; text-align: left; }
         .resumen-box th { background-color: #edf2f7; color: #2d3748; }
     </style>
 </head>
 <body>
 
-    <h1>Gestión Interactiva de Personal por Bloque</h1>
-    <p class="subtitle">Asigna personal operativo, vincula zonas de aforo (S1, S2) y supervisa quién trabaja en cada bloque o bahía.</p>
+    <h1>Monitoreo de Personal por Bloque - DP World</h1>
+    <p class="subtitle">Arrastra las fichas de personal entre los bloques diseñados previamente o adminístralos en la tabla resumen.</p>
 
-    <div class="container">
-        <!-- TARJETAS DE BLOQUES Y ZONAS -->
-        <div class="bloques-grid" id="gridBloquesPersonal">
-            <!-- Se carga dinámicamente -->
+    <div class="main-layout">
+        <div class="croquis-canvas" id="canvas">
+            <div class="muelle-banner">MUELLE / ZONA DE ATRAQUE (DP World Posorja)</div>
         </div>
 
-        <!-- PANEL DE RESUMEN Y ESTADÍSTICAS -->
         <div class="panel-lateral">
-            <h3>Panel de Control Operativo</h3>
-            <button class="btn-flotante" onclick="toggleResumen()">📊 Ver / Ocultar Tabla de Resumen</button>
+            <h3>Panel de Reportería</h3>
             
+            <div class="form-group" style="background: #edf2f7; padding: 8px; border-radius: 4px;">
+                <label>Añadir Nuevo Operativo / Inspector:</label>
+                <div style="display: flex; gap: 5px; margin-top: 4px;">
+                    <input type="text" id="nuevoPersonalNombre" placeholder="Nombre completo...">
+                    <button class="btn btn-success" style="width: auto; margin-top:0;" onclick="crearPersonal()">Agregar</button>
+                </div>
+            </div>
+
+            <hr style="margin: 10px 0;">
+            <button class="btn" style="background-color: #2b6cb0;" onclick="toggleResumen()">📊 Ver / Ocultar Tabla de Resumen Automática</button>
+
             <div id="contenedorResumen" class="resumen-box" style="display: none;">
-                <strong>Resumen de Personal por Bloque:</strong>
+                <strong>Reportería Actual por Bloque:</strong>
                 <div id="tablaResumenContenido"></div>
             </div>
 
-            <div style="margin-top: auto; font-size: 12px; color: #718096; border-top: 1px solid #eee; padding-top: 10px;">
-                <p>💡 <strong>Nota:</strong> Los aforadores asignados en zonas S1/S2 se enlazan de forma cruzada con los bloques activos (como el Bloque K u otros) para trazabilidad completa.</p>
-            </div>
+            <hr style="margin: 15px 0;">
+            <a href="editor_puerto.html" class="btn btn-secundario">✏️ Volver a Editar los Bloques del Puerto</a>
         </div>
     </div>
 
     <script>
-        // Base de datos simulada obtenida de los bloques definidos (D al I, K, CC, S1, S2) con su personal asignado
-        let bloquesPersonal = [
-            { id: 1, nombre: "Bloque I (Reefer)", tipo: "reefer", bayInfo: "Bahías 92 ➔ 48", personal: ["Carlos Mendoza", "Luis Vera"] },
-            { id: 2, nombre: "Bloque H (Reefer)", tipo: "reefer", bayInfo: "Bahías 92 ➔ 48", personal: ["Jorge Alarcón"] },
-            { id: 3, nombre: "Bloque G", tipo: "estandar", bayInfo: "Bahías 92 ➔ 48", personal: ["Mario Benítez"] },
-            { id: 4, nombre: "Bloque F", tipo: "estandar", bayInfo: "Bahías 92 ➔ 48", personal: ["Pedro Suárez", "Andrés Paz"] },
-            { id: 5, nombre: "Bloque E", tipo: "estandar", bayInfo: "Bahías 92 ➔ 48", personal: ["Roberto Gómez"] },
-            { id: 6, nombre: "Bloque D", tipo: "estandar", bayInfo: "Bahías 92 ➔ 48", personal: ["Julio Jaramillo"] },
-            { id: 7, nombre: "Bloque K (Vertical)", tipo: "estandar", bayInfo: "Bahías 1 ➔ 20 (Vertical)", personal: ["Daniela Castro", "Alex Pinargote"] },
-            { id: 8, nombre: "Cold Chamber (CC)", tipo: "coldchamber", bayInfo: "Insp. Preembarque", personal: ["Evelyn Morales"] },
-            { id: 9, nombre: "Zona S1 (Service / Aforo)", tipo: "servicio", bayInfo: "Aforo y Control", personal: ["Lic. Fausto Zambrano (Aforador)"] },
-            { id: 10, nombre: "Zona S2 (Service / Aforo)", tipo: "servicio", bayInfo: "Aforo y Control", personal: ["Ing. Sofia Benalcázar (Aforador)"] }
-        ];
+        // Cargar los bloques guardados de la pantalla 1 o usar valores predeterminados
+        let bloques = JSON.parse(localStorage.getItem('puerto_bloques')) || [];
+
+        const canvas = document.getElementById("canvas");
 
         function renderizarPantallaPersonal() {
-            const grid = document.getElementById("gridBloquesPersonal");
-            grid.innerHTML = "";
+            const banner = canvas.querySelector(".muelle-banner");
+            canvas.innerHTML = "";
+            canvas.appendChild(banner);
 
-            bloquesPersonal.forEach((bloque, index) => {
-                const card = document.createElement("div");
-                card.className = `card-bloque ${bloque.tipo}`;
+            bloques.forEach(bloque => {
+                const div = document.createElement("div");
+                div.className = `bloque-item ${bloque.tipo}`;
+                div.style.left = bloque.x + "px";
+                div.style.top = bloque.y + "px";
+                div.style.width = bloque.ancho + "px";
+                div.style.height = bloque.alto + "px";
 
-                let listaHTML = "";
-                bloque.personal.forEach((persona, pIndex) => {
-                    listaHTML += `
-                        <li class="personal-item">
-                            <span>👤 ${persona}</span>
-                            <button onclick="eliminarPersonal(${index}, ${pIndex})" title="Remover personal">&times;</button>
-                        </li>
-                    `;
-                });
+                let infoBahias = bloque.bayInicio > 0 ? `<div class="bloque-sub">Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}</div>` : `<div class="bloque-sub">Zona Operativa</div>`;
 
-                card.innerHTML = `
-                    <div>
-                        <div class="card-header">
-                            <h3>${bloque.nombre}</h3>
-                            <span class="badge-bay">${bloque.bayInfo}</span>
-                        </div>
-                        <ul class="personal-list">
-                            ${listaHTML || '<li style="color:#a0aec0; font-size:11px; font-style:italic; padding:5px;">Sin personal asignado</li>'}
-                        </ul>
-                    </div>
-                    <div class="add-personal-box">
-                        <input type="text" id="inputPersona_${index}" placeholder="Nombre del personal...">
-                        <button class="btn-add" onclick="agregarPersonal(${index})">Asignar</button>
+                let personalHTML = "";
+                if (bloque.personal) {
+                    bloque.personal.forEach((persona) => {
+                        personalHTML += `
+                            <div class="ficha-personal" draggable="true" ondragstart="iniciarArrastreFicha(event, ${bloque.id}, '${persona}')">
+                                <span>👤 ${persona}</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                div.innerHTML = `
+                    <div class="bloque-titulo">${bloque.nombre}</div>
+                    ${infoBahias}
+                    <div class="bloque-personal-dropzone" ondragover="permitirDrop(event)" ondrop="soltarFicha(event, ${bloque.id})">
+                        ${personalHTML || '<span style="font-size:9px; color:#aaa; text-align:center; padding:5px;">Arrastra personal aquí</span>'}
                     </div>
                 `;
-                grid.appendChild(card);
+
+                canvas.appendChild(div);
             });
 
             actualizarTablaResumen();
+            localStorage.setItem('puerto_bloques', JSON.stringify(bloques));
         }
 
-        function agregarPersonal(index) {
-            const input = document.getElementById(`inputPersona_${index}`);
+        function iniciarArrastreFicha(e, bloqueOrigenId, nombrePersona) {
+            e.dataTransfer.setData("text/plain", JSON.stringify({ bloqueOrigenId, nombrePersona }));
+        }
+
+        function permitirDrop(e) { e.preventDefault(); }
+
+        function soltarFicha(e, bloqueDestinoId) {
+            e.preventDefault();
+            const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+            const origenId = data.bloqueOrigenId;
+            const nombre = data.nombrePersona;
+
+            if (origenId === bloqueDestinoId) return;
+
+            const bloqueOrigen = bloques.find(b => b.id === origenId);
+            bloqueOrigen.personal = bloqueOrigen.personal.filter(p => p !== nombre);
+
+            const bloqueDestino = bloques.find(b => b.id === bloqueDestinoId);
+            if (!bloqueDestino.personal) bloqueDestino.personal = [];
+            if (!bloqueDestino.personal.includes(nombre)) {
+                bloqueDestino.personal.push(nombre);
+            }
+
+            renderizarPantallaPersonal();
+        }
+
+        function crearPersonal() {
+            const input = document.getElementById("nuevoPersonalNombre");
             const nombre = input.value.trim();
-            if (nombre) {
-                bloquesPersonal[index].personal.push(nombre);
+            if (nombre && bloques.length > 0) {
+                if (!bloques[0].personal) bloques[0].personal = [];
+                bloques[0].personal.push(nombre); // Se añade al primer bloque por defecto
                 input.value = "";
                 renderizarPantallaPersonal();
             }
-        }
-
-        function eliminarPersonal(bloqueIndex, personaIndex) {
-            bloquesPersonal[bloqueIndex].personal.splice(personaIndex, 1);
-            renderizarPantallaPersonal();
         }
 
         function toggleResumen() {
@@ -236,22 +169,16 @@
 
         function actualizarTablaResumen() {
             const contenido = document.getElementById("tablaResumenContenido");
-            let html = `<table>
-                <thead>
-                    <tr><th>Bloque / Zona</th><th>Personal Asignado</th></tr>
-                </thead>
-                <tbody>`;
-
-            bloquesPersonal.forEach(b => {
-                let personalStr = b.personal.length > 0 ? b.personal.join(", ") : "<span style='color:#ccc;'>Ninguno</span>";
-                html += `<tr><td><strong>${b.nombre}</strong><br><small>${b.bayInfo}</small></td><td>${personalStr}</td></tr>`;
+            let html = `<table><thead><tr><th>Bloque / Zona</th><th>Personal Asignado</th></tr></thead><tbody>`;
+            bloques.forEach(b => {
+                let personalStr = (b.personal && b.personal.length > 0) ? b.personal.join(", ") : "<span style='color:#bbb;'>Sin personal</span>";
+                let detalleBahia = b.bayInicio > 0 ? ` (Bahías ${b.bayInicio}-${b.bayFin})` : "";
+                html += `<tr><td><strong>${b.nombre}</strong>${detalleBahia}</td><td>${personalStr}</td></tr>`;
             });
-
             html += `</tbody></table>`;
             contenido.innerHTML = html;
         }
 
-        // Inicializar vista
         renderizarPantallaPersonal();
     </script>
 </body>
