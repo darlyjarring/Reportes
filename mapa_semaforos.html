@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoreo Operativo con Semáforos - Puerto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        h1 { text-align: center; color: #002060; margin-bottom: 3px; font-size: 20px; }
+        p.subtitle { text-align: center; color: #666; margin-top: 0; font-size: 12px; }
+
+        .layout {
+            display: flex;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Lienzo que reproduce exactamente el diseño de los bloques del editor */
+        .plano-canvas {
+            flex: 3.5;
+            background: #eef2f7;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            position: relative;
+            height: 750px;
+            overflow: auto;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+
+        .muelle-banner {
+            position: absolute;
+            top: 10px; left: 10px; right: 10px;
+            background-color: #002060; color: white; text-align: center;
+            padding: 8px; font-weight: bold; border-radius: 4px; z-index: 1; font-size: 13px;
+        }
+
+        /* Bloques dinámicos heredados del editor */
+        .bloque-render {
+            position: absolute;
+            border-radius: 6px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            user-select: none;
+            background-color: #e2e3e5;
+            border: 2px solid #383d41;
+        }
+        .bloque-render.reefer { background-color: #cce5ff; border: 2px solid #004085; color: #004085; }
+        .bloque-render.estandar { background-color: #e2e3e5; border: 2px solid #383d41; color: #383d41; }
+        .bloque-render.servicio { background-color: #d4edda; border: 2px solid #155724; color: #155724; }
+        .bloque-render.coldchamber { background-color: #fff3cd; border: 2px solid #856404; color: #856404; }
+
+        .bloque-titulo { font-size: 11px; font-weight: bold; text-align: center; pointer-events: none; }
+        .bloque-sub { font-size: 9px; text-align: center; pointer-events: none; margin-bottom: 4px; }
+
+        /* Contenedor interno donde se sueltan las fichas de semáforo */
+        .zona-dropzone {
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px dashed rgba(0,0,0,0.2);
+            border-radius: 4px;
+            padding: 4px;
+            overflow-y: auto;
+            min-height: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-content: flex-start;
+            justify-content: center;
+        }
+
+        /* Ficha tipo Semáforo */
+        .ficha-semaforo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #28a745; /* Verde normal */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 10px;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            user-select: none;
+            position: relative;
+        }
+        .ficha-semaforo:active { cursor: grabbing; }
+        .ficha-semaforo.amarillo { background-color: #ffc107; color: #000; }
+        .ficha-semaforo.rojo { background-color: #dc3545; }
+
+        .ficha-semaforo::after {
+            content: attr(data-nombre);
+            position: absolute;
+            bottom: -13px;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            font-size: 8px;
+            padding: 1px 4px;
+            border-radius: 3px;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* Panel Lateral */
+        .panel-lateral {
+            flex: 1.2;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            max-height: 750px;
+            overflow-y: auto;
+        }
+        .panel-lateral h3 { margin-top: 0; color: #002060; font-size: 15px; border-bottom: 2px solid #eee; padding-bottom: 5px; }
+        
+        .banco-personal {
+            background: #f8f9fa;
+            border: 1px dashed #ccc;
+            border-radius: 6px;
+            padding: 10px;
+            min-height: 120px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-content: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background-color: #002060; color: white; border: none; padding: 8px;
+            border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; font-size: 12px; text-align: center; text-decoration: none; display: block; margin-top: 10px;
+        }
+        .btn:hover { background-color: #001030; }
+
+        .instruccion {
+            font-size: 11px;
+            color: #555;
+            background: #eef4fc;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Monitoreo de Personal por Semáforos sobre el Plano</h1>
+    <p class="subtitle">Visualiza los bloques creados y arrastra las fichas de personal entre ellos. Haz clic en una ficha para cambiar su estado (Verde ➔ Amarillo ➔ Rojo).</p>
+
+    <div class="layout">
+        <!-- LIENZO DE BLOQUES + SEMÁFOROS -->
+        <div class="plano-canvas" id="canvasPlano">
+            <div class="muelle-banner">MUELLE / ZONA DE ATRAQUE (DP World)</div>
+        </div>
+
+        <!-- PANEL DE CONTROL / BANCO -->
+        <div class="panel-lateral">
+            <h3>Personal Sin Asignar (Banco)</h3>
+            <div class="instruccion">
+                ℹ️ Los nombres provienen directamente de los registros de tu pantalla principal (`index.html`). Arrástralos a cualquier bloque o devuélvelos aquí.
+            </div>
+            
+            <div class="banco-personal" id="bancoPersonal" ondragover="permitirDrop(event)" ondrop="soltarEnBanco(event)">
+                <!-- Fichas libres -->
+            </div>
+
+            <a href="index.html" class="btn">🏠 Ir a Index (Principal)</a>
+            <a href="editor_puerto.html" class="btn" style="background-color: #6c757d;">✏️ Ir a Editor de Bloques</a>
+        </div>
+    </div>
+
+    <script>
+        // 1. Cargar la estructura de bloques diseñada previamente
+        let bloques = JSON.parse(localStorage.getItem('puerto_bloques')) || [];
+
+        // 2. Cargar los técnicos registrados en el index.html (registros_bloques)
+        let registrosIndex = JSON.parse(localStorage.getItem('registros_bloques')) || [];
+
+        // 3. Estado de posiciones y colores de semáforo de cada persona
+        let estadosPersonal = JSON.parse(localStorage.getItem('puerto_semaforos_personal')) || {};
+
+        function sincronizarPersonal() {
+            // Recolectar todos los técnicos del index
+            let tecnicosTotales = [];
+            registrosIndex.forEach(g => {
+                if(g.tecnicos) tecnicosTotales.push(...g.tecnicos);
+            });
+
+            // Asegurar que cada técnico tenga un estado y ubicación asignada por defecto (en el primer bloque o banco)
+            tecnicosTotales.forEach(tec => {
+                if (!estadosPersonal[tec]) {
+                    estadosPersonal[tec] = { bloqueId: null, color: "verde" }; // null significa en el banco
+                }
+            });
+
+            guardarEstado();
+        }
+
+        function guardarEstado() {
+            localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
+        }
+
+        function renderizarMapa() {
+            sincronizarPersonal();
+            const canvas = document.getElementById("canvasPlano");
+            const bancoContainer = document.getElementById("bancoPersonal");
+
+            // Limpiar canvas manteniendo el banner del muelle
+            const banner = canvas.querySelector(".muelle-banner");
+            canvas.innerHTML = "";
+            canvas.appendChild(banner);
+            bancoContainer.innerHTML = "";
+
+            // Dibujar cada bloque en su posición exacta del diseño
+            bloques.forEach(bloque => {
+                const div = document.createElement("div");
+                div.className = `bloque-render ${bloque.tipo}`;
+                div.style.left = bloque.x + "px";
+                div.style.top = bloque.y + "px";
+                div.style.width = bloque.ancho + "px";
+                div.style.height = bloque.alto + "px";
+
+                let infoBahias = bloque.bayInicio > 0 ? `<div class="bloque-sub">Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}</div>` : `<div class="bloque-sub">Zona Operativa</div>`;
+
+                div.innerHTML = `
+                    <div class="bloque-titulo">${bloque.nombre}</div>
+                    ${infoBahias}
+                    <div class="zona-dropzone" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="dropzone_${bloque.id}"></div>
+                `;
+                canvas.appendChild(div);
+            });
+
+            // Crear y ubicar las fichas (semáforos) de cada persona
+            for (let persona in estadosPersonal) {
+                let info = estadosPersonal[persona];
+                let ficha = document.createElement("div");
+                ficha.className = `ficha-semaforo ${info.color}`;
+                ficha.draggable = true;
+                ficha.setAttribute("data-nombre", persona);
+                ficha.innerText = persona.substring(0, 3).toUpperCase(); // Siglas en la ficha
+                ficha.title = `${persona} (Clic para cambiar color semáforo)`;
+
+                // Clic para cambiar color de semáforo (Verde -> Amarillo -> Rojo -> Verde)
+                ficha.onclick = (e) => {
+                    e.stopPropagation();
+                    if (info.color === 'verde') info.color = 'amarillo';
+                    else if (info.color === 'amarillo') info.color = 'rojo';
+                    else info.color = 'verde';
+                    guardarEstado();
+                    renderizarMapa();
+                };
+
+                ficha.ondragstart = (e) => {
+                    e.dataTransfer.setData("text/plain", persona);
+                };
+
+                // Ubicar la ficha en su bloque correspondiente o en el banco lateral si no tiene bloque
+                if (info.bloqueId === null || !document.getElementById(`dropzone_${info.bloqueId}`)) {
+                    bancoContainer.appendChild(ficha);
+                } else {
+                    document.getElementById(`dropzone_${info.bloqueId}`).appendChild(ficha);
+                }
+            }
+        }
+
+        function permitirDrop(e) { e.preventDefault(); }
+
+        function soltarEnBloque(e, bloqueId) {
+            e.preventDefault();
+            const persona = e.dataTransfer.getData("text/plain");
+            if (persona && estadosPersonal[persona]) {
+                estadosPersonal[persona].bloqueId = bloqueId;
+                guardarEstado();
+                renderizarMapa();
+            }
+        }
+
+        function soltarEnBanco(e) {
+            e.preventDefault();
+            const persona = e.dataTransfer.getData("text/plain");
+            if (persona && estadosPersonal[persona]) {
+                estadosPersonal[persona].bloqueId = null;
+                guardarEstado();
+                renderizarMapa();
+            }
+        }
+
+        // Inicializar al cargar
+        renderizarMapa();
+    </script>
+</body>
+</html>
