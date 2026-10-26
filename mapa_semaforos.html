@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo Operativo con Semáforos - Puerto</title>
+    <title>Monitoreo Dinámico de Personal y Bahías - Puerto</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,7 +22,7 @@
             margin: 0 auto;
         }
 
-        /* Lienzo que reproduce exactamente el plano de los bloques */
+        /* Lienzo del plano de bloques */
         .plano-canvas {
             flex: 3.5;
             background: #eef2f7;
@@ -41,7 +41,7 @@
             padding: 8px; font-weight: bold; border-radius: 4px; z-index: 1; font-size: 13px;
         }
 
-        /* Bloques limpios directamente sobre el canvas */
+        /* Bloques limpios sobre el canvas */
         .bloque-plano {
             position: absolute;
             border-radius: 6px;
@@ -62,24 +62,34 @@
 
         .bloque-titulo { font-size: 10px; font-weight: bold; text-align: center; pointer-events: none; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* Contenedor invisible encima del bloque para acomodar las fichas que se mueven libremente */
-        .bloque-fichas-container {
+        /* Área interna del bloque con indicador de bahías y espacio libre para soltar al técnico donde sea */
+        .bloque-area-trabajo {
             width: 100%;
             flex-grow: 1;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            align-content: flex-start;
-            justify-content: center;
+            position: relative;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px dashed rgba(0,0,0,0.2);
+            border-radius: 4px;
             margin-top: 3px;
         }
 
-        /* Ficha tipo Semáforo (Técnico) */
+        .bahias-label {
+            position: absolute;
+            bottom: 2px;
+            left: 4px;
+            font-size: 8px;
+            color: #666;
+            pointer-events: none;
+            font-weight: bold;
+        }
+
+        /* Ficha tipo Semáforo (Técnico móvil en cualquier punto del bloque) */
         .ficha-semaforo {
-            width: 32px;
-            height: 32px;
+            position: absolute;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            background-color: #28a745; /* Verde normal */
+            background-color: #28a745;
             color: white;
             display: flex;
             align-items: center;
@@ -87,19 +97,18 @@
             font-weight: bold;
             font-size: 9px;
             cursor: grab;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
             user-select: none;
-            position: relative;
+            z-index: 10;
         }
         .ficha-semaforo:active { cursor: grabbing; }
         .ficha-semaforo.amarillo { background-color: #ffc107; color: #000; }
         .ficha-semaforo.rojo { background-color: #dc3545; }
 
-        /* Nombre del técnico debajo de la ficha */
         .ficha-semaforo::after {
             content: attr(data-nombre);
             position: absolute;
-            bottom: -13px;
+            bottom: -12px;
             background: rgba(0,0,0,0.85);
             color: #fff;
             font-size: 8px;
@@ -153,8 +162,8 @@
 </head>
 <body>
 
-    <h1>Monitoreo Directo de Personal sobre Bloques</h1>
-    <p class="subtitle">Las fichas (semáforos) se ubican directamente sobre el bloque asignado. Haz clic para cambiar color o arrástralas para moverlas.</p>
+    <h1>Monitoreo y Movimiento Libre por Bahías</h1>
+    <p class="subtitle">Arrastra al técnico y suéltalo exactamente en el punto o bahía que desees dentro de cualquier bloque. Haz clic en la ficha para cambiar su color.</p>
 
     <div class="layout">
         <!-- PLANO DE BLOQUES -->
@@ -162,11 +171,11 @@
             <div class="muelle-banner">MUELLE / ZONA DE ATRAQUE (DP World / TPG)</div>
         </div>
 
-        <!-- PANEL LATERAL (BANCO DE PERSONAL SIN BLOQUE) -->
+        <!-- PANEL LATERAL (BANCO DE PERSONAL) -->
         <div class="panel-lateral">
-            <h3>Personal en Banco (Sin Bloque Asignado)</h3>
+            <h3>Personal en Banco (Sin Asignar)</h3>
             <div class="instruccion">
-                ℹ️ Los técnicos registrados en el reporte (`index.html`) que aún no tengan un bloque asignado aparecerán aquí hasta que se cree o elija su ubicación.
+                ℹ️ Técnicos registrados en tu reporte principal (`index.html`) que aún no han sido ubicados en el patio.
             </div>
             
             <div class="banco-personal" id="bancoPersonal" ondragover="permitirDrop(event)" ondrop="soltarEnBanco(event)">
@@ -179,42 +188,30 @@
     </div>
 
     <script>
-        // 1. Cargar bloques definidos en el editor
         let bloques = JSON.parse(localStorage.getItem('puerto_bloques')) || [];
-
-        // 2. Cargar técnicos registrados en el index.html
         let registrosIndex = JSON.parse(localStorage.getItem('registros_bloques')) || [];
-
-        // 3. Cargar estado de ubicación y color de los semáforos
         let estadosPersonal = JSON.parse(localStorage.getItem('puerto_semaforos_personal')) || {};
 
         function sincronizarDatos() {
-            // Extraer lista plana de todos los técnicos del index
             let tecnicosTotales = [];
             registrosIndex.forEach(g => {
                 if(g.tecnicos) {
-                    g.tecnicos.forEach(tec => tecnicosTotales.push({ nombre: tClean(tec), bloqueSugerido: g.bloque }));
+                    g.tecnicos.forEach(tec => tecnicosTotales.push({ nombre: tec.trim().toUpperCase(), bloqueSugerido: g.bloque }));
                 }
             });
 
-            // Sincronizar con el estado guardado
             tecnicosTotales.forEach(item => {
                 if (!estadosPersonal[item.nombre]) {
-                    // Buscar si el bloque sugerido por el index existe en el editor de bloques
                     let bloqueEncontrado = bloques.find(b => b.nombre.toUpperCase().includes(item.bloqueSugerido.toUpperCase()));
-                    
                     estadosPersonal[item.nombre] = {
-                        bloqueId: bloqueEncontrado ? bloqueEncontrado.id : null, // Si no existe bloque, se va al banco derecho
+                        bloqueId: bloqueEncontrado ? bloqueEncontrado.id : null,
+                        x: 10, // Posición interna por defecto dentro del bloque
+                        y: 15,
                         color: "verde"
                     };
                 }
             });
-
             guardarEstado();
-        }
-
-        function tClean(str) {
-            return str.trim().toUpperCase();
         }
 
         function guardarEstado() {
@@ -231,7 +228,7 @@
             canvas.appendChild(banner);
             bancoContainer.innerHTML = "";
 
-            // Dibujar los bloques limpios con sus coordenadas exactas
+            // Dibujar bloques con su área de trabajo interna
             bloques.forEach(bloque => {
                 const div = document.createElement("div");
                 div.className = `bloque-plano ${bloque.tipo}`;
@@ -240,27 +237,34 @@
                 div.style.width = bloque.ancho + "px";
                 div.style.height = bloque.alto + "px";
 
+                let textBahias = bloque.bayInicio > 0 ? `Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}` : `Zona Operativa`;
+
                 div.innerHTML = `
                     <div class="bloque-titulo">${bloque.nombre}</div>
-                    <div class="bloque-fichas-container" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="dropzone_${bloque.id}"></div>
+                    <div class="bloque-area-trabajo" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="area_${bloque.id}">
+                        <div class="bahias-label">${textBahias}</div>
+                    </div>
                 `;
                 canvas.appendChild(div);
             });
 
-            // Crear y ubicar las fichas (semáforos) directamente sobre el bloque o en el banco
+            // Colocar fichas interactivas en sus coordenadas exactas (dentro del bloque o banco)
             for (let persona in estadosPersonal) {
                 let info = estadosPersonal[persona];
                 let ficha = document.createElement("div");
                 ficha.className = `ficha-semaforo ${info.color}`;
                 ficha.draggable = true;
                 ficha.setAttribute("data-nombre", persona);
-                
-                // Mostrar iniciales o abreviatura limpia en la ficha
+
                 let partes = persona.split(" ");
                 ficha.innerText = partes.length > 1 ? (partes[0][0] + partes[1][0]) : persona.substring(0, 3);
-                ficha.title = `${persona} (Clic para cambiar color de semáforo)`;
+                ficha.title = `${persona} (Clic para cambiar color / Arrastra para mover)`;
 
-                // Clic para cambiar color (Verde -> Amarillo -> Rojo -> Verde)
+                // Asignar posición interna exacta dentro del área de trabajo
+                ficha.style.left = (info.x || 10) + "px";
+                ficha.style.top = (info.y || 15) + "px";
+
+                // Cambiar color de semáforo al hacer clic
                 ficha.onclick = (e) => {
                     e.stopPropagation();
                     if (info.color === 'verde') info.color = 'amarillo';
@@ -274,11 +278,11 @@
                     e.dataTransfer.setData("text/plain", persona);
                 };
 
-                // Si no tiene bloque asignado, va al banco lateral derecho
-                if (info.bloqueId === null || !document.getElementById(`dropzone_${info.bloqueId}`)) {
+                if (info.bloqueId === null || !document.getElementById(`area_${info.bloqueId}`)) {
+                    ficha.style.position = "static"; // Posición normal en el banco lateral
                     bancoContainer.appendChild(ficha);
                 } else {
-                    document.getElementById(`dropzone_${info.bloqueId}`).appendChild(ficha);
+                    document.getElementById(`area_${info.bloqueId}`).appendChild(ficha);
                 }
             }
         }
@@ -289,7 +293,20 @@
             e.preventDefault();
             const persona = e.dataTransfer.getData("text/plain");
             if (persona && estadosPersonal[persona]) {
+                const areaRect = document.getElementById(`area_${bloqueId}`).getBoundingClientRect();
+                
+                // Calcular la coordenada exacta (X, Y) donde soltó el mouse dentro de ese bloque
+                let offsetX = e.clientX - areaRect.left - 15; // Centrar ficha de 30px
+                let offsetY = e.clientY - areaRect.top - 15;
+
+                // Limitar para que no se salgan del bloque
+                offsetX = Math.max(5, Math.min(offsetX, areaRect.width - 35));
+                offsetY = Math.max(5, Math.min(offsetY, areaRect.height - 35));
+
                 estadosPersonal[persona].bloqueId = bloqueId;
+                estadosPersonal[persona].x = offsetX;
+                estadosPersonal[persona].y = offsetY;
+
                 guardarEstado();
                 renderizarMapa();
             }
@@ -305,7 +322,6 @@
             }
         }
 
-        // Ejecutar al cargar la página
         renderizarMapa();
     </script>
 </body>
