@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control Operativo Reefer & Mapa Semáforo - DP World</title>
-  <!-- Librería para descargar la tabla/canvas como imagen PNG -->
+  <!-- Librería para descargar la tabla como imagen PNG -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
@@ -332,7 +332,7 @@
       position: absolute;
       top: 0;
       right: 0;
-      width: 150px;
+      width: 160px;
       height: 100%;
       background: #1e3a5f;
       border-left: 4px dashed #ffc107;
@@ -345,7 +345,7 @@
     }
 
     .buque-box {
-      width: 120px;
+      width: 130px;
       height: 280px;
       background: #d9534f;
       border: 2px solid #912d2b;
@@ -353,7 +353,8 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
+      padding-top: 10px;
       font-size: 11px;
       font-weight: bold;
       text-align: center;
@@ -361,9 +362,19 @@
       position: relative;
     }
 
+    .buque-work-area {
+      width: 100%;
+      flex-grow: 1;
+      position: relative;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px dashed rgba(255, 255, 255, 0.5);
+      margin-top: 5px;
+      border-radius: 4px;
+    }
+
     .gruas-qc-row {
       position: absolute;
-      left: -25px;
+      left: -28px;
       top: 10px;
       bottom: 10px;
       display: flex;
@@ -492,12 +503,6 @@
       margin-bottom: 15px;
     }
 
-    /* RESIZE HANDLES EDITOR BLOQUES */
-    .bloque-plano-item.seleccionado {
-      border: 2px dashed #ff9800 !important;
-      box-shadow: 0 0 8px rgba(255, 152, 0, 0.7);
-    }
-
     .resize-handle {
       position: absolute;
       width: 10px;
@@ -508,6 +513,10 @@
       z-index: 20;
     }
 
+    .bloque-plano-item.seleccionado {
+      border: 2px dashed #ff9800 !important;
+      box-shadow: 0 0 8px rgba(255, 152, 0, 0.7);
+    }
     .bloque-plano-item.seleccionado .resize-handle { display: block; }
     .handle-se { bottom: -5px; right: -5px; cursor: se-resize; }
     .handle-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
@@ -519,7 +528,7 @@
 
   <!-- ENCABEZADO -->
   <header>
-    <h1>Control Operativo Reefer & Patio DP World</h1>
+    <h1>Control Operativo Reefer & Mapa Semáforo</h1>
   </header>
 
   <!-- MENÚ TAB SUPERIOR -->
@@ -552,8 +561,8 @@
           <input type="hidden" id="editIdBloques" value="">
 
           <div class="form-group">
-            <label for="bloque">Bloque / Zona:</label>
-            <input type="text" id="bloque" placeholder="Ej: 1D, 1F, BUQUE" required>
+            <label for="bloque">Bloque / Zona / Buque (Ej: 1D, AFOROS, BUQUE 1):</label>
+            <input type="text" id="bloque" placeholder="Ej: 1D, AFOROS, BUQUE 1" required>
           </div>
 
           <div class="form-group">
@@ -668,26 +677,28 @@
     <div class="mapa-layout">
       <div class="plano-canvas-container" id="canvasSemaforo">
         <div class="muelle-vertical-derecha">
-          <div style="font-weight: bold; font-size: 12px; transform: rotate(90deg); margin-bottom: 20px;">MUELLE DP WORLD POSORJA</div>
+          <div style="font-weight: bold; font-size: 11px; transform: rotate(90deg); margin-bottom: 15px; white-space: nowrap;">MUELLE POSORJA</div>
           
           <!-- Buque 1 -->
-          <div class="buque-box">
+          <div class="buque-box" ondragover="permitirDrop(event)" ondrop="soltarEnBuque(event, 'BUQUE 1')" id="area_BUQUE_1">
             <div class="gruas-qc-row">
               <span class="grua-qc">QC01</span>
               <span class="grua-qc">QC02</span>
               <span class="grua-qc">QC03</span>
             </div>
-            🚢 BUQUE 1
+            <span>🚢 BUQUE 1</span>
+            <div class="buque-work-area"></div>
           </div>
 
           <!-- Buque 2 -->
-          <div class="buque-box">
+          <div class="buque-box" ondragover="permitirDrop(event)" ondrop="soltarEnBuque(event, 'BUQUE 2')" id="area_BUQUE_2">
             <div class="gruas-qc-row">
               <span class="grua-qc">QC04</span>
               <span class="grua-qc">QC05</span>
               <span class="grua-qc">QC06</span>
             </div>
-            🚢 BUQUE 2
+            <span>🚢 BUQUE 2</span>
+            <div class="buque-work-area"></div>
           </div>
         </div>
       </div>
@@ -695,7 +706,7 @@
       <div class="panel-side">
         <h3 style="color: var(--navy-blue); margin-bottom: 10px;">Banco de Personal (Sin Asignar)</h3>
         <p style="font-size: 11px; color: #666; margin-bottom: 8px;">
-          Técnicos provenientes de 'Equipos por Bloque'. Haz clic para cambiar semáforo (Verde ➔ Amarillo ➔ Rojo). Arrastra para situar en bloque.
+          Técnicos sincronizados desde la pestaña 'Equipos por Bloque'. Haz clic para cambiar estado (Verde ➔ Amarillo ➔ Rojo) o arrástralos libremente a cualquier Bloque, Aforo, Buque 1 o Buque 2 según la operación en vivo.
         </p>
         
         <div class="banco-personal-box" id="bancoSemaforo" ondragover="permitirDrop(event)" ondrop="soltarEnBanco(event)"></div>
@@ -708,7 +719,7 @@
     <div class="mapa-layout">
       <div class="plano-canvas-container" id="canvasEditor">
         <div class="muelle-vertical-derecha">
-          <div style="font-weight: bold; font-size: 12px; transform: rotate(90deg); margin-bottom: 20px;">MUELLE DP WORLD POSORJA</div>
+          <div style="font-weight: bold; font-size: 11px; transform: rotate(90deg); margin-bottom: 15px; white-space: nowrap;">MUELLE POSORJA</div>
           <div class="buque-box">🚢 BUQUE 1</div>
           <div class="buque-box">🚢 BUQUE 2</div>
         </div>
@@ -829,11 +840,8 @@
         { id: 1, bloque: "1D", tecnicos: ["TOCTO", "TORRES"], radios: ["4250"], tablets: ["3", "2"] },
         { id: 2, bloque: "1E", tecnicos: ["CHONILLO", "PÉREZ"], radios: ["Lp", "4329"], tablets: ["4", "5"] },
         { id: 3, bloque: "1F", tecnicos: ["DAMIÁN", "VERA"], radios: ["3456", "2340"], tablets: ["6", "7"] },
-        { id: 4, bloque: "1G", tecnicos: ["SÁNCHEZ", "PINEDA"], radios: ["4250"], tablets: ["23", "45"] },
-        { id: 5, bloque: "1H", tecnicos: ["VIRIUS", "TERRY"], radios: ["2390", "3450"], tablets: ["34", "67"] },
-        { id: 6, bloque: "1I", tecnicos: ["TERRY", "TOREWS"], radios: ["3260", "5634"], tablets: ["12", "11"] },
-        { id: 7, bloque: "AFOROS", tecnicos: ["PATIMO"], radios: ["3212"], tablets: ["78"] },
-        { id: 8, bloque: "BUQUE", tecnicos: ["PÉREZ"], radios: [""], tablets: ["2"] }
+        { id: 4, bloque: "AFOROS", tecnicos: ["PATIMO"], radios: ["3212"], tablets: ["78"] },
+        { id: 5, bloque: "BUQUE 1", tecnicos: ["PÉREZ"], radios: [""], tablets: ["2"] }
       ];
       localStorage.setItem("registros_bloques", JSON.stringify(defaultData));
       return defaultData;
@@ -1145,7 +1153,7 @@
         { id: 4, nombre: "1F", tipo: "estandar", x: 440, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
         { id: 5, nombre: "1E", tipo: "estandar", x: 580, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
         { id: 6, nombre: "1D", tipo: "estandar", x: 720, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
-        { id: 7, nombre: "AFOROS (S1)", tipo: "servicio", x: 20, y: 160, ancho: 140, alto: 80, bayInicio: 0, bayFin: 0 },
+        { id: 7, nombre: "AFOROS", tipo: "servicio", x: 20, y: 160, ancho: 140, alto: 80, bayInicio: 0, bayFin: 0 },
         { id: 8, nombre: "Cold Chamber", tipo: "coldchamber", x: 180, y: 160, ancho: 140, alto: 80, bayInicio: 0, bayFin: 0 }
       ];
       localStorage.setItem('puerto_bloques', JSON.stringify(defaultLayout));
@@ -1176,15 +1184,50 @@
 
       tecnicosReporte.forEach(item => {
         let bloqueCoincidente = bloquesLayout.find(b => b.nombre.toUpperCase().includes(item.bloque));
+        let esBuque = item.bloque.includes("BUQUE 1") || item.bloque.includes("BUQUE 2") ? item.bloque : null;
+
         if (!estadosPersonal[item.nombre]) {
           estadosPersonal[item.nombre] = {
             bloqueId: bloqueCoincidente ? bloqueCoincidente.id : null,
+            buqueDestino: esBuque,
             x: 10, y: 10, color: "verde"
           };
         }
       });
 
       localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
+    }
+
+    function reasignarTecnicoEnRegistros(nombreTecnico, nuevoNombreBloque) {
+      let registros = getStoredBloques();
+      registros.forEach(grupo => {
+        let idx = grupo.tecnicos.indexOf(nombreTecnico);
+        if (idx !== -1) {
+          grupo.tecnicos.splice(idx, 1);
+          if (grupo.radios && grupo.radios[idx] !== undefined) grupo.radios.splice(idx, 1);
+          if (grupo.tablets && grupo.tablets[idx] !== undefined) grupo.tablets.splice(idx, 1);
+        }
+      });
+      registros = registros.filter(g => g.tecnicos.length > 0);
+
+      if (nuevoNombreBloque) {
+        let grupoDestino = registros.find(g => g.bloque.toUpperCase() === nuevoNombreBloque.toUpperCase());
+        if (grupoDestino) {
+          grupoDestino.tecnicos.push(nombreTecnico);
+          if (grupoDestino.radios) grupoDestino.radios.push("");
+          if (grupoDestino.tablets) grupoDestino.tablets.push("");
+        } else {
+          registros.push({
+            id: Date.now(),
+            bloque: nuevoNombreBloque.toUpperCase(),
+            tecnicos: [nombreTecnico],
+            radios: [""],
+            tablets: [""]
+          });
+        }
+      }
+      localStorage.setItem("registros_bloques", JSON.stringify(registros));
+      renderTableBloques();
     }
 
     function renderizarMapaSemaforo() {
@@ -1206,7 +1249,7 @@
         div.style.width = bloque.ancho + "px";
         div.style.height = bloque.alto + "px";
 
-        let textBahias = bloque.bayInicio > 0 ? `Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}` : `Zona Servicio`;
+        let textBahias = bloque.bayInicio > 0 ? `Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}` : `Zona Operativa`;
 
         div.innerHTML = `
           <div class="bloque-title-bar">${bloque.nombre}</div>
@@ -1243,7 +1286,10 @@
           e.dataTransfer.setData("text/plain", persona);
         };
 
-        if (info.bloqueId === null || !document.getElementById(`area_${info.bloqueId}`)) {
+        if (info.buqueDestino) {
+          const areaBuque = document.getElementById(info.buqueDestino === 'BUQUE 1' ? 'area_BUQUE_1' : 'area_BUQUE_2').querySelector('.buque-work-area');
+          if(areaBuque) areaBuque.appendChild(ficha);
+        } else if (info.bloqueId === null || !document.getElementById(`area_${info.bloqueId}`)) {
           ficha.style.position = "static";
           banco.appendChild(ficha);
         } else {
@@ -1265,9 +1311,32 @@
         offsetX = Math.max(5, Math.min(offsetX, areaRect.width - 35));
         offsetY = Math.max(5, Math.min(offsetY, areaRect.height - 35));
 
+        const layout = getStoredLayoutBloques();
+        const bloqueObj = layout.find(b => b.id === bloqueId);
+        const nombreBloqueDestino = bloqueObj ? bloqueObj.nombre : "";
+
         estadosPersonal[persona].bloqueId = bloqueId;
+        estadosPersonal[persona].buqueDestino = null;
         estadosPersonal[persona].x = offsetX;
         estadosPersonal[persona].y = offsetY;
+
+        reasignarTecnicoEnRegistros(persona, nombreBloqueDestino);
+
+        localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
+        renderizarMapaSemaforo();
+      }
+    }
+
+    function soltarEnBuque(e, nombreBuque) {
+      e.preventDefault();
+      const persona = e.dataTransfer.getData("text/plain");
+      if (persona && estadosPersonal[persona]) {
+        estadosPersonal[persona].bloqueId = null;
+        estadosPersonal[persona].buqueDestino = nombreBuque;
+        estadosPersonal[persona].x = 10;
+        estadosPersonal[persona].y = 10;
+
+        reasignarTecnicoEnRegistros(persona, nombreBuque);
 
         localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
         renderizarMapaSemaforo();
@@ -1279,6 +1348,10 @@
       const persona = e.dataTransfer.getData("text/plain");
       if (persona && estadosPersonal[persona]) {
         estadosPersonal[persona].bloqueId = null;
+        estadosPersonal[persona].buqueDestino = null;
+
+        reasignarTecnicoEnRegistros(persona, null);
+
         localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
         renderizarMapaSemaforo();
       }
