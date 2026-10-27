@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Operativo Reefer & Mapa Semáforo - DP World</title>
+  <!-- Librería para descargar la tabla/canvas como imagen PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    :root {
+      --navy-blue: #002060;
+      --header-blue: #5b9bd5;
+      --border-color: #000000;
+      --bg-light: #f4f7f9;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-light);
+      padding-bottom: 30px;
+    }
+
+    /* HEADER Y MENÚ SUPERIOR FIJO */
+    header {
+      background-color: var(--navy-blue);
+      color: white;
+      padding: 12px 15px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    header h1 {
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      background-color: #ffffff;
+      border-bottom: 2px solid #ccc;
+      position: sticky;
+      top: 43px;
+      z-index: 99;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 130px;
+      padding: 12px 8px;
+      background: none;
+      border: none;
+      font-size: 13px;
+      font-weight: bold;
+      color: #555;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      color: var(--navy-blue);
+      border-bottom-color: var(--navy-blue);
+      background-color: #eef4fc;
+    }
+
+    /* SECCIONES Y CONTENEDORES */
+    .tab-content {
+      display: none;
+      padding: 15px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .form-container {
+      flex: 1;
+      min-width: 100%;
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+      font-size: 13px;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 9px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 14px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    button.btn-add {
+      background-color: #28a745;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.btn-cancel {
+      background-color: #6c757d;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button.btn-clear {
+      background-color: #dc3545;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .action-buttons-container {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+
+    button.btn-report {
+      background-color: var(--navy-blue);
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      padding: 12px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    button.btn-download {
+      background-color: #17a2b8;
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      padding: 12px 15px;
+      border-radius: 5px;
+      font-size: 14px;
+      flex: 1;
+    }
+
+    .preview-container {
+      flex: 1;
+      min-width: 100%;
+      margin-top: 15px;
+    }
+
+    /* ESTILOS DE TABLAS DE REPORTES */
+    .custom-table, .reefer-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 2px solid var(--border-color);
+      background-color: white;
+      font-size: 12px;
+    }
+
+    .custom-table th, .reefer-table th.col-header {
+      background-color: var(--navy-blue);
+      color: white;
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 6px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .reefer-table th.col-header {
+      background-color: var(--header-blue);
+      color: black;
+    }
+
+    .custom-table td, .reefer-table td {
+      border: 1px solid var(--border-color);
+      text-align: center;
+      padding: 5px;
+      font-weight: bold;
+    }
+
+    .reefer-table th.main-title {
+      background-color: var(--header-blue);
+      color: black;
+      font-size: 15px;
+      font-weight: bold;
+      text-align: center;
+      padding: 8px;
+      border-bottom: 2px solid var(--border-color);
+      text-transform: uppercase;
+    }
+
+    .reefer-table td.header-label {
+      font-weight: bold;
+      text-transform: uppercase;
+      padding: 5px 8px;
+      text-align: left;
+    }
+
+    .reefer-table td.header-val {
+      font-weight: bold;
+      padding: 5px 8px;
+      text-align: left;
+    }
+
+    .reefer-table td.personal-col {
+      text-align: left;
+    }
+
+    .reefer-table tr.total-row td {
+      background-color: var(--header-blue);
+      font-weight: bold;
+      color: black;
+    }
+
+    .section-header {
+      background-color: var(--header-blue);
+      color: black;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .actions-cell { width: 45px; }
+
+    .btn-action {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px;
+    }
+
+    .btn-edit { color: #0056b3; }
+    .btn-delete { color: red; }
+
+    /* MODO REPORTE PANTALLA COMPLETA REAL */
+    .fullscreen-report {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      z-index: 99999;
+      overflow-y: auto;
+      padding: 10px;
+      box-sizing: border-box;
+      touch-action: manipulation;
+    }
+
+    .fullscreen-hint {
+      text-align: center;
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 8px;
+      font-style: italic;
+    }
+
+    /* ESTILOS MAPA SEMÁFORO Y EDITOR DE BLOQUES */
+    .mapa-layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .plano-canvas-container {
+      flex: 3.5;
+      min-width: 320px;
+      background: #e1e8f0;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      position: relative;
+      height: 720px;
+      overflow: auto;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.08);
+    }
+
+    .muelle-vertical-derecha {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 160px;
+      height: 100%;
+      background: #1e3a5f;
+      border-left: 4px dashed #ffc107;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-evenly;
+      color: white;
+      z-index: 2;
+    }
+
+    .buque-box {
+      width: 130px;
+      height: 280px;
+      background: #d9534f;
+      border: 2px solid #912d2b;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 10px;
+      font-size: 11px;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .buque-work-area {
+      width: 100%;
+      flex-grow: 1;
+      position: relative;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px dashed rgba(255, 255, 255, 0.5);
+      margin-top: 5px;
+      border-radius: 4px;
+    }
+
+    .gruas-qc-row {
+      position: absolute;
+      left: -28px;
+      top: 10px;
+      bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+    }
+
+    .grua-qc {
+      background: #f0ad4e;
+      color: black;
+      font-size: 9px;
+      font-weight: bold;
+      padding: 3px 5px;
+      border-radius: 3px;
+      border: 1px solid #000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .bloque-plano-item {
+      position: absolute;
+      border-radius: 6px;
+      padding: 6px;
+      box-sizing: border-box;
+      user-select: none;
+      background-color: #e2e3e5;
+      border: 2px solid #383d41;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .bloque-plano-item.reefer { background-color: #cce5ff; border: 2px solid #004085; color: #004085; }
+    .bloque-plano-item.estandar { background-color: #e2e3e5; border: 2px solid #383d41; color: #383d41; }
+    .bloque-plano-item.servicio { background-color: #d4edda; border: 2px solid #155724; color: #155724; }
+    .bloque-plano-item.coldchamber { background-color: #fff3cd; border: 2px solid #856404; color: #856404; }
+
+    .bloque-title-bar {
+      font-size: 11px;
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
+      pointer-events: none;
+      border-bottom: 1px solid rgba(0,0,0,0.15);
+      padding-bottom: 2px;
+      margin-bottom: 3px;
+    }
+
+    .bloque-work-area {
+      width: 100%;
+      flex-grow: 1;
+      position: relative;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px dashed rgba(0,0,0,0.25);
+      border-radius: 4px;
+      min-height: 40px;
+    }
+
+    .bahia-tag {
+      position: absolute;
+      bottom: 2px;
+      left: 4px;
+      font-size: 8px;
+      color: #555;
+      font-weight: bold;
+      pointer-events: none;
+    }
+
+    /* FICHAS DE TÉCNICOS TIPO SEMÁFORO */
+    .ficha-tec {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #28a745;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 10px;
+      cursor: grab;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      user-select: none;
+      z-index: 10;
+      border: 2px solid #fff;
+    }
+
+    .ficha-tec.amarillo { background-color: #ffc107; color: #000; }
+    .ficha-tec.rojo { background-color: #dc3545; color: #fff; }
+
+    .ficha-tec::after {
+      content: attr(data-nombre);
+      position: absolute;
+      bottom: -14px;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      font-size: 8px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .panel-side {
+      flex: 1.2;
+      min-width: 280px;
+      background: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-height: 720px;
+      overflow-y: auto;
+    }
+
+    .banco-personal-box {
+      background: #f8f9fa;
+      border: 1px dashed #ccc;
+      border-radius: 6px;
+      padding: 12px;
+      min-height: 120px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-content: flex-start;
+      margin-top: 10px;
+      margin-bottom: 15px;
+    }
+
+    .resize-handle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #ff9800;
+      border: 1px solid #fff;
+      display: none;
+      z-index: 20;
+    }
+
+    .bloque-plano-item.seleccionado {
+      border: 2px dashed #ff9800 !important;
+      box-shadow: 0 0 8px rgba(255, 152, 0, 0.7);
+    }
+    .bloque-plano-item.seleccionado .resize-handle { display: block; }
+    .handle-se { bottom: -5px; right: -5px; cursor: se-resize; }
+    .handle-sw { bottom: -5px; left: -5px; cursor: sw-resize; }
+    .handle-ne { top: -5px; right: -5px; cursor: ne-resize; }
+    .handle-nw { top: -5px; left: -5px; cursor: nw-resize; }
+  </style>
+</head>
+<body>
+
+  <!-- ENCABEZADO -->
+  <header>
+    <h1>Control Operativo Reefer & Patio DP World</h1>
+  </header>
+
+  <!-- MENÚ TAB SUPERIOR -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tabBloques', this)">
+      📋 Equipos por Bloque
+    </button>
+    <button class="tab-btn" onclick="switchTab('tabReefer', this)">
+      👥 Equipo de Trabajo
+    </button>
+    <button class="tab-btn" onclick="switchTab('tabSemaforo', this)">
+      🚦 Mapa Semáforo Patio
+    </button>
+    <button class="tab-btn" onclick="switchTab('tabEditorBloques', this)">
+      ✏️ Editor de Bloques
+    </button>
+  </nav>
+
+  <!-- PESTAÑA 1: EQUIPOS POR BLOQUE -->
+  <div id="tabBloques" class="tab-content active">
+    <div class="action-buttons-container">
+      <button class="btn-report" onclick="mostrarReporteCapturaBloques()">👁️ Modo Captura</button>
+      <button class="btn-download" onclick="descargarImagenBloques()">📷 Descargar PNG</button>
+    </div>
+
+    <div class="container">
+      <div class="form-container" id="formBloquesContainer">
+        <h2 id="formBloquesTitle" style="text-align:center; margin-bottom:10px;">Ingresar Registro</h2>
+        <form id="recordFormBloques">
+          <input type="hidden" id="editIdBloques" value="">
+
+          <div class="form-group">
+            <label for="bloque">Bloque / Zona / Buque (Ej: 1D, AFOROS, BUQUE 1):</label>
+            <input type="text" id="bloque" placeholder="Ej: 1D, AFOROS, BUQUE 1" required>
+          </div>
+
+          <div class="form-group">
+            <label for="tecnicos">Técnico(s) (Separados por coma):</label>
+            <input type="text" id="tecnicos" placeholder="Ej: TOCTO, TORRES" required>
+          </div>
+
+          <div class="form-group">
+            <label for="radio">Radio(s) (Separadas por coma o una sola):</label>
+            <input type="text" id="radio" placeholder="Ej: 4028, 1018">
+          </div>
+
+          <div class="form-group">
+            <label for="tablets">Tablet(s) por Técnico (Separadas por coma):</label>
+            <input type="text" id="tablets" placeholder="Ej: 1, 11">
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn-add" id="btnSubmitBloques">Añadir Registro</button>
+            <button type="button" class="btn-cancel" id="btnCancelBloques" style="display:none;" onclick="cancelarEdicionBloques()">Cancelar</button>
+          </div>
+          <button type="button" class="btn-clear" onclick="limpiarBloques()">Borrar Todos los Datos</button>
+        </form>
+      </div>
+
+      <div class="preview-container">
+        <h2 style="text-align:center; margin-bottom:10px;">Panel de Edición</h2>
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th style="width: 40%;">BLOQUES</th>
+              <th style="width: 25%;">RADIO</th>
+              <th style="width: 20%;">TABBLE</th>
+              <th class="actions-cell">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="tableBodyBloques"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 2: EQUIPO DE TRABAJO -->
+  <div id="tabReefer" class="tab-content">
+    <div class="action-buttons-container">
+      <button class="btn-report" onclick="mostrarReporteCapturaReefer()">👁️ Modo Captura</button>
+      <button class="btn-download" onclick="descargarImagenReefer()">📷 Descargar PNG</button>
+    </div>
+
+    <div class="container">
+      <div class="form-container" id="formReeferContainer">
+        <h2 id="formReeferTitle" style="text-align:center; margin-bottom:10px;">Configuración & Registro</h2>
+        
+        <div class="form-group">
+          <label for="fecha">Fecha:</label>
+          <input type="text" id="fecha" value="5/9/2026">
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;">
+            <label for="turno">Turno:</label>
+            <input type="text" id="turno" value="1">
+          </div>
+          <div class="form-group" style="flex:2;">
+            <label for="team">Team / Grupo:</label>
+            <input type="text" id="team" value="HALCONES">
+          </div>
+        </div>
+
+        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ccc;">
+
+        <form id="recordFormReefer">
+          <input type="hidden" id="editIdReefer" value="">
+
+          <div class="form-group">
+            <label for="personal">Categoría Personal:</label>
+            <input type="text" id="personal" placeholder="Ej: DPW Ec, Perú (12 hrs)" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex:1;">
+              <label for="pedido">Pedido:</label>
+              <input type="number" id="pedido" min="0" required>
+            </div>
+            <div class="form-group" style="flex:1;">
+              <label for="asistieron">Asistieron:</label>
+              <input type="number" id="asistieron" min="0" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="observaciones">Observaciones:</label>
+            <input type="text" id="observaciones" placeholder="Opcional">
+          </div>
+
+          <div class="btn-group">
+            <button type="submit" class="btn-add" id="btnSubmitReefer">Añadir / Actualizar Fila</button>
+            <button type="button" class="btn-cancel" id="btnCancelReefer" style="display:none;" onclick="cancelarEdicionReefer()">Cancelar</button>
+          </div>
+          <button type="button" class="btn-clear" onclick="limpiarReefer()">Borrar Todos los Datos</button>
+        </form>
+      </div>
+
+      <div class="preview-container">
+        <h2 style="text-align:center; margin-bottom:10px;">Panel de Edición</h2>
+        <div id="tablePreviewContainerReefer"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 3: MAPA SEMÁFORO PATIO -->
+  <div id="tabSemaforo" class="tab-content">
+    <div class="mapa-layout">
+      <div class="plano-canvas-container" id="canvasSemaforo">
+        <div class="muelle-vertical-derecha">
+          <div style="font-weight: bold; font-size: 11px; transform: rotate(90deg); margin-bottom: 15px; white-space: nowrap;">MUELLE POSORJA</div>
+          
+          <!-- Buque 1 -->
+          <div class="buque-box" ondragover="permitirDrop(event)" ondrop="soltarEnBuque(event, 'BUQUE 1')" id="area_BUQUE_1">
+            <div class="gruas-qc-row">
+              <span class="grua-qc">QC01</span>
+              <span class="grua-qc">QC02</span>
+              <span class="grua-qc">QC03</span>
+            </div>
+            <span>🚢 BUQUE 1</span>
+            <div class="buque-work-area"></div>
+          </div>
+
+          <!-- Buque 2 -->
+          <div class="buque-box" ondragover="permitirDrop(event)" ondrop="soltarEnBuque(event, 'BUQUE 2')" id="area_BUQUE_2">
+            <div class="gruas-qc-row">
+              <span class="grua-qc">QC04</span>
+              <span class="grua-qc">QC05</span>
+              <span class="grua-qc">QC06</span>
+            </div>
+            <span>🚢 BUQUE 2</span>
+            <div class="buque-work-area"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-side">
+        <h3 style="color: var(--navy-blue); margin-bottom: 10px;">Banco de Personal (Sin Asignar)</h3>
+        <p style="font-size: 11px; color: #666; margin-bottom: 8px;">
+          Técnicos sincronizados desde la pestaña 'Equipos por Bloque'. Haz clic para cambiar estado (Verde ➔ Amarillo ➔ Rojo) o arrástralos a cualquier Bloque, Aforo, Buque 1 o Buque 2.
+        </p>
+        
+        <div class="banco-personal-box" id="bancoSemaforo" ondragover="permitirDrop(event)" ondrop="soltarEnBanco(event)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PESTAÑA 4: EDITOR DE BLOQUES -->
+  <div id="tabEditorBloques" class="tab-content">
+    <div class="mapa-layout">
+      <div class="plano-canvas-container" id="canvasEditor">
+        <div class="muelle-vertical-derecha">
+          <div style="font-weight: bold; font-size: 11px; transform: rotate(90deg); margin-bottom: 15px; white-space: nowrap;">MUELLE POSORJA</div>
+          <div class="buque-box">🚢 BUQUE 1</div>
+          <div class="buque-box">🚢 BUQUE 2</div>
+        </div>
+      </div>
+
+      <div class="panel-side">
+        <h3 style="color: var(--navy-blue); margin-bottom: 10px;">Propiedades del Bloque</h3>
+        <div id="infoEdicionBloque">
+          <p style="font-size: 12px; color: #666;">Haz clic en un bloque dentro del plano para configurar sus bahías y tamaño.</p>
+        </div>
+
+        <div id="formularioEdicionBloque" style="display: none;">
+          <input type="hidden" id="editBloqueId">
+          <div class="form-group"><label>Nombre del Bloque:</label><input type="text" id="editBloqueNombre" oninput="actualizarBloqueDesdeInputs()"></div>
+          <div class="form-group">
+            <label>Tipo de Zona:</label>
+            <select id="editBloqueTipo" onchange="actualizarBloqueDesdeInputs()">
+              <option value="estandar">Bloque Estándar</option>
+              <option value="reefer">Bloque Reefer</option>
+              <option value="coldchamber">Cold Chamber (CC)</option>
+              <option value="servicio">Zona de Aforo / Servicio</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Bahía Inicial:</label><input type="number" id="editBloqueBayInicio" oninput="actualizarBloqueDesdeInputs()"></div>
+          <div class="form-group"><label>Bahía Final:</label><input type="number" id="editBloqueBayFin" oninput="actualizarBloqueDesdeInputs()"></div>
+          <button class="btn-clear" onclick="eliminarBloqueSeleccionado()">Eliminar Bloque</button>
+        </div>
+
+        <hr style="margin: 15px 0;">
+        <button class="btn-add" onclick="agregarNuevoBloque()">+ Añadir Nuevo Bloque</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISTAS DE CAPTURA EN PANTALLA COMPLETA -->
+  <div class="fullscreen-report" id="fullscreenReportBloques" ondblclick="cerrarReportes()">
+    <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
+    <div id="captureTargetBloques" style="background: white; padding: 5px;">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th style="width: 45%;">BLOQUES</th>
+            <th style="width: 30%;">RADIO</th>
+            <th style="width: 25%;">TABBLE</th>
+          </tr>
+        </thead>
+        <tbody id="captureReportBodyBloques"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="fullscreen-report" id="fullscreenReportReefer" ondblclick="cerrarReportes()">
+    <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
+    <div id="captureTargetReefer" style="background: white; padding: 5px;">
+      <div id="tableCaptureContainerReefer"></div>
+    </div>
+  </div>
+
+  <script>
+    // SISTEMA DE PESTAÑAS
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById(tabId).classList.add('active');
+      btnElement.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (tabId === 'tabSemaforo') renderizarMapaSemaforo();
+      if (tabId === 'tabEditorBloques') renderizarEditorBloques();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderTableBloques();
+      document.getElementById("fecha").addEventListener("input", renderReefer);
+      document.getElementById("turno").addEventListener("input", renderReefer);
+      document.getElementById("team").addEventListener("input", renderReefer);
+      renderReefer();
+    });
+
+    // ==========================================
+    // LÓGICA 1: EQUIPOS POR BLOQUE
+    // ==========================================
+    const formBloques = document.getElementById("recordFormBloques");
+
+    formBloques.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const editId = document.getElementById("editIdBloques").value;
+      const bloque = document.getElementById("bloque").value.trim().toUpperCase();
+      const tecnicosStr = document.getElementById("tecnicos").value.trim();
+      const radioStr = document.getElementById("radio").value.trim();
+      const tabletsStr = document.getElementById("tablets").value.trim();
+
+      const tecnicos = tecnicosStr.split(',').map(t => t.trim()).filter(t => t !== "");
+      const radios = radioStr ? radioStr.split(',').map(r => r.trim()) : [];
+      const tablets = tabletsStr ? tabletsStr.split(',').map(t => t.trim()) : [];
+
+      if (tecnicos.length === 0) return;
+
+      let currentData = getStoredBloques();
+
+      if (editId) {
+        currentData = currentData.map(item => item.id == editId ? { id: Number(editId), bloque, tecnicos, radios, tablets } : item);
+        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+        cancelarEdicionBloques();
+      } else {
+        currentData.push({ id: Date.now(), bloque, tecnicos, radios, tablets });
+        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+        formBloques.reset();
+      }
+      renderTableBloques();
+    });
+
+    function getStoredBloques() {
+      const data = localStorage.getItem("registros_bloques");
+      if (data !== null) return JSON.parse(data);
+      const defaultData = [
+        { id: 1, bloque: "1D", tecnicos: ["TOCTO", "TORRES"], radios: ["4250"], tablets: ["3", "2"] },
+        { id: 2, bloque: "1E", tecnicos: ["CHONILLO", "PÉREZ"], radios: ["Lp", "4329"], tablets: ["4", "5"] },
+        { id: 3, bloque: "1F", tecnicos: ["DAMIÁN", "VERA"], radios: ["3456", "2340"], tablets: ["6", "7"] },
+        { id: 4, bloque: "AFOROS", tecnicos: ["PATIMO"], radios: ["3212"], tablets: ["78"] },
+        { id: 5, bloque: "BUQUE 1", tecnicos: ["PÉREZ"], radios: [""], tablets: ["2"] }
+      ];
+      localStorage.setItem("registros_bloques", JSON.stringify(defaultData));
+      return defaultData;
+    }
+
+    function renderTableBloques() {
+      const data = getStoredBloques();
+      const tbody = document.getElementById("tableBodyBloques");
+      tbody.innerHTML = "";
+
+      data.forEach(group => {
+        const rowCount = group.tecnicos.length;
+        const hasMultipleRadios = Array.isArray(group.radios) && group.radios.length > 1;
+
+        const headerRow = document.createElement("tr");
+        headerRow.innerHTML = `<td colspan="4" class="section-header">${group.bloque}</td>`;
+        tbody.appendChild(headerRow);
+
+        group.tecnicos.forEach((tecnico, index) => {
+          const row = document.createElement("tr");
+          let html = `<td class="tech-name">${tecnico}</td>`;
+
+          if (hasMultipleRadios) {
+            html += `<td>${group.radios[index] || ""}</td>`;
+          } else {
+            if (index === 0) html += `<td rowspan="${rowCount}" style="vertical-align: middle;">${group.radios[0] || ""}</td>`;
+          }
+
+          html += `<td>${group.tablets[index] || ""}</td>`;
+
+          if (index === 0) {
+            html += `<td rowspan="${rowCount}" class="actions-cell" style="vertical-align: middle;">
+                      <button class="btn-action btn-edit" onclick="cargarEdicionBloques(${group.id})">✏️</button>
+                      <button class="btn-action btn-delete" onclick="deleteEntryBloques(${group.id})">🗑️</button>
+                    </td>`;
+          }
+          row.innerHTML = html;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    function cargarEdicionBloques(id) {
+      const item = getStoredBloques().find(i => i.id == id);
+      if (!item) return;
+
+      document.getElementById("editIdBloques").value = item.id;
+      const inputBloque = document.getElementById("bloque");
+      inputBloque.value = item.bloque;
+      document.getElementById("tecnicos").value = item.tecnicos.join(", ");
+      document.getElementById("radio").value = item.radios.join(", ");
+      document.getElementById("tablets").value = item.tablets.join(", ");
+
+      document.getElementById("formBloquesTitle").innerText = "Editar Registro";
+      document.getElementById("btnSubmitBloques").innerText = "Guardar Cambios";
+      document.getElementById("btnCancelBloques").style.display = "inline-block";
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicionBloques() {
+      document.getElementById("editIdBloques").value = "";
+      formBloques.reset();
+      document.getElementById("formBloquesTitle").innerText = "Ingresar Registro";
+      document.getElementById("btnSubmitBloques").innerText = "Añadir Registro";
+      document.getElementById("btnCancelBloques").style.display = "none";
+    }
+
+    function deleteEntryBloques(id) {
+      if (confirm("¿Eliminar registro?")) {
+        const currentData = getStoredBloques().filter(item => item.id !== id);
+        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+        renderTableBloques();
+      }
+    }
+
+    function limpiarBloques() {
+      if (confirm("¿Borrar todos los bloques?")) {
+        localStorage.setItem("registros_bloques", JSON.stringify([]));
+        cancelarEdicionBloques();
+        renderTableBloques();
+      }
+    }
+
+    function buildCleanBloques() {
+      const data = getStoredBloques();
+      const tbody = document.getElementById("captureReportBodyBloques");
+      tbody.innerHTML = "";
+
+      data.forEach(group => {
+        const rowCount = group.tecnicos.length;
+        const hasMultipleRadios = Array.isArray(group.radios) && group.radios.length > 1;
+
+        const headerRow = document.createElement("tr");
+        headerRow.innerHTML = `<td colspan="3" class="section-header">${group.bloque}</td>`;
+        tbody.appendChild(headerRow);
+
+        group.tecnicos.forEach((tecnico, index) => {
+          const row = document.createElement("tr");
+          let html = `<td class="tech-name">${tecnico}</td>`;
+
+          if (hasMultipleRadios) {
+            html += `<td>${group.radios[index] || ""}</td>`;
+          } else {
+            if (index === 0) html += `<td rowspan="${rowCount}" style="vertical-align: middle;">${group.radios[0] || ""}</td>`;
+          }
+
+          html += `<td>${group.tablets[index] || ""}</td>`;
+          row.innerHTML = html;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    function mostrarReporteCapturaBloques() {
+      buildCleanBloques();
+      document.getElementById("fullscreenReportBloques").style.display = "block";
+    }
+
+    function descargarImagenBloques() {
+      buildCleanBloques();
+      descargarCanvas(document.getElementById("captureTargetBloques"), document.getElementById("fullscreenReportBloques"), 'Reporte_Equipos_Bloques.png');
+    }
+
+    // ==========================================
+    // LÓGICA 2: EQUIPO DE TRABAJO (REEFER)
+    // ==========================================
+    const formReefer = document.getElementById("recordFormReefer");
+
+    formReefer.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const editId = document.getElementById("editIdReefer").value;
+      const personal = document.getElementById("personal").value.trim();
+      const pedido = parseInt(document.getElementById("pedido").value) || 0;
+      const asistieron = parseInt(document.getElementById("asistieron").value) || 0;
+      const observaciones = document.getElementById("observaciones").value.trim();
+
+      let currentData = getStoredReefer();
+
+      if (editId) {
+        currentData = currentData.map(item => item.id == editId ? { id: Number(editId), personal, pedido, asistieron, observaciones } : item);
+        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
+        cancelarEdicionReefer();
+      } else {
+        currentData.push({ id: Date.now(), personal, pedido, asistieron, observaciones });
+        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
+        formReefer.reset();
+      }
+      renderReefer();
+    });
+
+    function getStoredReefer() {
+      const data = localStorage.getItem("reefer_team_data");
+      if (data !== null) return JSON.parse(data);
+      const defaultData = [
+        { id: 1, personal: "DPW Ec", pedido: 7, asistieron: 7, observaciones: "" },
+        { id: 2, personal: "Perú (12 hrs)", pedido: 2, asistieron: 2, observaciones: "" },
+        { id: 3, personal: "Personal Coestibas", pedido: 5, asistieron: 5, observaciones: "" },
+        { id: 4, personal: "Gate", pedido: 2, asistieron: 2, observaciones: "" },
+        { id: 5, personal: "Proyecto", pedido: 2, asistieron: 2, observaciones: "" }
+      ];
+      localStorage.setItem("reefer_team_data", JSON.stringify(defaultData));
+      return defaultData;
+    }
+
+    function generateTableHTMLReefer(isCaptureMode = false) {
+      const data = getStoredReefer();
+      const fecha = document.getElementById("fecha").value;
+      const turno = document.getElementById("turno").value;
+      const team = document.getElementById("team").value;
+
+      let totalPedido = 0, totalAsistieron = 0;
+      const colSpan = isCaptureMode ? 4 : 5;
+
+      let html = `<table class="reefer-table">
+        <thead>
+          <tr><th colspan="${colSpan}" class="main-title">PROGRAMACION DIARIA REEFER</th></tr>
+          <tr><td class="header-label">FECHA:</td><td class="header-val" colspan="${colSpan - 1}">${fecha}</td></tr>
+          <tr><td class="header-label">TURNO:</td><td class="header-val" colspan="${colSpan - 1}">${turno}</td></tr>
+          <tr><td class="header-label">TEAM:</td><td class="header-val" colspan="${colSpan - 1}">${team}</td></tr>
+          <tr>
+            <th class="col-header" style="width: 40%;">PERSONAL</th>
+            <th class="col-header" style="width: 20%;">PEDIDO</th>
+            <th class="col-header" style="width: 20%;">ASISTIERON</th>
+            <th class="col-header" style="width: 20%;">Observaciones</th>
+            ${!isCaptureMode ? '<th class="col-header actions-cell">Acción</th>' : ''}
+          </tr>
+        </thead>
+        <tbody>`;
+
+      data.forEach(item => {
+        totalPedido += Number(item.pedido);
+        totalAsistieron += Number(item.asistieron);
+        html += `<tr>
+          <td class="personal-col">${item.personal}</td>
+          <td>${item.pedido}</td>
+          <td>${item.asistieron}</td>
+          <td>${item.observaciones}</td>
+          ${!isCaptureMode ? `
+            <td class="actions-cell">
+              <button class="btn-action btn-edit" onclick="cargarEdicionReefer(${item.id})">✏️</button>
+              <button class="btn-action btn-delete" onclick="deleteEntryReefer(${item.id})">🗑️</button>
+            </td>
+          ` : ''}
+        </tr>`;
+      });
+
+      html += `<tr class="total-row">
+        <td class="personal-col">TOTAL</td>
+        <td>${totalPedido}</td>
+        <td>${totalAsistieron}</td>
+        <td></td>
+        ${!isCaptureMode ? '<td></td>' : ''}
+      </tr></tbody></table>`;
+
+      return html;
+    }
+
+    function renderReefer() {
+      document.getElementById("tablePreviewContainerReefer").innerHTML = generateTableHTMLReefer(false);
+    }
+
+    function cargarEdicionReefer(id) {
+      const item = getStoredReefer().find(i => i.id == id);
+      if (!item) return;
+
+      document.getElementById("editIdReefer").value = item.id;
+      document.getElementById("personal").value = item.personal;
+      document.getElementById("pedido").value = item.pedido;
+      document.getElementById("asistieron").value = item.asistieron;
+      document.getElementById("observaciones").value = item.observaciones;
+
+      document.getElementById("formReeferTitle").innerText = "Editar Registro";
+      document.getElementById("btnSubmitReefer").innerText = "Guardar Cambios";
+      document.getElementById("btnCancelReefer").style.display = "inline-block";
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicionReefer() {
+      document.getElementById("editIdReefer").value = "";
+      formReefer.reset();
+      document.getElementById("formReeferTitle").innerText = "Configuración & Registro";
+      document.getElementById("btnSubmitReefer").innerText = "Añadir / Actualizar Fila";
+      document.getElementById("btnCancelReefer").style.display = "none";
+    }
+
+    function deleteEntryReefer(id) {
+      if (confirm("¿Eliminar fila?")) {
+        const currentData = getStoredReefer().filter(item => item.id !== id);
+        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
+        renderReefer();
+      }
+    }
+
+    function limpiarReefer() {
+      if (confirm("¿Borrar todos los datos de equipo?")) {
+        localStorage.setItem("reefer_team_data", JSON.stringify([]));
+        cancelarEdicionReefer();
+        renderReefer();
+      }
+    }
+
+    function mostrarReporteCapturaReefer() {
+      document.getElementById("tableCaptureContainerReefer").innerHTML = generateTableHTMLReefer(true);
+      document.getElementById("fullscreenReportReefer").style.display = "block";
+    }
+
+    function descargarImagenReefer() {
+      document.getElementById("tableCaptureContainerReefer").innerHTML = generateTableHTMLReefer(true);
+      descargarCanvas(document.getElementById("captureTargetReefer"), document.getElementById("fullscreenReportReefer"), 'Programacion_Reefer.png');
+    }
+
+    function cerrarReportes() {
+      document.getElementById("fullscreenReportBloques").style.display = "none";
+      document.getElementById("fullscreenReportReefer").style.display = "none";
+    }
+
+    function descargarCanvas(target, parentModal, fileName) {
+      const wasHidden = parentModal.style.display === "none" || parentModal.style.display === "";
+      if (wasHidden) {
+        parentModal.style.display = "block";
+        parentModal.style.opacity = "0";
+      }
+
+      html2canvas(target, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        if (wasHidden) {
+          parentModal.style.display = "none";
+          parentModal.style.opacity = "1";
+        }
+      });
+    }
+
+    // ==========================================
+    // LÓGICA 3 & 4: MAPA SEMÁFORO Y EDITOR
+    // ==========================================
+    function getStoredLayoutBloques() {
+      const data = localStorage.getItem('puerto_bloques');
+      if (data !== null) return JSON.parse(data);
+      const defaultLayout = [
+        { id: 1, nombre: "1I (Reefer)", tipo: "reefer", x: 20, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
+        { id: 2, nombre: "1H (Reefer)", tipo: "reefer", x: 160, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
+        { id: 3, nombre: "1G", tipo: "estandar", x: 300, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
+        { id: 4, nombre: "1F", tipo: "estandar", x: 440, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
+        { id: 5, nombre: "1E", tipo: "estandar", x: 580, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
+        { id: 6, nombre: "1D", tipo: "estandar", x: 720, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
+        { id: 7, nombre: "AFOROS", tipo: "servicio", x: 20, y: 160, ancho: 140, alto: 80, bayInicio: 0, bayFin: 0 },
+        { id: 8, nombre: "Cold Chamber", tipo: "coldchamber", x: 180, y: 160, ancho: 140, alto: 80, bayInicio: 0, bayFin: 0 }
+      ];
+      localStorage.setItem('puerto_bloques', JSON.stringify(defaultLayout));
+      return defaultLayout;
+    }
+
+    let estadosPersonal = JSON.parse(localStorage.getItem('puerto_semaforos_personal')) || {};
+
+    function sincronizarTecnicos() {
+      const registrosIndex = getStoredBloques();
+      let tecnicosReporte = [];
+
+      registrosIndex.forEach(g => {
+        if(g.tecnicos && g.bloque) {
+          g.tecnicos.forEach(tec => {
+            let nombre = tec.trim().toUpperCase();
+            if(nombre) tecnicosReporte.push({ nombre, bloque: g.bloque.trim().toUpperCase() });
+          });
+        }
+      });
+
+      const bloquesLayout = getStoredLayoutBloques();
+      let nombresActuales = new Set(tecnicosReporte.map(t => t.nombre));
+
+      for (let p in estadosPersonal) {
+        if (!nombresActuales.has(p)) delete estadosPersonal[p];
+      }
+
+      tecnicosReporte.forEach(item => {
+        let bloqueCoincidente = bloquesLayout.find(b => b.nombre.toUpperCase().includes(item.bloque));
+        let esBuque = item.bloque.includes("BUQUE 1") || item.bloque.includes("BUQUE 2") ? item.bloque : null;
+
+        if (!estadosPersonal[item.nombre]) {
+          estadosPersonal[item.nombre] = {
+            bloqueId: bloqueCoincidente ? bloqueCoincidente.id : null,
+            buqueDestino: esBuque,
+            x: 10, y: 10, color: "verde"
+          };
+        } else {
+          if (esBuque && !estadosPersonal[item.nombre].bloqueId) {
+            estadosPersonal[item.nombre].buqueDestino = esBuque;
+          } else if (bloqueCoincidente && !estadosPersonal[item.nombre].buqueDestino) {
+            estadosPersonal[item.nombre].bloqueId = bloqueCoincidente.id;
+          }
+        }
+      });
+
+      localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
+    }
+
+    function renderizarMapaSemaforo() {
+      sincronizarTecnicos();
+      const canvas = document.getElementById("canvasSemaforo");
+      const banco = document.getElementById("bancoSemaforo");
+      const layout = getStoredLayoutBloques();
+
+      const muelle = canvas.querySelector(".muelle-vertical-derecha");
+      canvas.innerHTML = "";
+      canvas.appendChild(muelle);
+      banco.innerHTML = "";
+
+      layout.forEach(bloque => {
+        const div = document.createElement("div");
+        div.className = `bloque-plano-item ${bloque.tipo}`;
+        div.style.left = bloque.x + "px";
+        div.style.top = bloque.y + "px";
+        div.style.width = bloque.ancho + "px";
+        div.style.height = bloque.alto + "px";
+
+        let textBahias = bloque.bayInicio > 0 ? `Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}` : `Zona Operativa`;
+
+        div.innerHTML = `
+          <div class="bloque-title-bar">${bloque.nombre}</div>
+          <div class="bloque-work-area" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="area_${bloque.id}">
+            <div class="bahia-tag">${textBahias}</div>
+          </div>
+        `;
+        canvas.appendChild(div);
+      });
+
+      for (let persona in estadosPersonal) {
+        let info = estadosPersonal[persona];
+        let ficha = document.createElement("div");
+        ficha.className = `ficha-tec ${info.color}`;
+        ficha.draggable = true;
+        ficha.setAttribute("data-nombre", persona);
+
+        let partes = persona.split(" ");
+        ficha.innerText = partes.length > 1 ? (partes[0][0] + partes[1][0]) : persona.substring(0, 3);
+
+        ficha.style.left = (info.x || 10) + "px";
+        ficha.style.top = (info.y || 10) + "px";
+
+        ficha.onclick = (e) => {
+          e.stopPropagation();
+          if (info.color === 'verde') info.color = 'amarillo';
+          else if (info.color === 'amarillo') info.color = 'rojo';
+          else info.color = 'verde';
+          localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
+          renderizarMapaSemaforo();
+        };
+
+        ficha.ondragstart = (e) => {
+          e.dataTransfer.setData("text/plain", persona);
+        };
+
+        if (info.buqueDestino) {
+          const areaBuque = document.getElementById(info.buqueDestino === 'BUQUE 1' ? 'area_BUQUE_1' : 'area_BUQUE_2').querySelector('.buque-work-area');
+          if(areaBuque) areaBuque.appendChild(ficha);
+        } else if (info.bloqueId === null || !document.getElementById(`area_${info.bloqueId}`)) {
+          ficha.style.position = "static";
+          banco.appendChild(ficha);
+        } else {
+          document.getElementById(`area_${info.bloqueId}`).appendChild(ficha);
+        }
+      }
+    }
+
+    function permitirDrop(e) { e.preventDefault(); }
+
+    function soltarEnBloque(e, bloqueId) {
+      e.preventDefault();
+      const persona = e.dataTransfer.getData("text/plain");
+      if (persona && estadosPersonal[persona]) {
+        const areaRect = document.getElementById(`area_${bloqueId}`).getBoundingClientRect();
+        let offsetX = e.clientX - areaRect.left - 16;
+        let offsetY = e.clientY - areaRect.top - 16;
+
+        offsetX = Math.max(5, Math.min(offsetX, areaRect.width - 35));
+        offsetY = Math.max(5, Math.min(offsetY, areaRect.height - 35));
+
+        estadosPersonal[persona].bloqueId = bloqueId;
+        estadosPersonal[persona].buqueDestino = null;
+        estadosPersonal[persona].x = offsetX;
+        estadosPersonal[persona].y = offsetY;
+
+        localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
+        renderizarMapaSemaforo();
+      }
+    }
+
+    function soltarEnBuque(e, nombreBuque) {
+      e.preventDefault();
+      const persona = e.dataTransfer.getData("text/plain");
+      if (persona && estadosPersonal[persona]) {
+        estadosPersonal[persona].bloqueId = null;
+        estadosPersonal[persona].buqueDestino = nombreBuque;
+        estadosPersonal[persona].x = 10;
+        estadosPersonal[persona].y = 10;
+
+        localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
+        renderizarMapaSemaforo();
+      }
+    }
+
+    function soltarEnBanco(e) {
+      e.preventDefault();
+      const persona = e.dataTransfer.getData("text/plain");
+      if (persona && estadosPersonal[persona]) {
+        estadosPersonal[persona].bloqueId = null;
+        estadosPersonal[persona].buqueDestino = null;
+        localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
+        renderizarMapaSemaforo();
+      }
+    }
+
+    // LÓGICA EDITOR DE BLOQUES
+    let idBloqueSeleccionado = null;
+    let modoAccion = null, startX, startY, initX, initY, initW, initH, resizeHandleType;
+
+    function renderizarEditorBloques() {
+      const canvas = document.getElementById("canvasEditor");
+      const layout = getStoredLayoutBloques();
+
+      const muelle = canvas.querySelector(".muelle-vertical-derecha");
+      canvas.innerHTML = "";
+      canvas.appendChild(muelle);
+
+      layout.forEach(bloque => {
+        const div = document.createElement("div");
+        div.className = `bloque-plano-item ${bloque.tipo}`;
+        if (bloque.id === idBloqueSeleccionado) div.classList.add("seleccionado");
+
+        div.style.left = bloque.x + "px";
+        div.style.top = bloque.y + "px";
+        div.style.width = bloque.ancho + "px";
+        div.style.height = bloque.alto + "px";
+        div.style.cursor = "move";
+
+        let textBahias = bloque.bayInicio > 0 ? `<small>Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}</small>` : `<small>Área Servicio</small>`;
+
+        div.innerHTML = `
+          <div class="bloque-title-bar">${bloque.nombre}</div>
+          ${textBahias}
+          <div class="resize-handle handle-se" data-handle="se"></div>
+          <div class="resize-handle handle-sw" data-handle="sw"></div>
+          <div class="resize-handle handle-ne" data-handle="ne"></div>
+          <div class="resize-handle handle-nw" data-handle="nw"></div>
+        `;
+
+        div.onmousedown = (e) => {
+          if (e.target.classList.contains('resize-handle')) return;
+          iniciarArrastreBloque(e, bloque.id);
+        };
+
+        div.querySelectorAll('.resize-handle').forEach(h => {
+          h.onmousedown = (e) => iniciarRedimensionadoBloque(e, bloque.id, h.dataset.handle);
+        });
+
+        canvas.appendChild(div);
+      });
+    }
+
+    function iniciarArrastreBloque(e, id) {
+      e.stopPropagation(); modoAccion = 'drag'; idBloqueSeleccionado = id; seleccionarBloqueEditor(id);
+      startX = e.clientX; startY = e.clientY;
+      const b = getStoredLayoutBloques().find(item => item.id === id);
+      initX = b.x; initY = b.y;
+    }
+
+    function iniciarRedimensionadoBloque(e, id, handleType) {
+      e.stopPropagation(); modoAccion = 'resize'; idBloqueSeleccionado = id; resizeHandleType = handleType; seleccionarBloqueEditor(id);
+      startX = e.clientX; startY = e.clientY;
+      const b = getStoredLayoutBloques().find(item => item.id === id);
+      initX = b.x; initY = b.y; initW = b.ancho; initH = b.alto;
+    }
+
+    document.onmousemove = (e) => {
+      if (!modoAccion || idBloqueSeleccionado === null) return;
+      let layout = getStoredLayoutBloques();
+      const b = layout.find(item => item.id === idBloqueSeleccionado);
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+
+      if (modoAccion === 'drag') {
+        b.x = Math.max(0, initX + dx); b.y = Math.max(0, initY + dy);
+      } else if (modoAccion === 'resize') {
+        if (resizeHandleType === 'se') { b.ancho = Math.max(60, initW + dx); b.alto = Math.max(40, initH + dy); }
+        else if (resizeHandleType === 'sw') { let nw = initW - dx; if (nw >= 60) { b.x = initX + dx; b.ancho = nw; } b.alto = Math.max(40, initH + dy); }
+        else if (resizeHandleType === 'ne') { b.ancho = Math.max(60, initW + dx); let nh = initH - dy; if (nh >= 40) { b.y = initY + dy; b.alto = nh; } }
+        else if (resizeHandleType === 'nw') { let nw = initW - dx; if (nw >= 60) { b.x = initX + dx; b.ancho = nw; } let nh = initH - dy; if (nh >= 40) { b.y = initY + dy; b.alto = nh; } }
+      }
+      localStorage.setItem('puerto_bloques', JSON.stringify(layout));
+      renderizarEditorBloques();
+    };
+
+    document.onmouseup = () => { modoAccion = null; };
+
+    function seleccionarBloqueEditor(id) {
+      idBloqueSeleccionado = id;
+      const b = getStoredLayoutBloques().find(item => item.id === id);
+      document.getElementById("infoEdicionBloque").style.display = "none";
+      document.getElementById("formularioEdicionBloque").style.display = "block";
+      document.getElementById("editBloqueId").value = b.id;
+      document.getElementById("editBloqueNombre").value = b.nombre;
+      document.getElementById("editBloqueTipo").value = b.tipo;
+      document.getElementById("editBloqueBayInicio").value = b.bayInicio;
+      document.getElementById("editBloqueBayFin").value = b.bayFin;
+      renderizarEditorBloques();
+    }
+
+    function actualizarBloqueDesdeInputs() {
+      if (idBloqueSeleccionado === null) return;
+      let layout = getStoredLayoutBloques();
+      const b = layout.find(item => item.id === idBloqueSeleccionado);
+      b.nombre = document.getElementById("editBloqueNombre").value;
+      b.tipo = document.getElementById("editBloqueTipo").value;
+      b.bayInicio = parseInt(document.getElementById("editBloqueBayInicio").value) || 0;
+      b.bayFin = parseInt(document.getElementById("editBloqueBayFin").value) || 0;
+      localStorage.setItem('puerto_bloques', JSON.stringify(layout));
+      renderizarEditorBloques();
+    }
+
+    function agregarNuevoBloque() {
+      let layout = getStoredLayoutBloques();
+      const nuevoId = layout.length > 0 ? Math.max(...layout.map(b => b.id)) + 1 : 1;
+      layout.push({ id: nuevoId, nombre: `Bloque ${nuevoId}`, tipo: "estandar", x: 40, y: 260, ancho: 120, alto: 90, bayInicio: 1, bayFin: 20 });
+      localStorage.setItem('puerto_bloques', JSON.stringify(layout));
+      seleccionarBloqueEditor(nuevoId);
+    }
+
+    function eliminarBloqueSeleccionado() {
+      if (idBloqueSeleccionado === null) return;
+      let layout = getStoredLayoutBloques().filter(b => b.id !== idBloqueSeleccionado);
+      localStorage.setItem('puerto_bloques', JSON.stringify(layout));
+      idBloqueSeleccionado = null;
+      document.getElementById("formularioEdicionBloque").style.display = "none";
+      document.getElementById("infoEdicionBloque").style.display = "block";
+      renderizarEditorBloques();
+    }
+  </script>
+</body>
+</html>
