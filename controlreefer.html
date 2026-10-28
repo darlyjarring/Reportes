@@ -342,13 +342,13 @@
       background: #f8f9fa;
       display: none;
       min-height: 90px;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-content: flex-start;
     }
 
     .banco-body-content.abierto {
       display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-content: flex-start;
     }
 
     .plano-wrapper-general {
@@ -413,6 +413,11 @@
       margin-top: 5px;
       border-radius: 4px;
       overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 6px;
+      align-content: flex-start;
     }
 
     .gruas-qc-row {
@@ -439,7 +444,7 @@
     .bloque-plano-item {
       position: absolute;
       border-radius: 6px;
-      padding: 4px;
+      padding: 3px;
       box-sizing: border-box;
       user-select: none;
       background-color: #e2e3e5;
@@ -454,22 +459,22 @@
     .bloque-plano-item.coldchamber { background-color: #fff3cd; border: 2px solid #856404; color: #856404; }
 
     .bloque-title-bar {
-      font-size: 11px;
+      font-size: 10px;
       font-weight: bold;
       text-align: center;
       width: 100%;
       pointer-events: none;
       border-bottom: 1px solid rgba(0,0,0,0.15);
-      padding-bottom: 2px;
+      padding-bottom: 1px;
       margin-bottom: 2px;
     }
 
-    /* ÁREA DE TRABAJO CON GRILLA DE BAHÍAS TIPO CROQUIS PORTUARIO */
+    /* GRILLA DE BAHÍAS DINÁMICA (Vertical u Horizontal) */
     .bloque-work-area {
       width: 100%;
       flex-grow: 1;
       position: relative;
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.9);
       border: 1px solid rgba(0,0,0,0.3);
       border-radius: 3px;
       overflow: hidden;
@@ -477,13 +482,13 @@
     }
 
     .bahia-celda {
-      border: 1px solid rgba(0, 0, 0, 0.2);
-      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(0, 0, 0, 0.25);
+      background: rgba(255, 255, 255, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 7px;
-      color: #444;
+      color: #333;
       font-weight: bold;
     }
 
@@ -700,7 +705,7 @@
     </div>
   </div>
 
-  <!-- PESTAÑA 3: MAPA SEMÁFORO PATIO (Con banco desplegable y libre movimiento por coordenadas) -->
+  <!-- PESTAÑA 3: MAPA SEMÁFORO PATIO -->
   <div id="tabSemaforo" class="tab-content">
     <div class="mapa-layout-completo">
       
@@ -1189,7 +1194,7 @@
     }
 
     // ==========================================
-    // LÓGICA 3 & 4: MAPA SEMÁFORO Y LIBRE MOVIMIENTO
+    // LÓGICA 3 & 4: MAPA SEMÁFORO Y BAHÍAS DINÁMICAS
     // ==========================================
     function getStoredLayoutBloques() {
       const data = localStorage.getItem('puerto_bloques');
@@ -1203,7 +1208,7 @@
         { id: 6, nombre: "1D", tipo: "estandar", x: 695, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
         { id: 7, nombre: "AFOROS", tipo: "servicio", x: 20, y: 270, ancho: 140, alto: 100, bayInicio: 0, bayFin: 0 },
         { id: 8, nombre: "Cold Chamber", tipo: "coldchamber", x: 175, y: 270, ancho: 140, alto: 100, bayInicio: 0, bayFin: 0 },
-        { id: 9, nombre: "1K", tipo: "estandar", x: 335, y: 270, ancho: 160, alto: 100, bayInicio: 46, bayFin: 52 }
+        { id: 9, nombre: "1K", tipo: "estandar", x: 335, y: 270, ancho: 220, alto: 100, bayInicio: 46, bayFin: 52 }
       ];
       localStorage.setItem('puerto_bloques', JSON.stringify(defaultLayout));
       return defaultLayout;
@@ -1254,7 +1259,7 @@
       document.getElementById("work_BUQUE_1").innerHTML = "";
       document.getElementById("work_BUQUE_2").innerHTML = "";
 
-      // 1. Renderizar bloques con cuadrícula de bahías interna
+      // 1. Renderizar bloques con divisiones de bahías reales (Verticales u Horizontales)
       layout.forEach(bloque => {
         const div = document.createElement("div");
         div.className = `bloque-plano-item ${bloque.tipo}`;
@@ -1266,15 +1271,20 @@
 
         let gridHTML = '';
         if (bloque.bayInicio > 0 && bloque.bayFin > 0) {
-          // Detectar orientación según ancho vs alto
-          let cols = bloque.ancho > bloque.alto ? 6 : 2;
-          let rows = bloque.ancho > bloque.alto ? 2 : 6;
-          div.style.display = "flex";
-          div.style.flexDirection = "column";
+          let esVertical = bloque.alto >= bloque.ancho;
+          let inicio = Math.min(bloque.bayInicio, bloque.bayFin);
+          let fin = Math.max(bloque.bayInicio, bloque.bayFin);
+          let totalBahias = Math.max(2, Math.min(16, Math.abs(fin - inicio) + 1));
+
+          let cols = esVertical ? 1 : totalBahias;
+          let rows = esVertical ? totalBahias : 1;
 
           gridHTML = `<div class="bloque-work-area" style="grid-template-columns: repeat(${cols}, 1fr); grid-template-rows: repeat(${rows}, 1fr);" ondragover="permitirDrop(event)" ondrop="soltarEnBloqueCoordenada(event, ${bloque.id})">`;
-          for(let i=1; i<=(cols*rows); i++) {
-            gridHTML += `<div class="bahia-celda">Bay ${i}</div>`;
+          
+          let paso = (fin - inicio) / (totalBahias - 1 || 1);
+          for(let i=0; i<totalBahias; i++) {
+            let numBay = Math.round(inicio + (paso * i));
+            gridHTML += `<div class="bahia-celda">B${numBay}</div>`;
           }
           gridHTML += `</div>`;
         } else {
@@ -1288,7 +1298,7 @@
         canvas.appendChild(div);
       });
 
-      // 2. Renderizar fichas de técnicos en sus posiciones libres exactas
+      // 2. Renderizar fichas de técnicos en sus posiciones libres
       for (let persona in estadosPersonal) {
         let info = estadosPersonal[persona];
         let ficha = document.createElement("div");
@@ -1346,7 +1356,6 @@
         let x = e.clientX - rect.left - 14;
         let y = e.clientY - rect.top - 14;
 
-        // Limitar dentro de los bordes del bloque
         x = Math.max(4, Math.min(x, rect.width - 32));
         y = Math.max(20, Math.min(y, rect.height - 32));
 
