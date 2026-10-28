@@ -83,7 +83,7 @@
     .tab-content {
       display: none;
       padding: 15px;
-      max-width: 1450px;
+      max-width: 1500px;
       margin: 0 auto;
     }
 
@@ -310,21 +310,58 @@
     }
 
     /* ESTILOS MAPA SEMÁFORO Y EDITOR DE BLOQUES */
-    .mapa-layout {
+    .mapa-layout-completo {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    /* BANCO DE PERSONAL DESPLEGABLE (ACORDEÓN) */
+    .banco-desplegable-container {
+      background: #ffffff;
+      border: 2px solid var(--navy-blue);
+      border-radius: 8px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .banco-header-bar {
+      background-color: var(--navy-blue);
+      color: white;
+      padding: 10px 15px;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .banco-body-content {
+      padding: 12px;
+      background: #f8f9fa;
+      display: none; /* Colapsado por defecto para maximizar el plano */
+      min-height: 90px;
+    }
+
+    .banco-body-content.abierto {
       display: flex;
       flex-wrap: wrap;
-      gap: 20px;
+      gap: 12px;
+      align-content: flex-start;
     }
 
     .plano-wrapper-general {
-      flex: 3.5;
       display: flex;
       background: #e1e8f0;
       border: 2px solid var(--border-color);
       border-radius: 8px;
-      height: 720px;
+      height: 75vh;
+      min-height: 600px;
       overflow: hidden;
       box-shadow: inset 0 0 10px rgba(0,0,0,0.08);
+      position: relative;
     }
 
     .plano-canvas-container {
@@ -408,7 +445,7 @@
     .bloque-plano-item {
       position: absolute;
       border-radius: 6px;
-      padding: 6px;
+      padding: 5px;
       box-sizing: border-box;
       user-select: none;
       background-color: #e2e3e5;
@@ -434,35 +471,61 @@
       margin-bottom: 3px;
     }
 
+    /* CONTENEDOR DE BAHÍAS INTERNAS (Simulación Patio DP World) */
     .bloque-work-area {
       width: 100%;
       flex-grow: 1;
       position: relative;
-      background: rgba(255, 255, 255, 0.65);
-      border: 1px dashed rgba(0,0,0,0.25);
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px dashed rgba(0,0,0,0.3);
       border-radius: 4px;
       min-height: 40px;
       display: flex;
+      flex-direction: column; /* Estructura de carriles/bahías */
+      gap: 3px;
+      padding: 3px;
+      overflow: hidden;
+    }
+
+    .bahia-carril {
+      flex: 1;
+      border: 1px dotted rgba(0,0,0,0.2);
+      background: rgba(255,255,255,0.4);
+      border-radius: 3px;
+      display: flex;
       flex-wrap: wrap;
-      gap: 6px;
-      padding: 4px;
-      align-content: flex-start;
+      gap: 4px;
+      padding: 2px;
+      align-content: center;
+      justify-content: center;
+      position: relative;
+      min-height: 25px;
+    }
+
+    .bahia-label-tag {
+      position: absolute;
+      bottom: 1px;
+      right: 3px;
+      font-size: 7px;
+      color: #666;
+      font-weight: bold;
+      pointer-events: none;
     }
 
     .bahia-tag {
-      position: absolute;
-      bottom: 2px;
-      left: 4px;
+      text-align: center;
       font-size: 8px;
-      color: #555;
+      color: #333;
       font-weight: bold;
+      margin-top: 2px;
+      width: 100%;
       pointer-events: none;
     }
 
     /* FICHAS DE TÉCNICOS TIPO SEMÁFORO */
     .ficha-tec {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       background-color: #28a745;
       color: white;
@@ -470,9 +533,9 @@
       align-items: center;
       justify-content: center;
       font-weight: bold;
-      font-size: 10px;
+      font-size: 9px;
       cursor: grab;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
       user-select: none;
       z-index: 10;
       border: 2px solid #fff;
@@ -486,39 +549,22 @@
     .ficha-tec::after {
       content: attr(data-nombre);
       position: absolute;
-      bottom: -14px;
+      bottom: -13px;
       background: rgba(0,0,0,0.85);
       color: #fff;
-      font-size: 8px;
-      padding: 1px 4px;
+      font-size: 7px;
+      padding: 1px 3px;
       border-radius: 3px;
       white-space: nowrap;
       pointer-events: none;
     }
 
-    .panel-side {
-      flex: 1.2;
-      min-width: 280px;
+    .panel-side-editor {
       background: #fff;
       padding: 15px;
       border-radius: 8px;
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      max-height: 720px;
-      overflow-y: auto;
-    }
-
-    .banco-personal-box {
-      background: #f8f9fa;
-      border: 2px dashed #999;
-      border-radius: 6px;
-      padding: 12px;
-      min-height: 140px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      align-content: flex-start;
-      margin-top: 10px;
-      margin-bottom: 15px;
+      margin-top: 15px;
     }
 
     .resize-handle {
@@ -690,9 +736,22 @@
     </div>
   </div>
 
-  <!-- PESTAÑA 3: MAPA SEMÁFORO PATIO -->
+  <!-- PESTAÑA 3: MAPA SEMÁFORO PATIO (Con banco desplegable y bahías internas) -->
   <div id="tabSemaforo" class="tab-content">
-    <div class="mapa-layout">
+    <div class="mapa-layout-completo">
+      
+      <!-- BANCO DE PERSONAL DESPLEGABLE -->
+      <div class="banco-desplegable-container">
+        <div class="banco-header-bar" onclick="toggleBancoDesplegable()">
+          <span>👥 Banco de Personal (Sin Asignar) / Libres</span>
+          <span id="bancoToggleIcon">▼ (Expandir)</span>
+        </div>
+        <div class="banco-body-content" id="bancoSemaforo" ondragover="permitirDrop(event)" ondrop="soltarEnBanco(event)">
+          <!-- Fichas libres aquí -->
+        </div>
+      </div>
+
+      <!-- PLANO PORTUARIO AMPLIO -->
       <div class="plano-wrapper-general">
         <div class="plano-canvas-container" id="canvasSemaforo"></div>
         
@@ -722,24 +781,15 @@
         </div>
       </div>
 
-      <div class="panel-side">
-        <h3 style="color: var(--navy-blue); margin-bottom: 10px;">Banco de Personal (Sin Asignar)</h3>
-        <p style="font-size: 11px; color: #666; margin-bottom: 8px;">
-          Arrastra técnicos hacia los bloques, buques o regresa al Banco si terminaron su labor. Toca cada ficha para cambiar semáforo (Verde ➔ Amarillo ➔ Rojo).
-        </p>
-        
-        <div class="banco-personal-box" id="bancoSemaforo" ondragover="permitirDrop(event)" ondrop="soltarEnBanco(event)"></div>
-      </div>
     </div>
   </div>
 
   <!-- PESTAÑA 4: EDITOR DE BLOQUES -->
   <div id="tabEditorBloques" class="tab-content">
-    <div class="mapa-layout">
+    <div class="mapa-layout-completo">
       <div class="plano-wrapper-general">
         <div class="plano-canvas-container" id="canvasEditor"></div>
         
-        <!-- Muelle y Buques fijos a la derecha en el Editor -->
         <div class="muelle-vertical-derecha">
           <div style="font-weight: bold; font-size: 11px; transform: rotate(90deg); margin-bottom: 15px; white-space: nowrap;">MUELLE POSORJA</div>
           <div class="buque-box">🚢 BUQUE 1</div>
@@ -747,7 +797,7 @@
         </div>
       </div>
 
-      <div class="panel-side">
+      <div class="panel-side-editor">
         <h3 style="color: var(--navy-blue); margin-bottom: 10px;">Propiedades del Bloque</h3>
         <div id="infoEdicionBloque">
           <p style="font-size: 12px; color: #666;">Haz clic en un bloque dentro del plano para configurar sus bahías y tamaño.</p>
@@ -821,6 +871,19 @@
       document.getElementById("team").addEventListener("input", renderReefer);
       renderReefer();
     });
+
+    // Desplegable Banco de Personal
+    function toggleBancoDesplegable() {
+      const cuerpo = document.getElementById("bancoSemaforo");
+      const icono = document.getElementById("bancoToggleIcon");
+      if (cuerpo.classList.contains("abierto")) {
+        cuerpo.classList.remove("abierto");
+        icono.innerText = "▼ (Expandir)";
+      } else {
+        cuerpo.classList.add("abierto");
+        icono.innerText = "▲ (Contraer)";
+      }
+    }
 
     // ==========================================
     // LÓGICA 1: EQUIPOS POR BLOQUE
@@ -1163,20 +1226,21 @@
     }
 
     // ==========================================
-    // LÓGICA 3 & 4: MAPA SEMÁFORO Y EDITOR
+    // LÓGICA 3 & 4: MAPA SEMÁFORO Y BAHÍAS INTERNAS
     // ==========================================
     function getStoredLayoutBloques() {
       const data = localStorage.getItem('puerto_bloques');
       if (data !== null) return JSON.parse(data);
       const defaultLayout = [
-        { id: 1, nombre: "1I (Reefer)", tipo: "reefer", x: 20, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
-        { id: 2, nombre: "1H (Reefer)", tipo: "reefer", x: 160, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
-        { id: 3, nombre: "1G", tipo: "estandar", x: 300, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
-        { id: 4, nombre: "1F", tipo: "estandar", x: 440, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
-        { id: 5, nombre: "1E", tipo: "estandar", x: 580, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
-        { id: 6, nombre: "1D", tipo: "estandar", x: 720, y: 30, ancho: 120, alto: 100, bayInicio: 92, bayFin: 48 },
-        { id: 7, nombre: "AFOROS", tipo: "servicio", x: 20, y: 160, ancho: 140, alto: 80, bayInicio: 0, bayFin: 0 },
-        { id: 8, nombre: "Cold Chamber", tipo: "coldchamber", x: 180, y: 160, ancho: 140, alto: 80, bayInicio: 0, bayFin: 0 }
+        { id: 1, nombre: "1I (Reefer)", tipo: "reefer", x: 20, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
+        { id: 2, nombre: "1H (Reefer)", tipo: "reefer", x: 155, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
+        { id: 3, nombre: "1G", tipo: "estandar", x: 290, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
+        { id: 4, nombre: "1F", tipo: "estandar", x: 425, y: 30, ancho: 120, alto: 220, bayInicio: 1, bayFin: 20 },
+        { id: 5, nombre: "1E", tipo: "estandar", x: 560, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
+        { id: 6, nombre: "1D", tipo: "estandar", x: 695, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
+        { id: 7, nombre: "AFOROS", tipo: "servicio", x: 20, y: 270, ancho: 140, alto: 100, bayInicio: 0, bayFin: 0 },
+        { id: 8, nombre: "Cold Chamber", tipo: "coldchamber", x: 175, y: 270, ancho: 140, alto: 100, bayInicio: 0, bayFin: 0 },
+        { id: 9, nombre: "1K", tipo: "estandar", x: 335, y: 270, ancho: 160, alto: 100, bayInicio: 46, bayFin: 52 }
       ];
       localStorage.setItem('puerto_bloques', JSON.stringify(defaultLayout));
       return defaultLayout;
@@ -1200,12 +1264,10 @@
       const bloquesLayout = getStoredLayoutBloques();
       let nombresActuales = new Set(tecnicosReporte.map(t => t.nombre));
 
-      // Limpiar técnicos eliminados
       for (let p in estadosPersonal) {
         if (!nombresActuales.has(p)) delete estadosPersonal[p];
       }
 
-      // Añadir nuevos técnicos solo si no existen para no sobrescribir posiciones de arrastre
       tecnicosReporte.forEach(item => {
         if (!estadosPersonal[item.nombre]) {
           let bloqueCoincidente = bloquesLayout.find(b => b.nombre.toUpperCase().includes(item.bloque));
@@ -1231,7 +1293,6 @@
       canvas.innerHTML = "";
       banco.innerHTML = "";
 
-      // Limpiar áreas de buques visuales antes de renderizar
       document.getElementById("work_BUQUE_1").innerHTML = "";
       document.getElementById("work_BUQUE_2").innerHTML = "";
 
@@ -1243,13 +1304,27 @@
         div.style.width = bloque.ancho + "px";
         div.style.height = bloque.alto + "px";
 
-        let textBahias = bloque.bayInicio > 0 ? `Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}` : `Zona Operativa`;
+        // Generar divisiones internas de bahías (simulando DP World)
+        let workAreaHTML = '';
+        if (bloque.bayInicio > 0 && bloque.bayFin > 0) {
+          workAreaHTML = `
+            <div class="bahia-carril" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="area_${bloque.id}_1">
+              <span class="bahia-label-tag">Bay ${bloque.bayInicio}</span>
+            </div>
+            <div class="bahia-carril" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="area_${bloque.id}_2">
+              <span class="bahia-label-tag">Bay ${bloque.bayFin}</span>
+            </div>
+          `;
+        } else {
+          workAreaHTML = `
+            <div class="bahia-carril" style="height:100%;" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="area_${bloque.id}_1"></div>
+          `;
+        }
 
         div.innerHTML = `
           <div class="bloque-title-bar">${bloque.nombre}</div>
-          <div class="bloque-work-area" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="area_${bloque.id}">
-            <div class="bahia-tag">${textBahias}</div>
-          </div>
+          <div class="bloque-work-area">${workAreaHTML}</div>
+          <div class="bahia-tag">${bloque.bayInicio > 0 ? `Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}` : `Zona Operativa`}</div>
         `;
         canvas.appendChild(div);
       });
@@ -1281,8 +1356,9 @@
           document.getElementById("work_BUQUE_1").appendChild(ficha);
         } else if (info.buqueDestino === 'BUQUE 2') {
           document.getElementById("work_BUQUE_2").appendChild(ficha);
-        } else if (info.bloqueId !== null && document.getElementById(`area_${info.bloqueId}`)) {
-          document.getElementById(`area_${info.bloqueId}`).appendChild(ficha);
+        } else if (info.bloqueId !== null && document.getElementById(`area_${info.bloqueId}_1`)) {
+          // Asignar al primer carril de bahía del bloque
+          document.getElementById(`area_${info.bloqueId}_1`).appendChild(ficha);
         } else {
           ficha.style.position = "static";
           banco.appendChild(ficha);
@@ -1434,7 +1510,7 @@
     function agregarNuevoBloque() {
       let layout = getStoredLayoutBloques();
       const nuevoId = layout.length > 0 ? Math.max(...layout.map(b => b.id)) + 1 : 1;
-      layout.push({ id: nuevoId, nombre: `Bloque ${nuevoId}`, tipo: "estandar", x: 40, y: 260, ancho: 120, alto: 90, bayInicio: 1, bayFin: 20 });
+      layout.push({ id: nuevoId, nombre: `Bloque ${nuevoId}`, tipo: "estandar", x: 40, y: 260, ancho: 120, alto: 120, bayInicio: 1, bayFin: 20 });
       localStorage.setItem('puerto_bloques', JSON.stringify(layout));
       seleccionarBloqueEditor(nuevoId);
     }
