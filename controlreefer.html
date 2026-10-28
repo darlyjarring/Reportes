@@ -469,12 +469,12 @@
       margin-bottom: 2px;
     }
 
-    /* GRILLA DE BAHÍAS DINÁMICA (Vertical u Horizontal) */
+    /* GRILLA DE BAHÍAS EXACTA (Secuencia de 4 en 4) */
     .bloque-work-area {
       width: 100%;
       flex-grow: 1;
       position: relative;
-      background: rgba(255, 255, 255, 0.9);
+      background: rgba(255, 255, 255, 0.95);
       border: 1px solid rgba(0,0,0,0.3);
       border-radius: 3px;
       overflow: hidden;
@@ -483,12 +483,12 @@
 
     .bahia-celda {
       border: 1px solid rgba(0, 0, 0, 0.25);
-      background: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.7);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 7px;
-      color: #333;
+      color: #222;
       font-weight: bold;
     }
 
@@ -1194,18 +1194,18 @@
     }
 
     // ==========================================
-    // LÓGICA 3 & 4: MAPA SEMÁFORO Y BAHÍAS DINÁMICAS
+    // LÓGICA 3 & 4: MAPA SEMÁFORO Y SECUENCIA EXACTA (DE 4 EN 4)
     // ==========================================
     function getStoredLayoutBloques() {
       const data = localStorage.getItem('puerto_bloques');
       if (data !== null) return JSON.parse(data);
       const defaultLayout = [
-        { id: 1, nombre: "1I (Reefer)", tipo: "reefer", x: 20, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
-        { id: 2, nombre: "1H (Reefer)", tipo: "reefer", x: 155, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
-        { id: 3, nombre: "1G", tipo: "estandar", x: 290, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
-        { id: 4, nombre: "1F", tipo: "estandar", x: 425, y: 30, ancho: 120, alto: 220, bayInicio: 1, bayFin: 20 },
-        { id: 5, nombre: "1E", tipo: "estandar", x: 560, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
-        { id: 6, nombre: "1D", tipo: "estandar", x: 695, y: 30, ancho: 120, alto: 220, bayInicio: 92, bayFin: 48 },
+        { id: 1, nombre: "1I (Reefer)", tipo: "reefer", x: 20, y: 30, ancho: 120, alto: 220, bayInicio: 48, bayFin: 96 },
+        { id: 2, nombre: "1H (Reefer)", tipo: "reefer", x: 155, y: 30, ancho: 120, alto: 220, bayInicio: 48, bayFin: 96 },
+        { id: 3, nombre: "1G", tipo: "estandar", x: 290, y: 30, ancho: 120, alto: 220, bayInicio: 48, bayFin: 96 },
+        { id: 4, nombre: "1F", tipo: "estandar", x: 425, y: 30, ancho: 120, alto: 220, bayInicio: 2, bayFin: 20 },
+        { id: 5, nombre: "1E", tipo: "estandar", x: 560, y: 30, ancho: 120, alto: 220, bayInicio: 48, bayFin: 96 },
+        { id: 6, nombre: "1D", tipo: "estandar", x: 695, y: 30, ancho: 120, alto: 220, bayInicio: 48, bayFin: 96 },
         { id: 7, nombre: "AFOROS", tipo: "servicio", x: 20, y: 270, ancho: 140, alto: 100, bayInicio: 0, bayFin: 0 },
         { id: 8, nombre: "Cold Chamber", tipo: "coldchamber", x: 175, y: 270, ancho: 140, alto: 100, bayInicio: 0, bayFin: 0 },
         { id: 9, nombre: "1K", tipo: "estandar", x: 335, y: 270, ancho: 220, alto: 100, bayInicio: 46, bayFin: 52 }
@@ -1259,7 +1259,7 @@
       document.getElementById("work_BUQUE_1").innerHTML = "";
       document.getElementById("work_BUQUE_2").innerHTML = "";
 
-      // 1. Renderizar bloques con divisiones de bahías reales (Verticales u Horizontales)
+      // 1. Renderizar bloques con divisiones exactas de 4 en 4
       layout.forEach(bloque => {
         const div = document.createElement("div");
         div.className = `bloque-plano-item ${bloque.tipo}`;
@@ -1274,18 +1274,25 @@
           let esVertical = bloque.alto >= bloque.ancho;
           let inicio = Math.min(bloque.bayInicio, bloque.bayFin);
           let fin = Math.max(bloque.bayInicio, bloque.bayFin);
-          let totalBahias = Math.max(2, Math.min(16, Math.abs(fin - inicio) + 1));
 
+          // Generar array con secuencia exacta de 4 en 4
+          let bahiasArray = [];
+          let actual = inicio;
+          while (actual <= fin) {
+            bahiasArray.push(actual);
+            actual += 4;
+          }
+          if (bahiasArray.length === 0) bahiasArray.push(inicio);
+
+          let totalBahias = bahiasArray.length;
           let cols = esVertical ? 1 : totalBahias;
           let rows = esVertical ? totalBahias : 1;
 
           gridHTML = `<div class="bloque-work-area" style="grid-template-columns: repeat(${cols}, 1fr); grid-template-rows: repeat(${rows}, 1fr);" ondragover="permitirDrop(event)" ondrop="soltarEnBloqueCoordenada(event, ${bloque.id})">`;
           
-          let paso = (fin - inicio) / (totalBahias - 1 || 1);
-          for(let i=0; i<totalBahias; i++) {
-            let numBay = Math.round(inicio + (paso * i));
+          bahiasArray.forEach(numBay => {
             gridHTML += `<div class="bahia-celda">B${numBay}</div>`;
-          }
+          });
           gridHTML += `</div>`;
         } else {
           gridHTML = `<div class="bloque-work-area" style="display:flex; align-items:center; justify-content:center;" ondragover="permitirDrop(event)" ondrop="soltarEnBloqueCoordenada(event, ${bloque.id})"><span style="font-size:9px; color:#555;">Servicio / Aforos</span></div>`;
@@ -1505,7 +1512,7 @@
     function agregarNuevoBloque() {
       let layout = getStoredLayoutBloques();
       const nuevoId = layout.length > 0 ? Math.max(...layout.map(b => b.id)) + 1 : 1;
-      layout.push({ id: nuevoId, nombre: `Bloque ${nuevoId}`, tipo: "estandar", x: 40, y: 260, ancho: 120, alto: 120, bayInicio: 1, bayFin: 20 });
+      layout.push({ id: nuevoId, nombre: `Bloque ${nuevoId}`, tipo: "estandar", x: 40, y: 260, ancho: 120, alto: 120, bayInicio: 2, bayFin: 46 });
       localStorage.setItem('puerto_bloques', JSON.stringify(layout));
       seleccionarBloqueEditor(nuevoId);
     }
