@@ -707,7 +707,7 @@
               <span class="grua-qc">QC03</span>
             </div>
             <span>🚢 BUQUE 1</span>
-            <div class="buque-work-area"></div>
+            <div class="buque-work-area" id="work_BUQUE_1"></div>
           </div>
 
           <div class="buque-box" ondragover="permitirDrop(event)" ondrop="soltarEnBuque(event, 'BUQUE 2')" id="area_BUQUE_2">
@@ -717,7 +717,7 @@
               <span class="grua-qc">QC06</span>
             </div>
             <span>🚢 BUQUE 2</span>
-            <div class="buque-work-area"></div>
+            <div class="buque-work-area" id="work_BUQUE_2"></div>
           </div>
         </div>
       </div>
@@ -1200,26 +1200,22 @@
       const bloquesLayout = getStoredLayoutBloques();
       let nombresActuales = new Set(tecnicosReporte.map(t => t.nombre));
 
+      // Limpiar técnicos eliminados
       for (let p in estadosPersonal) {
         if (!nombresActuales.has(p)) delete estadosPersonal[p];
       }
 
+      // Añadir nuevos técnicos solo si no existen para no sobrescribir posiciones de arrastre
       tecnicosReporte.forEach(item => {
-        let bloqueCoincidente = bloquesLayout.find(b => b.nombre.toUpperCase().includes(item.bloque));
-        let esBuque = item.bloque.includes("BUQUE 1") || item.bloque.includes("BUQUE 2") ? item.bloque : null;
-
         if (!estadosPersonal[item.nombre]) {
+          let bloqueCoincidente = bloquesLayout.find(b => b.nombre.toUpperCase().includes(item.bloque));
+          let esBuque = item.bloque.includes("BUQUE 1") ? "BUQUE 1" : (item.bloque.includes("BUQUE 2") ? "BUQUE 2" : null);
+
           estadosPersonal[item.nombre] = {
             bloqueId: bloqueCoincidente ? bloqueCoincidente.id : null,
             buqueDestino: esBuque,
-            x: 10, y: 10, color: "verde"
+            color: "verde"
           };
-        } else {
-          if (esBuque && !estadosPersonal[item.nombre].bloqueId) {
-            estadosPersonal[item.nombre].buqueDestino = esBuque;
-          } else if (bloqueCoincidente && !estadosPersonal[item.nombre].buqueDestino) {
-            estadosPersonal[item.nombre].bloqueId = bloqueCoincidente.id;
-          }
         }
       });
 
@@ -1234,6 +1230,10 @@
 
       canvas.innerHTML = "";
       banco.innerHTML = "";
+
+      // Limpiar áreas de buques visuales antes de renderizar
+      document.getElementById("work_BUQUE_1").innerHTML = "";
+      document.getElementById("work_BUQUE_2").innerHTML = "";
 
       layout.forEach(bloque => {
         const div = document.createElement("div");
@@ -1277,14 +1277,15 @@
           e.dataTransfer.setData("text/plain", persona);
         };
 
-        if (info.buqueDestino) {
-          const areaBuque = document.getElementById(info.buqueDestino === 'BUQUE 1' ? 'area_BUQUE_1' : 'area_BUQUE_2').querySelector('.buque-work-area');
-          if(areaBuque) areaBuque.appendChild(ficha);
-        } else if (info.bloqueId === null || !document.getElementById(`area_${info.bloqueId}`)) {
+        if (info.buqueDestino === 'BUQUE 1') {
+          document.getElementById("work_BUQUE_1").appendChild(ficha);
+        } else if (info.buqueDestino === 'BUQUE 2') {
+          document.getElementById("work_BUQUE_2").appendChild(ficha);
+        } else if (info.bloqueId !== null && document.getElementById(`area_${info.bloqueId}`)) {
+          document.getElementById(`area_${info.bloqueId}`).appendChild(ficha);
+        } else {
           ficha.style.position = "static";
           banco.appendChild(ficha);
-        } else {
-          document.getElementById(`area_${info.bloqueId}`).appendChild(ficha);
         }
       }
     }
@@ -1295,17 +1296,8 @@
       e.preventDefault();
       const persona = e.dataTransfer.getData("text/plain");
       if (persona && estadosPersonal[persona]) {
-        const areaRect = document.getElementById(`area_${bloqueId}`).getBoundingClientRect();
-        let offsetX = e.clientX - areaRect.left - 16;
-        let offsetY = e.clientY - areaRect.top - 16;
-
-        offsetX = Math.max(5, Math.min(offsetX, areaRect.width - 35));
-        offsetY = Math.max(5, Math.min(offsetY, areaRect.height - 35));
-
         estadosPersonal[persona].bloqueId = bloqueId;
         estadosPersonal[persona].buqueDestino = null;
-        estadosPersonal[persona].x = offsetX;
-        estadosPersonal[persona].y = offsetY;
 
         localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
         renderizarMapaSemaforo();
@@ -1318,8 +1310,6 @@
       if (persona && estadosPersonal[persona]) {
         estadosPersonal[persona].bloqueId = null;
         estadosPersonal[persona].buqueDestino = nombreBuque;
-        estadosPersonal[persona].x = 10;
-        estadosPersonal[persona].y = 10;
 
         localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
         renderizarMapaSemaforo();
