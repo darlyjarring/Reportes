@@ -309,14 +309,13 @@
       font-style: italic;
     }
 
-    /* ESTILOS MAPA SEMÁFORO Y EDITOR DE BLOQUES */
+    /* MAPA SEMÁFORO Y EDITOR */
     .mapa-layout-completo {
       display: flex;
       flex-direction: column;
       gap: 15px;
     }
 
-    /* BANCO DE PERSONAL DESPLEGABLE (ACORDEÓN) */
     .banco-desplegable-container {
       background: #ffffff;
       border: 2px solid var(--navy-blue);
@@ -341,7 +340,7 @@
     .banco-body-content {
       padding: 12px;
       background: #f8f9fa;
-      display: none; /* Colapsado por defecto para maximizar el plano */
+      display: none;
       min-height: 90px;
     }
 
@@ -413,12 +412,7 @@
       border: 1px dashed rgba(255, 255, 255, 0.6);
       margin-top: 5px;
       border-radius: 4px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 6px;
-      align-content: flex-start;
-      overflow-y: auto;
+      overflow: hidden;
     }
 
     .gruas-qc-row {
@@ -445,14 +439,13 @@
     .bloque-plano-item {
       position: absolute;
       border-radius: 6px;
-      padding: 5px;
+      padding: 4px;
       box-sizing: border-box;
       user-select: none;
       background-color: #e2e3e5;
       border: 2px solid #383d41;
       display: flex;
       flex-direction: column;
-      align-items: center;
     }
 
     .bloque-plano-item.reefer { background-color: #cce5ff; border: 2px solid #004085; color: #004085; }
@@ -468,64 +461,37 @@
       pointer-events: none;
       border-bottom: 1px solid rgba(0,0,0,0.15);
       padding-bottom: 2px;
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }
 
-    /* CONTENEDOR DE BAHÍAS INTERNAS (Simulación Patio DP World) */
+    /* ÁREA DE TRABAJO CON GRILLA DE BAHÍAS TIPO CROQUIS PORTUARIO */
     .bloque-work-area {
       width: 100%;
       flex-grow: 1;
       position: relative;
-      background: rgba(255, 255, 255, 0.7);
-      border: 1px dashed rgba(0,0,0,0.3);
-      border-radius: 4px;
-      min-height: 40px;
-      display: flex;
-      flex-direction: column; /* Estructura de carriles/bahías */
-      gap: 3px;
-      padding: 3px;
-      overflow: hidden;
-    }
-
-    .bahia-carril {
-      flex: 1;
-      border: 1px dotted rgba(0,0,0,0.2);
-      background: rgba(255,255,255,0.4);
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0,0,0,0.3);
       border-radius: 3px;
+      overflow: hidden;
+      display: grid;
+    }
+
+    .bahia-celda {
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      background: rgba(255, 255, 255, 0.5);
       display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      padding: 2px;
-      align-content: center;
+      align-items: center;
       justify-content: center;
-      position: relative;
-      min-height: 25px;
-    }
-
-    .bahia-label-tag {
-      position: absolute;
-      bottom: 1px;
-      right: 3px;
       font-size: 7px;
-      color: #666;
+      color: #444;
       font-weight: bold;
-      pointer-events: none;
     }
 
-    .bahia-tag {
-      text-align: center;
-      font-size: 8px;
-      color: #333;
-      font-weight: bold;
-      margin-top: 2px;
-      width: 100%;
-      pointer-events: none;
-    }
-
-    /* FICHAS DE TÉCNICOS TIPO SEMÁFORO */
+    /* FICHAS DE TÉCNICOS TOTALMENTE LIBRES */
     .ficha-tec {
-      width: 30px;
-      height: 30px;
+      position: absolute;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       background-color: #28a745;
       color: white;
@@ -535,12 +501,10 @@
       font-weight: bold;
       font-size: 9px;
       cursor: grab;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
       user-select: none;
-      z-index: 10;
+      z-index: 25;
       border: 2px solid #fff;
-      position: relative;
-      flex-shrink: 0;
     }
 
     .ficha-tec.amarillo { background-color: #ffc107; color: #000; }
@@ -574,7 +538,7 @@
       background: #ff9800;
       border: 1px solid #fff;
       display: none;
-      z-index: 20;
+      z-index: 30;
     }
 
     .bloque-plano-item.seleccionado {
@@ -736,7 +700,7 @@
     </div>
   </div>
 
-  <!-- PESTAÑA 3: MAPA SEMÁFORO PATIO (Con banco desplegable y bahías internas) -->
+  <!-- PESTAÑA 3: MAPA SEMÁFORO PATIO (Con banco desplegable y libre movimiento por coordenadas) -->
   <div id="tabSemaforo" class="tab-content">
     <div class="mapa-layout-completo">
       
@@ -747,13 +711,13 @@
           <span id="bancoToggleIcon">▼ (Expandir)</span>
         </div>
         <div class="banco-body-content" id="bancoSemaforo" ondragover="permitirDrop(event)" ondrop="soltarEnBanco(event)">
-          <!-- Fichas libres aquí -->
+          <!-- Fichas libres -->
         </div>
       </div>
 
       <!-- PLANO PORTUARIO AMPLIO -->
       <div class="plano-wrapper-general">
-        <div class="plano-canvas-container" id="canvasSemaforo"></div>
+        <div class="plano-canvas-container" id="canvasSemaforo" ondragover="permitirDrop(event)" ondrop="soltarEnCanvasPlano(event)"></div>
         
         <!-- Muelle y Buques fijos a la derecha -->
         <div class="muelle-vertical-derecha">
@@ -766,7 +730,7 @@
               <span class="grua-qc">QC03</span>
             </div>
             <span>🚢 BUQUE 1</span>
-            <div class="buque-work-area" id="work_BUQUE_1"></div>
+            <div class="buque-work-area" id="work_BUQUE_1" ondragover="permitirDrop(event)" ondrop="soltarEnBuqueArea(event, 'BUQUE 1')"></div>
           </div>
 
           <div class="buque-box" ondragover="permitirDrop(event)" ondrop="soltarEnBuque(event, 'BUQUE 2')" id="area_BUQUE_2">
@@ -776,7 +740,7 @@
               <span class="grua-qc">QC06</span>
             </div>
             <span>🚢 BUQUE 2</span>
-            <div class="buque-work-area" id="work_BUQUE_2"></div>
+            <div class="buque-work-area" id="work_BUQUE_2" ondragover="permitirDrop(event)" ondrop="soltarEnBuqueArea(event, 'BUQUE 2')"></div>
           </div>
         </div>
       </div>
@@ -872,7 +836,6 @@
       renderReefer();
     });
 
-    // Desplegable Banco de Personal
     function toggleBancoDesplegable() {
       const cuerpo = document.getElementById("bancoSemaforo");
       const icono = document.getElementById("bancoToggleIcon");
@@ -1226,7 +1189,7 @@
     }
 
     // ==========================================
-    // LÓGICA 3 & 4: MAPA SEMÁFORO Y BAHÍAS INTERNAS
+    // LÓGICA 3 & 4: MAPA SEMÁFORO Y LIBRE MOVIMIENTO
     // ==========================================
     function getStoredLayoutBloques() {
       const data = localStorage.getItem('puerto_bloques');
@@ -1261,21 +1224,17 @@
         }
       });
 
-      const bloquesLayout = getStoredLayoutBloques();
       let nombresActuales = new Set(tecnicosReporte.map(t => t.nombre));
-
       for (let p in estadosPersonal) {
         if (!nombresActuales.has(p)) delete estadosPersonal[p];
       }
 
       tecnicosReporte.forEach(item => {
         if (!estadosPersonal[item.nombre]) {
-          let bloqueCoincidente = bloquesLayout.find(b => b.nombre.toUpperCase().includes(item.bloque));
-          let esBuque = item.bloque.includes("BUQUE 1") ? "BUQUE 1" : (item.bloque.includes("BUQUE 2") ? "BUQUE 2" : null);
-
           estadosPersonal[item.nombre] = {
-            bloqueId: bloqueCoincidente ? bloqueCoincidente.id : null,
-            buqueDestino: esBuque,
+            destinoTipo: 'banco', // 'bloque', 'buque', 'banco'
+            destinoId: null,
+            x: 10, y: 10,
             color: "verde"
           };
         }
@@ -1292,10 +1251,10 @@
 
       canvas.innerHTML = "";
       banco.innerHTML = "";
-
       document.getElementById("work_BUQUE_1").innerHTML = "";
       document.getElementById("work_BUQUE_2").innerHTML = "";
 
+      // 1. Renderizar bloques con cuadrícula de bahías interna
       layout.forEach(bloque => {
         const div = document.createElement("div");
         div.className = `bloque-plano-item ${bloque.tipo}`;
@@ -1303,32 +1262,33 @@
         div.style.top = bloque.y + "px";
         div.style.width = bloque.ancho + "px";
         div.style.height = bloque.alto + "px";
+        div.setAttribute("id", `bloque_cont_${bloque.id}`);
 
-        // Generar divisiones internas de bahías (simulando DP World)
-        let workAreaHTML = '';
+        let gridHTML = '';
         if (bloque.bayInicio > 0 && bloque.bayFin > 0) {
-          workAreaHTML = `
-            <div class="bahia-carril" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="area_${bloque.id}_1">
-              <span class="bahia-label-tag">Bay ${bloque.bayInicio}</span>
-            </div>
-            <div class="bahia-carril" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="area_${bloque.id}_2">
-              <span class="bahia-label-tag">Bay ${bloque.bayFin}</span>
-            </div>
-          `;
+          // Detectar orientación según ancho vs alto
+          let cols = bloque.ancho > bloque.alto ? 6 : 2;
+          let rows = bloque.ancho > bloque.alto ? 2 : 6;
+          div.style.display = "flex";
+          div.style.flexDirection = "column";
+
+          gridHTML = `<div class="bloque-work-area" style="grid-template-columns: repeat(${cols}, 1fr); grid-template-rows: repeat(${rows}, 1fr);" ondragover="permitirDrop(event)" ondrop="soltarEnBloqueCoordenada(event, ${bloque.id})">`;
+          for(let i=1; i<=(cols*rows); i++) {
+            gridHTML += `<div class="bahia-celda">Bay ${i}</div>`;
+          }
+          gridHTML += `</div>`;
         } else {
-          workAreaHTML = `
-            <div class="bahia-carril" style="height:100%;" ondragover="permitirDrop(event)" ondrop="soltarEnBloque(event, ${bloque.id})" id="area_${bloque.id}_1"></div>
-          `;
+          gridHTML = `<div class="bloque-work-area" style="display:flex; align-items:center; justify-content:center;" ondragover="permitirDrop(event)" ondrop="soltarEnBloqueCoordenada(event, ${bloque.id})"><span style="font-size:9px; color:#555;">Servicio / Aforos</span></div>`;
         }
 
         div.innerHTML = `
           <div class="bloque-title-bar">${bloque.nombre}</div>
-          <div class="bloque-work-area">${workAreaHTML}</div>
-          <div class="bahia-tag">${bloque.bayInicio > 0 ? `Bahías: ${bloque.bayInicio} ➔ ${bloque.bayFin}` : `Zona Operativa`}</div>
+          ${gridHTML}
         `;
         canvas.appendChild(div);
       });
 
+      // 2. Renderizar fichas de técnicos en sus posiciones libres exactas
       for (let persona in estadosPersonal) {
         let info = estadosPersonal[persona];
         let ficha = document.createElement("div");
@@ -1352,13 +1312,21 @@
           e.dataTransfer.setData("text/plain", persona);
         };
 
-        if (info.buqueDestino === 'BUQUE 1') {
-          document.getElementById("work_BUQUE_1").appendChild(ficha);
-        } else if (info.buqueDestino === 'BUQUE 2') {
-          document.getElementById("work_BUQUE_2").appendChild(ficha);
-        } else if (info.bloqueId !== null && document.getElementById(`area_${info.bloqueId}_1`)) {
-          // Asignar al primer carril de bahía del bloque
-          document.getElementById(`area_${info.bloqueId}_1`).appendChild(ficha);
+        if (info.destinoTipo === 'buque') {
+          ficha.style.position = "relative";
+          ficha.style.margin = "4px";
+          const areaBuque = document.getElementById(info.destinoId === 'BUQUE 1' ? 'work_BUQUE_1' : 'work_BUQUE_2');
+          if(areaBuque) areaBuque.appendChild(ficha);
+        } else if (info.destinoTipo === 'bloque') {
+          const contenedorBloque = document.getElementById(`bloque_cont_${info.destinoId}`);
+          if (contenedorBloque) {
+            ficha.style.position = "absolute";
+            ficha.style.left = info.x + "px";
+            ficha.style.top = info.y + "px";
+            contenedorBloque.appendChild(ficha);
+          } else {
+            banco.appendChild(ficha);
+          }
         } else {
           ficha.style.position = "static";
           banco.appendChild(ficha);
@@ -1368,12 +1336,24 @@
 
     function permitirDrop(e) { e.preventDefault(); }
 
-    function soltarEnBloque(e, bloqueId) {
+    function soltarEnBloqueCoordenada(e, bloqueId) {
       e.preventDefault();
       const persona = e.dataTransfer.getData("text/plain");
       if (persona && estadosPersonal[persona]) {
-        estadosPersonal[persona].bloqueId = bloqueId;
-        estadosPersonal[persona].buqueDestino = null;
+        const contenedorBloque = document.getElementById(`bloque_cont_${bloqueId}`);
+        const rect = contenedorBloque.getBoundingClientRect();
+
+        let x = e.clientX - rect.left - 14;
+        let y = e.clientY - rect.top - 14;
+
+        // Limitar dentro de los bordes del bloque
+        x = Math.max(4, Math.min(x, rect.width - 32));
+        y = Math.max(20, Math.min(y, rect.height - 32));
+
+        estadosPersonal[persona].destinoTipo = 'bloque';
+        estadosPersonal[persona].destinoId = bloqueId;
+        estadosPersonal[persona].x = x;
+        estadosPersonal[persona].y = y;
 
         localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
         renderizarMapaSemaforo();
@@ -1384,20 +1364,26 @@
       e.preventDefault();
       const persona = e.dataTransfer.getData("text/plain");
       if (persona && estadosPersonal[persona]) {
-        estadosPersonal[persona].bloqueId = null;
-        estadosPersonal[persona].buqueDestino = nombreBuque;
+        estadosPersonal[persona].destinoTipo = 'buque';
+        estadosPersonal[persona].destinoId = nombreBuque;
 
         localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
         renderizarMapaSemaforo();
       }
     }
 
+    function soltarEnBuqueArea(e, nombreBuque) {
+      e.stopPropagation();
+      soltarEnBuque(e, nombreBuque);
+    }
+
     function soltarEnBanco(e) {
       e.preventDefault();
       const persona = e.dataTransfer.getData("text/plain");
       if (persona && estadosPersonal[persona]) {
-        estadosPersonal[persona].bloqueId = null;
-        estadosPersonal[persona].buqueDestino = null;
+        estadosPersonal[persona].destinoTipo = 'banco';
+        estadosPersonal[persona].destinoId = null;
+
         localStorage.setItem('puerto_semaforos_personal', JSON.stringify(estadosPersonal));
         renderizarMapaSemaforo();
       }
