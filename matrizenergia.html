@@ -21,7 +21,7 @@
         Plan de Cambio de Energía - Bloques Reefer (24 Horas)
       </h1>
       <p class="text-center text-sky-200 text-sm mt-1">
-        Fijación exclusiva de Unidades COLD (Columna F) | Matriz Visual 3x3 Ordenada y Prolija
+        Fijación exclusiva de Unidades COLD (Columna F) | Matriz Visual 3x3 con Cupo Exacto de Bahías
       </p>
     </header>
 
@@ -182,13 +182,66 @@
       }
     }
 
+    function calcularBahiasApagarPorBloque(hIdx) {
+      const totalBahiasApagar = parseInt(document.getElementById("inputBahias").value) || 10;
+      const cantBloques = parseInt(document.getElementById("inputBloques").value) || 2;
+      const bahiasPorBloque = Math.ceil(totalBahiasApagar / cantBloques);
+      const ciclo3H = Math.floor(hIdx / 3) % 3;
+      const bloquesActivos = obtenerBloquesActivos(hIdx);
+
+      const apagadasPorBloque = {};
+
+      Object.keys(bloquesActivos).forEach(blk => {
+        const listaApagadas = {};
+        let count = 0;
+
+        // Dos pasadas: 1ra respetando el ciclo de 3 horas como prioridad de zona, 2da como respaldo general
+        for (let intento = 1; intento <= 2; intento++) {
+          for (let bi = 0; bi < bahiasBase.length; bi++) {
+            if (count >= bahiasPorBloque) break;
+
+            let idxReal = bi;
+            if (intento === 1) {
+              if (ciclo3H === 0) idxReal = bi; // Primeras
+              else if (ciclo3H === 1) idxReal = bahiasBase.length - 1 - bi; // Últimas
+              else if (ciclo3H === 2) idxReal = (Math.floor(bahiasBase.length / 2) + bi) % bahiasBase.length; // Medio
+            }
+
+            const bay = bahiasBase[idxReal];
+            if (!listaApagadas[bay]) {
+              const esCold = mapaColdDetectadas[blk] && mapaColdDetectadas[blk][bay];
+              if (!esCold) {
+                let pasaZona = true;
+                if (intento === 1) {
+                  const numBay = parseInt(bay);
+                  if (ciclo3H === 0 && (numBay < 48 || numBay > 68)) pasaZona = false;
+                  else if (ciclo3H === 1 && (numBay < 76 || numBay > 96)) pasaZona = false;
+                  else if (ciclo3H === 2 && (numBay < 64 || numBay > 84)) pasaZona = false;
+                }
+
+                if (pasaZona) {
+                  listaApagadas[bay] = true;
+                  count++;
+                }
+              }
+            }
+          }
+          if (count >= bahiasPorBloque) break;
+        }
+
+        apagadasPorBloque[blk] = listaApagadas;
+      });
+
+      return apagadasPorBloque;
+    }
+
     function generarMatrizHTML() {
       const contenedor = document.getElementById("contenedorMatriz");
       contenedor.innerHTML = "";
 
       horasCambio.forEach((hora, hIdx) => {
         const bloquesActivos = obtenerBloquesActivos(hIdx);
-        const ciclo3H = Math.floor(hIdx / 3) % 3;
+        const apagadasPorBloque = calcularBahiasApagarPorBloque(hIdx);
 
         let htmlTabla = `
           <div class="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden text-xs">
@@ -206,7 +259,6 @@
         `;
 
         bahiasBase.forEach(bay => {
-          const numBay = parseInt(bay);
           htmlTabla += `<tr>`;
 
           bloquesBase.forEach(blk => {
@@ -214,17 +266,8 @@
 
             if (esCold) {
               htmlTabla += `<td class="py-1 border border-slate-200 cell-cold">${bay}</td>`;
-            } else if (bloquesActivos[blk]) {
-              let pertenece = false;
-              if (ciclo3H === 0 && numBay >= 48 && numBay <= 68) pertenece = true;
-              else if (ciclo3H === 1 && numBay >= 76 && numBay <= 96) pertenece = true;
-              else if (ciclo3H === 2 && numBay >= 64 && numBay <= 84) pertenece = true;
-
-              if (pertenece) {
-                htmlTabla += `<td class="py-1 border border-slate-200 cell-red">${bay}</td>`;
-              } else {
-                htmlTabla += `<td class="py-1 border border-slate-200 cell-normal">${bay}</td>`;
-              }
+            } else if (bloquesActivos[blk] && apagadasPorBloque[blk] && apagadasPorBloque[blk][bay]) {
+              htmlTabla += `<td class="py-1 border border-slate-200 cell-red">${bay}</td>`;
             } else {
               htmlTabla += `<td class="py-1 border border-slate-200 cell-normal">${bay}</td>`;
             }
@@ -286,10 +329,7 @@
           <table>
       `;
 
-      // Recorremos las 24 horas en filas de 3 tablas por fila horizontal
       for (let hIdx = 0; hIdx < horasCambio.length; hIdx += 3) {
-        
-        // 1. Fila de Encabezados de Hora
         excelHTML += `<tr>`;
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
@@ -299,7 +339,6 @@
         }
         excelHTML += `</tr>`;
 
-        // 2. Fila de Bloques (1R, 2R, 3R...)
         excelHTML += `<tr>`;
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
@@ -311,15 +350,13 @@
         }
         excelHTML += `</tr>`;
 
-        // 3. Filas de Bahías (48 al 96)
         bahiasBase.forEach(bay => {
           excelHTML += `<tr>`;
           for (let t = 0; t < 3; t++) {
             const hActual = hIdx + t;
             if (hActual < horasCambio.length) {
               const bloquesActivos = obtenerBloquesActivos(hActual);
-              const ciclo3H = Math.floor(hActual / 3) % 3;
-              const numBay = parseInt(bay);
+              const apagadasPorBloque = calcularBahiasApagarPorBloque(hActual);
 
               bloquesBase.forEach(blk => {
                 const esCold = mapaColdDetectadas[blk] && mapaColdDetectadas[blk][bay];
@@ -327,13 +364,8 @@
 
                 if (esCold) {
                   estiloCelda = "col-green";
-                } else if (bloquesActivos[blk]) {
-                  let pertenece = false;
-                  if (ciclo3H === 0 && numBay >= 48 && numBay <= 68) pertenece = true;
-                  else if (ciclo3H === 1 && numBay >= 76 && numBay <= 96) pertenece = true;
-                  else if (ciclo3H === 2 && numBay >= 64 && numBay <= 84) pertenece = true;
-
-                  if (pertenece) estiloCelda = "col-red";
+                } else if (bloquesActivos[blk] && apagadasPorBloque[blk] && apagadasPorBloque[blk][bay]) {
+                  estiloCelda = "col-red";
                 }
 
                 excelHTML += `<td class="${estiloCelda}">${bay}</td>`;
@@ -344,7 +376,6 @@
           excelHTML += `</tr>`;
         });
 
-        // 4. Filas de Leyendas debajo de cada una de las 3 tablas de la fila
         excelHTML += `<tr>`;
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
@@ -363,7 +394,6 @@
         }
         excelHTML += `</tr>`;
 
-        // Fila de separación amplia entre filas de la matriz
         excelHTML += `<tr><td colspan="20" style="border:none; height: 20px;"></td></tr>`;
       }
 
