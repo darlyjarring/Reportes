@@ -21,7 +21,7 @@
         Plan de Cambio de Energía - Bloques Reefer (24 Horas)
       </h1>
       <p class="text-center text-sky-200 text-sm mt-1">
-        Fijación exclusiva de Unidades COLD (Columna F) | Matriz Visual 3x3 con Colores Exactos al Descargar
+        Fijación exclusiva de Unidades COLD (Columna F) | Matriz Visual 3x3 con Leyendas y Colores
       </p>
     </header>
 
@@ -62,7 +62,7 @@
           <span>🚀</span> Generar Matriz 3x3 de 24H
         </button>
         <button id="btnExportar" onclick="exportarExcelConColores()" disabled class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-6 rounded shadow transition-all text-sm opacity-50 cursor-not-allowed flex items-center gap-2">
-          <span>📥</span> Exportar Excel con Colores (.xls)
+          <span>📥</span> Exportar Excel con Colores y Leyendas (.xls)
         </button>
       </div>
     </div>
@@ -237,6 +237,11 @@
                 </tbody>
               </table>
             </div>
+            <!-- LEYENDA VISUAL EN EL SISTEMA -->
+            <div class="p-2.5 bg-slate-50 border-t border-slate-200 text-[11px] space-y-1">
+              <div class="flex items-center gap-2"><span class="w-3 h-3 bg-[#FF7676] rounded-sm inline-block"></span> <span class="font-bold text-slate-700">COLOR ROJO: BAHÍAS DESCONECTADAS</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 bg-[#92D050] rounded-sm inline-block"></span> <span class="font-bold text-slate-700">COLOR VERDE: UNIDADES COLD</span></div>
+            </div>
           </div>
         `;
         contenedor.innerHTML += htmlTabla;
@@ -260,7 +265,6 @@
     }
 
     function exportarExcelConColores() {
-      // Generamos una tabla HTML completa con estilos inline para que Excel conserve los colores exactos al abrir
       let excelHTML = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
         <head>
@@ -271,8 +275,10 @@
             td { text-align: center; border: 1px solid #D9D9D9; padding: 4px; font-weight: bold; }
             .col-green { background-color: #92D050; color: #000000; }
             .col-red { background-color: #FF7676; color: #FFFFFF; }
-            .col-header-hora { background-color: #2F5597; color: #FFFFFF; font-size: 12pt; font-weight: bold; text-align: center; }
+            .col-header-hora { background-color: #2F5597; color: #FFFFFF; font-size: 11pt; font-weight: bold; text-align: center; }
             .col-header-blk { background-color: #D9E1F2; color: #1F4E79; font-weight: bold; text-align: center; }
+            .leyenda-rojo { background-color: #FF7676; color: #FFFFFF; font-weight: bold; text-align: left; padding: 5px; }
+            .leyenda-verde { background-color: #92D050; color: #000000; font-weight: bold; text-align: left; padding: 5px; }
           </style>
         </head>
         <body>
@@ -280,9 +286,8 @@
           <table>
       `;
 
-      // Armamos filas organizadas en bloques de 3 tablas horizontales
       for (let hIdx = 0; hIdx < horasCambio.length; hIdx += 3) {
-        // Fila 1: Horas
+        // Fila de Horas
         excelHTML += `<tr>`;
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
@@ -291,19 +296,19 @@
         }
         excelHTML += `</tr>`;
 
-        // Fila 2: Nombres de Bloques
+        // Fila de Bloques
         excelHTML += `<tr>`;
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
             bloquesBase.forEach(b => {
               excelHTML += `<td class="col-header-blk">${b}</td>`;
             });
-            excelHTML += `<td></td>`; // separador
+            excelHTML += `<td></td>`;
           }
         }
         excelHTML += `</tr>`;
 
-        // Filas de Bahías (48 al 96)
+        // Filas de Bahías
         bahiasBase.forEach(bay => {
           excelHTML += `<tr>`;
           for (let t = 0; t < 3; t++) {
@@ -330,13 +335,15 @@
 
                 excelHTML += `<td class="${estiloCelda}">${bay}</td>`;
               });
-              excelHTML += `<td></td>`; // columna separadora vacía
+              excelHTML += `<td></td>`;
             }
           }
           excelHTML += `</tr>`;
         });
 
-        // Filas vacías de separación entre filas de tablas
+        // LEYENDAS INCORPORADAS EN EL EXCEL DESCARGADO
+        excelHTML += `<tr><td colspan="7" class="leyenda-rojo">COLOR ROJO SON LAS BAHIAS DESCONECTADAS</td></tr>`;
+        excelHTML += `<tr><td colspan="7" class="leyenda-verde">COLOR VERDE SON LAS BAHIAS DONDE ESTAN LAS UNIDADES COLD</td></tr>`;
         excelHTML += `<tr><td colspan="21" style="border:none;">&nbsp;</td></tr>`;
       }
 
@@ -346,11 +353,10 @@
         </html>
       `;
 
-      // Descargamos como archivo .xls con soporte nativo de estilos HTML en Excel
       const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = "Plan_Cambio_Energia_Reefer_Con_Colores.xls";
+      link.download = "Plan_Cambio_Energia_Reefer_Con_Leyendas.xls";
       link.click();
     }
   </script>
