@@ -21,7 +21,7 @@
         Plan de Cambio de Energía - Bloques Reefer (24 Horas)
       </h1>
       <p class="text-center text-sky-200 text-sm mt-1">
-        Fijación exclusiva de Unidades COLD (Columna F: GradeID) | Matriz Visual 3x3
+        Fijación exclusiva de Unidades COLD (Columna F) | Matriz Visual 3x3 con Colores Exactos al Descargar
       </p>
     </header>
 
@@ -61,15 +61,15 @@
         <button id="btnProcesar" onclick="procesarReporte()" class="bg-sky-700 hover:bg-sky-800 text-white font-semibold py-2.5 px-6 rounded shadow transition-all text-sm flex items-center gap-2">
           <span>🚀</span> Generar Matriz 3x3 de 24H
         </button>
-        <button id="btnExportar" onclick="exportarExcel()" disabled class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-6 rounded shadow transition-all text-sm opacity-50 cursor-not-allowed flex items-center gap-2">
-          <span>📥</span> Exportar Matriz a Excel (.xlsx)
+        <button id="btnExportar" onclick="exportarExcelConColores()" disabled class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-6 rounded shadow transition-all text-sm opacity-50 cursor-not-allowed flex items-center gap-2">
+          <span>📥</span> Exportar Excel con Colores (.xls)
         </button>
       </div>
     </div>
 
     <!-- Resumen de Lectura -->
     <div id="panelResumen" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-lg mb-6 text-sm">
-      <span class="font-bold">Resumen de Procesamiento:</span> Se identificaron <span id="cantCold" class="font-bold text-emerald-900">0</span> bahías con unidades que dicen exactamente <span class="underline">COLD</span> en la Columna F, protegidas en verde.
+      <span class="font-bold">Resumen de Procesamiento:</span> Se identificaron <span id="cantCold" class="font-bold text-emerald-900">0</span> bahías con unidades COLD en la Columna F, protegidas en verde.
     </div>
 
     <!-- Área de la Matriz 3x3 (24 Horas) -->
@@ -159,7 +159,6 @@
               const gradeVal = String(rows[r][colGrade]).trim().toUpperCase();
               const posVal = String(rows[r][colPos]).trim();
 
-              // FILTRO ESTRICTO: ÚNICAMENTE CUANDO DICE "COLD" EN LA COLUMNA F
               if (gradeVal === "COLD") {
                 const blk = parsearBloque(posVal);
                 const bay = parsearBahia(posVal);
@@ -184,21 +183,11 @@
     }
 
     function generarMatrizHTML() {
-      const cantBahias = parseInt(document.getElementById("inputBahias").value) || 10;
-      const cantBloques = parseInt(document.getElementById("inputBloques").value) || 2;
-      const blkInicio = parseInt(document.getElementById("inputInicioBloque").value) || 0;
-
       const contenedor = document.getElementById("contenedorMatriz");
       contenedor.innerHTML = "";
 
       horasCambio.forEach((hora, hIdx) => {
-        const bloquesActivos = {};
-        const offsetBloque = hIdx * cantBloques;
-        for (let i = 0; i < cantBloques; i++) {
-          const idxB = (blkInicio + offsetBloque + i) % 6;
-          bloquesActivos[bloquesBase[idxB]] = true;
-        }
-
+        const bloquesActivos = obtenerBloquesActivos(hIdx);
         const ciclo3H = Math.floor(hIdx / 3) % 3;
 
         let htmlTabla = `
@@ -248,13 +237,8 @@
                 </tbody>
               </table>
             </div>
-            <div class="p-2 bg-slate-50 border-t border-slate-200 text-[10px] space-y-0.5">
-              <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-red-500 rounded-sm"></span> <span class="text-slate-600 font-semibold">COLOR ROJO: BAHÍAS DESCONECTADAS</span></div>
-              <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-sm"></span> <span class="text-slate-600 font-semibold">COLOR VERDE: UNIDADES COLD</span></div>
-            </div>
           </div>
         `;
-
         contenedor.innerHTML += htmlTabla;
       });
 
@@ -263,50 +247,111 @@
       btnExp.classList.remove("opacity-50", "cursor-not-allowed");
     }
 
-    function exportarExcel() {
-      const wb = XLSX.utils.book_new();
-      const wsData = [];
+    function obtenerBloquesActivos(hIdx) {
+      const cantBloques = parseInt(document.getElementById("inputBloques").value) || 2;
+      const blkInicio = parseInt(document.getElementById("inputInicioBloque").value) || 0;
+      const bloquesActivos = {};
+      const offsetBloque = hIdx * cantBloques;
+      for (let i = 0; i < cantBloques; i++) {
+        const idxB = (blkInicio + offsetBloque + i) % 6;
+        bloquesActivos[bloquesBase[idxB]] = true;
+      }
+      return bloquesActivos;
+    }
 
-      wsData.push(["PLAN DE CAMBIO DE ENERGÍA DE LOS BLOQUES REEFER (24 HORAS)"]);
-      wsData.push([]);
+    function exportarExcelConColores() {
+      // Generamos una tabla HTML completa con estilos inline para que Excel conserve los colores exactos al abrir
+      let excelHTML = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 10pt; }
+            th { background-color: #1F4E79; color: #FFFFFF; font-weight: bold; text-align: center; border: 1px solid #000; padding: 6px; }
+            td { text-align: center; border: 1px solid #D9D9D9; padding: 4px; font-weight: bold; }
+            .col-green { background-color: #92D050; color: #000000; }
+            .col-red { background-color: #FF7676; color: #FFFFFF; }
+            .col-header-hora { background-color: #2F5597; color: #FFFFFF; font-size: 12pt; font-weight: bold; text-align: center; }
+            .col-header-blk { background-color: #D9E1F2; color: #1F4E79; font-weight: bold; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <h2>PLAN DE CAMBIO DE ENERGÍA DE LOS BLOQUES REEFER (24 HORAS)</h2>
+          <table>
+      `;
 
+      // Armamos filas organizadas en bloques de 3 tablas horizontales
       for (let hIdx = 0; hIdx < horasCambio.length; hIdx += 3) {
-        const filaHoras = [""];
+        // Fila 1: Horas
+        excelHTML += `<tr>`;
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
-            filaHoras.push("HORA DE CAMBIO " + horasCambio[hIdx + t], "", "", "", "", "", "");
+            excelHTML += `<td colspan="6" class="col-header-hora">HORA DE CAMBIO ${horasCambio[hIdx + t]}</td><td></td>`;
           }
         }
-        wsData.push(filaHoras);
+        excelHTML += `</tr>`;
 
-        const filaBloques = [""];
+        // Fila 2: Nombres de Bloques
+        excelHTML += `<tr>`;
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
-            bloquesBase.forEach(b => filaBloques.push(b));
-            filaBloques.push("");
+            bloquesBase.forEach(b => {
+              excelHTML += `<td class="col-header-blk">${b}</td>`;
+            });
+            excelHTML += `<td></td>`; // separador
           }
         }
-        wsData.push(filaBloques);
+        excelHTML += `</tr>`;
 
+        // Filas de Bahías (48 al 96)
         bahiasBase.forEach(bay => {
-          const filaBahia = [""];
+          excelHTML += `<tr>`;
           for (let t = 0; t < 3; t++) {
-            if (hIdx + t < horasCambio.length) {
-              bloquesBase.forEach(() => filaBahia.push(bay));
-              filaBahia.push("");
+            const hActual = hIdx + t;
+            if (hActual < horasCambio.length) {
+              const bloquesActivos = obtenerBloquesActivos(hActual);
+              const ciclo3H = Math.floor(hActual / 3) % 3;
+              const numBay = parseInt(bay);
+
+              bloquesBase.forEach(blk => {
+                const esCold = mapaColdDetectadas[blk] && mapaColdDetectadas[blk][bay];
+                let estiloCelda = "";
+
+                if (esCold) {
+                  estiloCelda = "col-green";
+                } else if (bloquesActivos[blk]) {
+                  let pertenece = false;
+                  if (ciclo3H === 0 && numBay >= 48 && numBay <= 68) pertenece = true;
+                  else if (ciclo3H === 1 && numBay >= 76 && numBay <= 96) pertenece = true;
+                  else if (ciclo3H === 2 && numBay >= 64 && numBay <= 84) pertenece = true;
+
+                  if (pertenece) estiloCelda = "col-red";
+                }
+
+                excelHTML += `<td class="${estiloCelda}">${bay}</td>`;
+              });
+              excelHTML += `<td></td>`; // columna separadora vacía
             }
           }
-          wsData.push(filaBahia);
+          excelHTML += `</tr>`;
         });
 
-        wsData.push(["", "COLOR ROJO: BAHÍAS DESCONECTADAS"]);
-        wsData.push(["", "COLOR VERDE: UNIDADES COLD"]);
-        wsData.push([]);
+        // Filas vacías de separación entre filas de tablas
+        excelHTML += `<tr><td colspan="21" style="border:none;">&nbsp;</td></tr>`;
       }
 
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      XLSX.utils.book_append_sheet(wb, ws, "Matriz_24H");
-      XLSX.writeFile(wb, "Plan_Cambio_Energia_Reefer_24H.xlsx");
+      excelHTML += `
+          </table>
+        </body>
+        </html>
+      `;
+
+      // Descargamos como archivo .xls con soporte nativo de estilos HTML en Excel
+      const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = "Plan_Cambio_Energia_Reefer_Con_Colores.xls";
+      link.click();
     }
   </script>
 </body>
