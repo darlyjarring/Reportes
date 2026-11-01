@@ -21,7 +21,7 @@
         Plan de Cambio de Energía - Bloques Reefer (24 Horas)
       </h1>
       <p class="text-center text-sky-200 text-sm mt-1">
-        Fijación de Unidades COLD (Columna F: GradeID 'A' o 'COLD') | Exclusión de CA | Matriz Visual 3x3
+        Fijación exclusiva de Unidades COLD (Columna F: GradeID) | Matriz Visual 3x3
       </p>
     </header>
 
@@ -69,7 +69,7 @@
 
     <!-- Resumen de Lectura -->
     <div id="panelResumen" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-lg mb-6 text-sm">
-      <span class="font-bold">Resumen de Procesamiento:</span> Se identificaron <span id="cantCold" class="font-bold text-emerald-900">0</span> bahías con unidades COLD (GradeID: A / COLD en Columna F) protegidas en verde. Las unidades CA fueron excluidas.
+      <span class="font-bold">Resumen de Procesamiento:</span> Se identificaron <span id="cantCold" class="font-bold text-emerald-900">0</span> bahías con unidades que dicen exactamente <span class="underline">COLD</span> en la Columna F, protegidas en verde.
     </div>
 
     <!-- Área de la Matriz 3x3 (24 Horas) -->
@@ -87,17 +87,17 @@
       "17:25", "18:25", "19:25", "20:25", "21:25", "22:25"
     ];
 
-    let mapaColdDetectadas = {}; // Guarda { "1R": { "48": true } }
+    let mapaColdDetectadas = {};
 
     function parsearBloque(pos) {
       if (!pos) return "1R";
       const u = String(pos).toUpperCase();
-      if (u.includes("1D") || u.includes("1R")) return "1R";
-      if (u.includes("1E") || u.includes("2R")) return "2R";
-      if (u.includes("1F") || u.includes("3R")) return "3R";
-      if (u.includes("1G") || u.includes("4R")) return "4R";
-      if (u.includes("1H") || u.includes("5R")) return "5R";
-      if (u.includes("1I") || u.includes("6R")) return "6R";
+      if (u.includes("1D")) return "1R";
+      if (u.includes("1E")) return "2R";
+      if (u.includes("1F")) return "3R";
+      if (u.includes("1G")) return "4R";
+      if (u.includes("1H")) return "5R";
+      if (u.includes("1I")) return "6R";
       const partes = u.split("-");
       if (partes.length >= 3) {
         const blkStr = partes[2].substring(0, 2);
@@ -113,10 +113,17 @@
 
     function parsearBahia(pos) {
       if (!pos) return "48";
-      const partes = String(pos).split("-");
+      const u = String(pos).toUpperCase();
+      for (let b of bahiasBase) {
+        if (u.includes(b)) return b;
+      }
+      const partes = u.split("-");
       if (partes.length >= 3) {
-        let sub = partes[2].split(".")[0];
-        if (sub.length >= 4) return sub.substring(2, 4);
+        let sub = partes[2].replace(/[^0-9]/g, "");
+        if (sub.length >= 4) {
+          let bayNum = sub.substring(2, 4);
+          if (bahiasBase.includes(bayNum)) return bayNum;
+        }
       }
       return "48";
     }
@@ -136,7 +143,6 @@
 
           let colGrade = -1, colPos = -1;
 
-          // Buscar encabezados a partir de la fila 5 (índice 4)
           for (let r = 0; r < Math.min(15, rows.length); r++) {
             const row = rows[r];
             for (let c = 0; c < row.length; c++) {
@@ -153,8 +159,8 @@
               const gradeVal = String(rows[r][colGrade]).trim().toUpperCase();
               const posVal = String(rows[r][colPos]).trim();
 
-              // EVALUACIÓN DE LA COLUMNA F: GradeID "A" o "COLD" representan frío (excluyendo CA)
-              if (gradeVal === "A" || gradeVal === "COLD") {
+              // FILTRO ESTRICTO: ÚNICAMENTE CUANDO DICE "COLD" EN LA COLUMNA F
+              if (gradeVal === "COLD") {
                 const blk = parsearBloque(posVal);
                 const bay = parsearBahia(posVal);
 
@@ -181,13 +187,11 @@
       const cantBahias = parseInt(document.getElementById("inputBahias").value) || 10;
       const cantBloques = parseInt(document.getElementById("inputBloques").value) || 2;
       const blkInicio = parseInt(document.getElementById("inputInicioBloque").value) || 0;
-      const bahiasPorBloque = Math.ceil(cantBahias / cantBloques);
 
       const contenedor = document.getElementById("contenedorMatriz");
       contenedor.innerHTML = "";
 
       horasCambio.forEach((hora, hIdx) => {
-        // Bloques activos en esta hora (Progresivos por parejas)
         const bloquesActivos = {};
         const offsetBloque = hIdx * cantBloques;
         for (let i = 0; i < cantBloques; i++) {
@@ -195,7 +199,6 @@
           bloquesActivos[bloquesBase[idxB]] = true;
         }
 
-        // Ciclo de 3 horas para bahías (0=Primeras, 1=Últimas, 2=Medio)
         const ciclo3H = Math.floor(hIdx / 3) % 3;
 
         let htmlTabla = `
@@ -224,9 +227,9 @@
               htmlTabla += `<td class="py-1 border border-slate-200 cell-cold">${bay}</td>`;
             } else if (bloquesActivos[blk]) {
               let pertenece = false;
-              if (ciclo3H === 0 && numBay >= 48 && numBay <= 68) pertenece = true; // Primeras
-              else if (ciclo3H === 1 && numBay >= 76 && numBay <= 96) pertenece = true; // Últimas
-              else if (ciclo3H === 2 && numBay >= 64 && numBay <= 84) pertenece = true; // Medio
+              if (ciclo3H === 0 && numBay >= 48 && numBay <= 68) pertenece = true;
+              else if (ciclo3H === 1 && numBay >= 76 && numBay <= 96) pertenece = true;
+              else if (ciclo3H === 2 && numBay >= 64 && numBay <= 84) pertenece = true;
 
               if (pertenece) {
                 htmlTabla += `<td class="py-1 border border-slate-200 cell-red">${bay}</td>`;
@@ -247,7 +250,7 @@
             </div>
             <div class="p-2 bg-slate-50 border-t border-slate-200 text-[10px] space-y-0.5">
               <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-red-500 rounded-sm"></span> <span class="text-slate-600 font-semibold">COLOR ROJO: BAHÍAS DESCONECTADAS</span></div>
-              <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-sm"></span> <span class="text-slate-600 font-semibold">COLOR VERDE: UNIDADES TRATAMIENTO (COLD)</span></div>
+              <div class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-sm"></span> <span class="text-slate-600 font-semibold">COLOR VERDE: UNIDADES COLD</span></div>
             </div>
           </div>
         `;
@@ -261,20 +264,13 @@
     }
 
     function exportarExcel() {
-      const cantBahias = parseInt(document.getElementById("inputBahias").value) || 10;
-      const cantBloques = parseInt(document.getElementById("inputBloques").value) || 2;
-      const blkInicio = parseInt(document.getElementById("inputInicioBloque").value) || 0;
-
       const wb = XLSX.utils.book_new();
       const wsData = [];
 
-      // Fila Título
       wsData.push(["PLAN DE CAMBIO DE ENERGÍA DE LOS BLOQUES REEFER (24 HORAS)"]);
       wsData.push([]);
 
-      // Construcción visual en 3 tablas por fila en Excel
       for (let hIdx = 0; hIdx < horasCambio.length; hIdx += 3) {
-        // Fila de encabezados de horas
         const filaHoras = [""];
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
@@ -283,42 +279,28 @@
         }
         wsData.push(filaHoras);
 
-        // Fila de nombres de bloques (1R, 2R, 3R...)
         const filaBloques = [""];
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
             bloquesBase.forEach(b => filaBloques.push(b));
-            filaBloques.push(""); // separador
+            filaBloques.push("");
           }
         }
         wsData.push(filaBloques);
 
-        // Filas de bahías (48 al 96)
         bahiasBase.forEach(bay => {
           const filaBahia = [""];
           for (let t = 0; t < 3; t++) {
-            const hActual = hIdx + t;
-            if (hActual < horasCambio.length) {
-              const offsetBloque = hActual * cantBloques;
-              const bloquesActivos = {};
-              for (let i = 0; i < cantBloques; i++) {
-                const idxB = (blkInicio + offsetBloque + i) % 6;
-                bloquesActivos[bloquesBase[idxB]] = true;
-              }
-              const ciclo3H = Math.floor(hActual / 3) % 3;
-
-              bloquesBase.forEach(blk => {
-                filaBahia.push(bay);
-              });
+            if (hIdx + t < horasCambio.length) {
+              bloquesBase.forEach(() => filaBahia.push(bay));
               filaBahia.push("");
             }
           }
           wsData.push(filaBahia);
         });
 
-        // Leyendas
-        wsData.push(["", "COLOR ROJO SON LAS BAHIAS DESCONECTADAS"]);
-        wsData.push(["", "COLOR VERDE SON LAS BAHIAS DONDE ESTAN LAS UNIDADES DE TRATAMIENTO"]);
+        wsData.push(["", "COLOR ROJO: BAHÍAS DESCONECTADAS"]);
+        wsData.push(["", "COLOR VERDE: UNIDADES COLD"]);
         wsData.push([]);
       }
 
