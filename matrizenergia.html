@@ -21,7 +21,7 @@
         Plan de Cambio de Energía - Bloques Reefer (24 Horas)
       </h1>
       <p class="text-center text-sky-200 text-sm mt-1">
-        Fijación exclusiva de Unidades COLD (Columna F) | Matriz Visual 3x3 con Leyendas y Colores
+        Fijación exclusiva de Unidades COLD (Columna F) | Matriz Visual 3x3 Ordenada y Prolija
       </p>
     </header>
 
@@ -61,8 +61,8 @@
         <button id="btnProcesar" onclick="procesarReporte()" class="bg-sky-700 hover:bg-sky-800 text-white font-semibold py-2.5 px-6 rounded shadow transition-all text-sm flex items-center gap-2">
           <span>🚀</span> Generar Matriz 3x3 de 24H
         </button>
-        <button id="btnExportar" onclick="exportarExcelConColores()" disabled class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-6 rounded shadow transition-all text-sm opacity-50 cursor-not-allowed flex items-center gap-2">
-          <span>📥</span> Exportar Excel con Colores y Leyendas (.xls)
+        <button id="btnExportar" onclick="exportarExcelPerfecto()" disabled class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 px-6 rounded shadow transition-all text-sm opacity-50 cursor-not-allowed flex items-center gap-2">
+          <span>📥</span> Exportar Excel Ordenado (.xls)
         </button>
       </div>
     </div>
@@ -237,9 +237,8 @@
                 </tbody>
               </table>
             </div>
-            <!-- LEYENDA VISUAL EN EL SISTEMA -->
             <div class="p-2.5 bg-slate-50 border-t border-slate-200 text-[11px] space-y-1">
-              <div class="flex items-center gap-2"><span class="w-3 h-3 bg-[#FF7676] rounded-sm inline-block"></span> <span class="font-bold text-slate-700">COLOR ROJO: BAHÍAS DESCONECTADAS</span></div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 bg-[#FF7676] rounded-sm inline-block"></span> <span class="font-bold text-slate-700">COLOR ROJO: DESCONECTADAS</span></div>
               <div class="flex items-center gap-2"><span class="w-3 h-3 bg-[#92D050] rounded-sm inline-block"></span> <span class="font-bold text-slate-700">COLOR VERDE: UNIDADES COLD</span></div>
             </div>
           </div>
@@ -264,7 +263,7 @@
       return bloquesActivos;
     }
 
-    function exportarExcelConColores() {
+    function exportarExcelPerfecto() {
       let excelHTML = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
         <head>
@@ -272,43 +271,47 @@
           <style>
             table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 10pt; }
             th { background-color: #1F4E79; color: #FFFFFF; font-weight: bold; text-align: center; border: 1px solid #000; padding: 6px; }
-            td { text-align: center; border: 1px solid #D9D9D9; padding: 4px; font-weight: bold; }
+            td { text-align: center; border: 1px solid #D9D9D9; padding: 4px; font-weight: bold; width: 45px; }
             .col-green { background-color: #92D050; color: #000000; }
             .col-red { background-color: #FF7676; color: #FFFFFF; }
-            .col-header-hora { background-color: #2F5597; color: #FFFFFF; font-size: 11pt; font-weight: bold; text-align: center; }
-            .col-header-blk { background-color: #D9E1F2; color: #1F4E79; font-weight: bold; text-align: center; }
-            .leyenda-rojo { background-color: #FF7676; color: #FFFFFF; font-weight: bold; text-align: left; padding: 5px; }
-            .leyenda-verde { background-color: #92D050; color: #000000; font-weight: bold; text-align: left; padding: 5px; }
+            .col-header-hora { background-color: #2F5597; color: #FFFFFF; font-size: 11pt; font-weight: bold; text-align: center; padding: 8px; }
+            .col-header-blk { background-color: #D9E1F2; color: #1F4E79; font-weight: bold; text-align: center; padding: 6px; }
+            .leyenda-rojo { background-color: #FF7676; color: #FFFFFF; font-weight: bold; text-align: left; padding: 5px; font-size: 9pt; }
+            .leyenda-verde { background-color: #92D050; color: #000000; font-weight: bold; text-align: left; padding: 5px; font-size: 9pt; }
+            .separador-col { width: 25px; border: none; background-color: #FFFFFF; }
           </style>
         </head>
         <body>
-          <h2>PLAN DE CAMBIO DE ENERGÍA DE LOS BLOQUES REEFER (24 HORAS)</h2>
+          <h2 style="font-family: Arial; color: #1F4E79;">PLAN DE CAMBIO DE ENERGÍA DE LOS BLOQUES REEFER (24 HORAS)</h2>
           <table>
       `;
 
+      // Recorremos las 24 horas en filas de 3 tablas por fila horizontal
       for (let hIdx = 0; hIdx < horasCambio.length; hIdx += 3) {
-        // Fila de Horas
+        
+        // 1. Fila de Encabezados de Hora
         excelHTML += `<tr>`;
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
-            excelHTML += `<td colspan="6" class="col-header-hora">HORA DE CAMBIO ${horasCambio[hIdx + t]}</td><td></td>`;
+            excelHTML += `<td colspan="6" class="col-header-hora">HORA DE CAMBIO ${horasCambio[hIdx + t]}</td>`;
+            if (t < 2) excelHTML += `<td class="separador-col"></td>`;
           }
         }
         excelHTML += `</tr>`;
 
-        // Fila de Bloques
+        // 2. Fila de Bloques (1R, 2R, 3R...)
         excelHTML += `<tr>`;
         for (let t = 0; t < 3; t++) {
           if (hIdx + t < horasCambio.length) {
             bloquesBase.forEach(b => {
               excelHTML += `<td class="col-header-blk">${b}</td>`;
             });
-            excelHTML += `<td></td>`;
+            if (t < 2) excelHTML += `<td class="separador-col"></td>`;
           }
         }
         excelHTML += `</tr>`;
 
-        // Filas de Bahías
+        // 3. Filas de Bahías (48 al 96)
         bahiasBase.forEach(bay => {
           excelHTML += `<tr>`;
           for (let t = 0; t < 3; t++) {
@@ -335,16 +338,33 @@
 
                 excelHTML += `<td class="${estiloCelda}">${bay}</td>`;
               });
-              excelHTML += `<td></td>`;
+              if (t < 2) excelHTML += `<td class="separador-col"></td>`;
             }
           }
           excelHTML += `</tr>`;
         });
 
-        // LEYENDAS INCORPORADAS EN EL EXCEL DESCARGADO
-        excelHTML += `<tr><td colspan="7" class="leyenda-rojo">COLOR ROJO SON LAS BAHIAS DESCONECTADAS</td></tr>`;
-        excelHTML += `<tr><td colspan="7" class="leyenda-verde">COLOR VERDE SON LAS BAHIAS DONDE ESTAN LAS UNIDADES COLD</td></tr>`;
-        excelHTML += `<tr><td colspan="21" style="border:none;">&nbsp;</td></tr>`;
+        // 4. Filas de Leyendas debajo de cada una de las 3 tablas de la fila
+        excelHTML += `<tr>`;
+        for (let t = 0; t < 3; t++) {
+          if (hIdx + t < horasCambio.length) {
+            excelHTML += `<td colspan="6" class="leyenda-rojo">COLOR ROJO: DESCONECTADAS</td>`;
+            if (t < 2) excelHTML += `<td class="separador-col"></td>`;
+          }
+        }
+        excelHTML += `</tr>`;
+
+        excelHTML += `<tr>`;
+        for (let t = 0; t < 3; t++) {
+          if (hIdx + t < horasCambio.length) {
+            excelHTML += `<td colspan="6" class="leyenda-verde">COLOR VERDE: UNIDADES COLD</td>`;
+            if (t < 2) excelHTML += `<td class="separador-col"></td>`;
+          }
+        }
+        excelHTML += `</tr>`;
+
+        // Fila de separación amplia entre filas de la matriz
+        excelHTML += `<tr><td colspan="20" style="border:none; height: 20px;"></td></tr>`;
       }
 
       excelHTML += `
@@ -356,7 +376,7 @@
       const blob = new Blob([excelHTML], { type: 'application/vnd.ms-excel' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = "Plan_Cambio_Energia_Reefer_Con_Leyendas.xls";
+      link.download = "Plan_Cambio_Energia_Reefer_Ordenado.xls";
       link.click();
     }
   </script>
