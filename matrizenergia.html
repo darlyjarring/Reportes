@@ -31,7 +31,11 @@
         <span>⚙️</span> Parámetros del Turno y Operación
       </h2>
       
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">HORA DE INICIO (CAMBIO)</label>
+          <input type="time" id="inputHoraInicio" value="03:25" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
+        </div>
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">CANTIDAD TOTAL DE BAHÍAS A DESCONECTAR</label>
           <input type="number" id="inputBahias" value="10" min="1" class="w-full border border-slate-300 rounded p-2 text-sm focus:ring-2 focus:ring-sky-500 outline-none">
@@ -80,12 +84,22 @@
   <script>
     const bloquesBase = ["1R", "2R", "3R", "4R", "5R", "6R"];
     const bahiasBase = ["48", "52", "56", "60", "64", "68", "72", "76", "80", "84", "88", "92", "96"];
-    const horasCambio = [
-      "23:25", "00:25", "01:25", "02:25", "03:25", "04:25",
-      "05:25", "06:25", "07:25", "08:25", "09:25", "10:25",
-      "11:25", "12:25", "13:25", "14:25", "15:25", "16:25",
-      "17:25", "18:25", "19:25", "20:25", "21:25", "22:25"
-    ];
+
+    function obtenerHorasCambioDinamicas() {
+      const horaInput = document.getElementById("inputHoraInicio").value || "03:25";
+      const [hStr, mStr] = horaInput.split(":");
+      let horaBase = parseInt(hStr, 10);
+      const minutoBase = parseInt(mStr, 10);
+      const horasArr = [];
+
+      for (let i = 0; i < 24; i++) {
+        let hActual = (horaBase + i) % 24;
+        let hFormat = String(hActual).padStart(2, '0');
+        let mFormat = String(minutoBase).padStart(2, '0');
+        horasArr.push(`${hFormat}:${mFormat}`);
+      }
+      return horasArr;
+    }
 
     let mapaColdDetectadas = {};
 
@@ -195,16 +209,15 @@
         const listaApagadas = {};
         let count = 0;
 
-        // Dos pasadas: 1ra respetando el ciclo de 3 horas como prioridad de zona, 2da como respaldo general
         for (let intento = 1; intento <= 2; intento++) {
           for (let bi = 0; bi < bahiasBase.length; bi++) {
             if (count >= bahiasPorBloque) break;
 
             let idxReal = bi;
             if (intento === 1) {
-              if (ciclo3H === 0) idxReal = bi; // Primeras
-              else if (ciclo3H === 1) idxReal = bahiasBase.length - 1 - bi; // Últimas
-              else if (ciclo3H === 2) idxReal = (Math.floor(bahiasBase.length / 2) + bi) % bahiasBase.length; // Medio
+              if (ciclo3H === 0) idxReal = bi;
+              else if (ciclo3H === 1) idxReal = bahiasBase.length - 1 - bi;
+              else if (ciclo3H === 2) idxReal = (Math.floor(bahiasBase.length / 2) + bi) % bahiasBase.length;
             }
 
             const bay = bahiasBase[idxReal];
@@ -238,6 +251,7 @@
     function generarMatrizHTML() {
       const contenedor = document.getElementById("contenedorMatriz");
       contenedor.innerHTML = "";
+      const horasCambio = obtenerHorasCambioDinamicas();
 
       horasCambio.forEach((hora, hIdx) => {
         const bloquesActivos = obtenerBloquesActivos(hIdx);
@@ -307,6 +321,7 @@
     }
 
     function exportarExcelPerfecto() {
+      const horasCambio = obtenerHorasCambioDinamicas();
       let excelHTML = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
         <head>
