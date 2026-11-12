@@ -639,8 +639,7 @@ async function sincronizarConSheets(){
   try {
     await fetch(WEB_APP_URL, {
       method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain;charset=utf-8" }, // Evita bloqueos CORS de preflight
       body: JSON.stringify(inventario)
     });
   } catch (error) {
