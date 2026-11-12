@@ -586,7 +586,7 @@ async function enviarCorreoOutlook(){
       await navigator.clipboard.write([new ClipboardItem({
         "text/html": new Blob([`<div style="font-family:Arial">${saludo}<br><br>${tablaHtml}</div>`], {type: "text/html"}),
         "text/plain": new Blob([textoPlano], {type: "text/plain"})
-      })];
+      })]);
     }
   }catch(e){ console.error(e); }
 
