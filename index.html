@@ -9,12 +9,12 @@
 *{box-sizing:border-box}
 body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);margin:0;padding:10px;color:#333}
 
-/* Pantalla de Login adaptada a móviles */
+/* Login */
 #loginScreen{max-width:100%;width:100%;margin:40px auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,.15);text-align:center}
 #loginScreen h2{color:var(--primary);margin-bottom:20px}
 .login-form{display:flex;flex-direction:column;gap:12px;text-align:left}
 
-/* Contenedor Principal Adaptable */
+/* Contenedor Principal */
 .container{max-width:100%;width:100%;margin:auto;background:#fff;padding:15px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.12);display:none}
 .header-top{display:flex;flex-direction:column;gap:10px;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--secondary);padding-bottom:10px;margin-bottom:15px}
 @media(min-width:600px){.header-top{flex-direction:row;align-items:center}}
@@ -22,7 +22,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);margin:0;paddi
 h2{color:var(--primary);margin:0;font-size:1.3rem}
 h3{color:var(--primary);margin-bottom:10px;font-size:1.1rem}
 
-/* Tarjetas del Menú Principal (Dashboard móvil amigable) */
+/* Tarjetas del Menú Principal */
 .dashboard-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:20px}
 @media(min-width:600px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}}
 @media(min-width:900px){.dashboard-grid{grid-template-columns:repeat(3,1fr)}}
@@ -61,17 +61,21 @@ button{padding:12px 16px;border:0;border-radius:4px;cursor:pointer;font-weight:b
 .btn-danger{background:#dc3545;color:#fff}
 .btn-secondary{background:#6c757d;color:#fff}
 
-/* Contenedor de tablas con Scroll horizontal para teléfonos */
+/* Tablas responsivas */
 .table-responsive{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px;border:1px solid #ccc;border-radius:6px}
-table{width:100%;border-collapse:collapse;min-width:600px}
+table{width:100%;border-collapse:collapse;min-width:650px}
 th,td{border:1px solid #ddd;padding:10px 8px;text-align:center;font-size:0.85rem}
 th{background:var(--primary);color:#fff;white-space:nowrap}
 tr:nth-child(even){background:#f8f8f8}
 
+/* Estados Visuales */
 .badge-ok{background:#d4edda;color:#198754;font-weight:bold;padding:3px 6px;border-radius:4px}
 .badge-abastecer{background:#ffeb00;color:#000;font-weight:bold;padding:3px 6px;border-radius:4px}
 .badge-fuera{background:#f8d7da;color:#b02a37;font-weight:bold;padding:3px 6px;border-radius:4px}
 .badge-salida{background:#cce5ff;color:#004085;font-weight:bold;padding:3px 6px;border-radius:4px}
+
+/* Fila resaltada en amarillo persistente cuando está marcado para abastecer */
+tr.row-abastecer { background-color: #fff9c4 !important; }
 
 .actions-cell button{padding:6px 10px;font-size:0.75rem;margin:2px;width:auto}
 .info{background:#e8f1ff;border-left:4px solid #0066cc;padding:10px;margin-bottom:15px;font-size:0.85rem}
@@ -109,11 +113,15 @@ tr:nth-child(even){background:#f8f8f8}
 <div class="dashboard-grid">
 <div class="dash-card" onclick="mostrarSeccion('secAgregar')">
 <h4>➕ Registrar Power Pack</h4>
-<p>Dar de alta equipos nuevos con ubicación y nivel.</p>
+<p>Dar de alta equipos nuevos en el sistema.</p>
 </div>
-<div class="dash-card" onclick="mostrarSeccion('secAbastecer')">
-<h4>⚡ Solicitar Abastecimiento</h4>
-<p>Gestionar niveles, marcar recargas y generar correo.</p>
+<div class="dash-card" onclick="mostrarSeccion('secAbastecerEstado')">
+<h4>🟡 Control de Abastecimiento</h4>
+<p>Marcar equipos que requieren combustible (Amarillo persistente).</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secEnviarCorreo')">
+<h4>📧 Enviar Correo de Abastecimiento</h4>
+<p>Generar reporte y tabla directa para Outlook.</p>
 </div>
 <div class="dash-card" onclick="mostrarSeccion('secReportes')">
 <h4>🚨 Reportar F/S o Salida Terminal</h4>
@@ -121,11 +129,11 @@ tr:nth-child(even){background:#f8f8f8}
 </div>
 <div class="dash-card" onclick="mostrarSeccion('secInventario')">
 <h4>📋 Inventario General</h4>
-<p>Monitoreo completo y edición táctil directa.</p>
+<p>Operativos primero y no operativos después con edición táctil.</p>
 </div>
 <div class="dash-card" onclick="mostrarSeccion('secAuditoria')">
 <h4>📊 Auditoría y Trazabilidad</h4>
-<p>Historial completo de reportes, abastecimiento y salidas.</p>
+<p>Historial completo de eventos y fechas.</p>
 </div>
 </div>
 </div>
@@ -145,13 +153,38 @@ tr:nth-child(even){background:#f8f8f8}
 <button class="btn-primary" onclick="guardarNuevoPPk()">Guardar Power Pack</button>
 </div>
 
-<!-- 2. SOLICITAR ABASTECIMIENTO -->
-<div id="secAbastecer" class="section-view">
+<!-- 2. CONTROL DE ABASTECIMIENTO (AMARILLO PERSISTENTE) -->
+<div id="secAbastecerEstado" class="section-view">
 <button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
-<h3>⚡ Solicitud de Abastecimiento</h3>
+<h3>🟡 Control de Estado "Por Abastecer"</h3>
+<div class="info">Selecciona el visto en los equipos que requieran combustible. Al marcarse, se pintarán de <strong>amarillo persistente</strong> y registrarán su fecha de solicitud hasta que quites el visto.</div>
 <div class="btn-container">
 <button class="btn-secondary" onclick="marcarSugeridosAbastecer()">⚡ Marcar sugeridos (&lt;=30% o &lt;=150 GLS)</button>
-<button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Generar correo Outlook</button>
+</div>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>POR ABASTECER?</th>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL ACTUAL</th>
+<th>ESTADO</th>
+<th>FECHA SOLICITUD ABASTECIMIENTO</th>
+</tr>
+</thead>
+<tbody id="tablaControlAbastecer"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 3. ENVIAR CORREO DE ABASTECIMIENTO -->
+<div id="secEnviarCorreo" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📧 Generar y Enviar Correo de Abastecimiento</h3>
+<div class="info">Esta tarjeta toma exclusivamente los equipos que están marcados actualmente como <strong>"Por Abastecer"</strong> y genera la tabla automática para Outlook.</div>
+<div class="btn-container">
+<button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Enviar Correo Outlook (Copiar Tabla)</button>
 <button class="btn-secondary" onclick="togglePanelCorreos()">⚙️ Configurar Destinatarios</button>
 </div>
 
@@ -167,34 +200,33 @@ tr:nth-child(even){background:#f8f8f8}
 <table>
 <thead>
 <tr>
-<th>ABASTECER?</th>
 <th>PPk</th>
 <th>UBICACIÓN</th>
-<th>NIVEL ACTUAL</th>
+<th>NIVEL</th>
 <th>ESTADO</th>
-<th>ÚLTIMA RECARGA</th>
+<th>FECHA SOLICITUD</th>
 </tr>
 </thead>
-<tbody id="tablaAbastecer"></tbody>
+<tbody id="tablaCorreoSeleccionados"></tbody>
 </table>
 </div>
 </div>
 
-<!-- 3. REPORTAR F/S O SALIDA DE TERMINAL -->
+<!-- 4. REPORTAR F/S O SALIDA DE TERMINAL -->
 <div id="secReportes" class="section-view">
 <button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
-<h3>🚨 Reportar Novedades</h3>
+<h3>🚨 Reportar Novedades (F/S o Salida de Terminal)</h3>
 <div class="form-grid">
 <div class="form-group"><label>Seleccionar Power Pack:</label><select id="selectPpkFalla" onchange="cargarDatosPpkSeleccionado()"></select></div>
 <div class="form-group"><label>Estado / Acción:</label>
 <select id="fallaEstado" onchange="cambiarTipoReporteForm()">
-<option value="FUERA DE SERVICIO">FUERA DE SERVICIO (Daño / Falla)</option>
-<option value="DEVUELTO TERMINAL">DEVUELTO (Salida Terminal)</option>
+<option value="FUERA DE SERVICIO">FUERA DE SERVICIO (Daño / Falla / Sin combustible)</option>
+<option value="DEVUELTO TERMINAL">DEVUELTO (Salida Terminal Portuaria)</option>
 <option value="OPERATIVO">OPERATIVO (Solucionado)</option>
 </select>
 </div>
 <div class="form-group" id="grupoMotivo" style="grid-column: 1/-1;">
-<label>Motivo de la Falla / Daño:</label>
+<label>Motivo de la Novedad:</label>
 <textarea id="fallaMotivo" placeholder="Describa el motivo detallado..."></textarea>
 </div>
 </div>
@@ -217,11 +249,11 @@ tr:nth-child(even){background:#f8f8f8}
 </div>
 </div>
 
-<!-- 4. INVENTARIO GENERAL -->
+<!-- 5. INVENTARIO GENERAL (OPERATIVOS PRIMERO) -->
 <div id="secInventario" class="section-view">
 <button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
-<h3>📋 Inventario General</h3>
-<div class="info"><strong>💡 Tip móvil:</strong> Toca cualquier celda para editarla directamente y presiona OK o Intro.</div>
+<h3>📋 Inventario General (Operativos primero, luego No Operativos)</h3>
+<div class="info"><strong>💡 Tip:</strong> Toca cualquier celda para editarla directamente. Los equipos operativos se muestran arriba y los fuera de servicio o devueltos abajo.</div>
 <div class="table-responsive">
 <table>
 <thead>
@@ -229,8 +261,9 @@ tr:nth-child(even){background:#f8f8f8}
 <th>PPk</th>
 <th>UBICACIÓN</th>
 <th>NIVEL COMBUSTIBLE</th>
-<th>ESTADO</th>
-<th>DETALLE</th>
+<th>ESTADO OPERATIVO</th>
+<th>ESTADO ABASTECIMIENTO</th>
+<th>DETALLE / NOVEDAD</th>
 <th>ACCIONES</th>
 </tr>
 </thead>
@@ -239,18 +272,18 @@ tr:nth-child(even){background:#f8f8f8}
 </div>
 </div>
 
-<!-- 5. AUDITORÍA Y TRAZABILIDAD -->
+<!-- 6. AUDITORÍA Y TRAZABILIDAD -->
 <div id="secAuditoria" class="section-view">
 <button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
 <h3>📊 Auditoría y Trazabilidad</h3>
-<p style="color:#666;font-size:0.85rem;">Historial completo de eventos y tiempos.</p>
+<p style="color:#666;font-size:0.85rem;">Historial completo de eventos, abastecimientos y tiempos.</p>
 <div class="table-responsive">
 <table>
 <thead>
 <tr>
 <th>PPk</th>
 <th>UBICACIÓN</th>
-<th>ESTADO</th>
+<th>ESTADO OPERATIVO</th>
 <th>REPORTE FALLA</th>
 <th>ABASTECIMIENTO</th>
 <th>SOLUCIÓN</th>
@@ -265,7 +298,7 @@ tr:nth-child(even){background:#f8f8f8}
 </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby_Es21g_TxPNMvMBIAJldikTlqpioCFgeQHOJNwmirnrTBPkLf1_CYjOgMff7kXps-0Q/exec"; 
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWl_Uvv9D94Urfxtr_LPwFoJ6gULYkq-uWx2ecas7ls6cwaDrduhq43DqfGOEsWyYdfw/exec"; 
 
 let inventario = JSON.parse(localStorage.getItem("inventario_ppk")) || [];
 
@@ -302,6 +335,7 @@ function mostrarSeccion(idSeccion){
   document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
   document.getElementById(idSeccion).classList.add('active');
   if(idSeccion === 'secReportes') poblarSelectReportes();
+  if(idSeccion === 'secEnviarCorreo') renderizarTablaCorreoSeleccionados();
 }
 
 function mostrarDashboard(){
@@ -340,6 +374,8 @@ function cambiarCheckAbastecer(index, checkbox){
   inventario[index].abastecer = checkbox.checked;
   if(checkbox.checked){
     inventario[index].fechaAbastecimiento = obtenerFechaHoraActual();
+  } else {
+    inventario[index].fechaAbastecimiento = "";
   }
   actualizarTodo();
 }
@@ -372,41 +408,63 @@ function actualizarTodo(){
 }
 
 function renderizarTablas(){
-  const tbodyAbast = document.getElementById("tablaAbastecer");
+  const tbodyControlAbast = document.getElementById("tablaControlAbastecer");
   const tbodyInv = document.getElementById("tablaInventario");
   const tbodyRep = document.getElementById("tablaReportesActivos");
   const tbodyAudit = document.getElementById("tablaAuditoria");
 
-  tbodyAbast.innerHTML = "";
+  tbodyControlAbast.innerHTML = "";
   tbodyInv.innerHTML = "";
   tbodyRep.innerHTML = "";
   tbodyAudit.innerHTML = "";
 
-  inventario.forEach((item, index)=>{
+  // Ordenar inventario: Operativos primero, luego no operativos
+  let inventarioOrdenado = [...inventario].sort((a, b) => {
+    if (a.estado === "OPERATIVO" && b.estado !== "OPERATIVO") return -1;
+    if (a.estado !== "OPERATIVO" && b.estado === "OPERATIVO") return 1;
+    return 0;
+  });
+
+  inventario.forEach((item)=>{
+    const index = inventario.indexOf(item); // índice original
     let badgeEstado = '<span class="badge-ok">OPERATIVO</span>';
     if(item.estado === "FUERA DE SERVICIO") badgeEstado = '<span class="badge-fuera">FUERA DE SERVICIO</span>';
     if(item.estado === "DEVUELTO TERMINAL") badgeEstado = '<span class="badge-salida">DEVUELTO TERMINAL</span>';
 
+    const badgeAbast = item.abastecer ? '<span class="badge-abastecer">POR ABASTECER</span>' : '<span class="badge-ok">ABASTECIDO / OK</span>';
     const badgeNovedad = item.estado==="FUERA DE SERVICIO" ? escapeHTML(item.novedadManual) : (item.abastecer ? 'POR ABASTECER' : 'OK');
 
-    // 1. Abastecer
+    // 1. Control de Abastecimiento (Amarillo persistente)
     const trAbast = document.createElement("tr");
+    if(item.abastecer) trAbast.className = "row-abastecer";
     trAbast.innerHTML = `
       <td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
       <td><strong>${escapeHTML(item.nombre)}</strong></td>
       <td>${escapeHTML(item.ubicacion)}</td>
       <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')"><strong>${escapeHTML(item.nivel)}</strong></td>
       <td>${badgeEstado}</td>
-      <td>${escapeHTML(item.fechaAbastecimiento || "Sin recargas")}</td>`;
-    tbodyAbast.appendChild(trAbast);
+      <td>${escapeHTML(item.fechaAbastecimiento || "Sin solicitud")}</td>`;
+    tbodyControlAbast.appendChild(trAbast);
+  });
 
-    // 2. Inventario
+  // 2. Inventario General ordenado
+  inventarioOrdenado.forEach((item)=>{
+    const index = inventario.indexOf(item);
+    let badgeEstado = '<span class="badge-ok">OPERATIVO</span>';
+    if(item.estado === "FUERA DE SERVICIO") badgeEstado = '<span class="badge-fuera">FUERA DE SERVICIO</span>';
+    if(item.estado === "DEVUELTO TERMINAL") badgeEstado = '<span class="badge-salida">DEVUELTO TERMINAL</span>';
+
+    const badgeAbast = item.abastecer ? '<span class="badge-abastecer">POR ABASTECER</span>' : '<span class="badge-ok">ABASTECIDO</span>';
+    const badgeNovedad = item.estado==="FUERA DE SERVICIO" ? escapeHTML(item.novedadManual) : 'OK';
+
     const trInv = document.createElement("tr");
+    if(item.abastecer) trInv.className = "row-abastecer";
     trInv.innerHTML = `
       <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')"><strong>${escapeHTML(item.nombre)}</strong></td>
       <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
       <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')">${escapeHTML(item.nivel)}</td>
       <td>${badgeEstado}</td>
+      <td>${badgeAbast}</td>
       <td>${badgeNovedad}</td>
       <td class="actions-cell"><button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button></td>`;
     tbodyInv.appendChild(trInv);
@@ -434,6 +492,28 @@ function renderizarTablas(){
       <td>${escapeHTML(item.fechaSolucion || "N/A")}</td>
       <td>${escapeHTML(item.fechaSalidaTerminal || "N/A")}</td>`;
     tbodyAudit.appendChild(trAudit);
+  });
+}
+
+function renderizarTablaCorreoSeleccionados(){
+  const tbody = document.getElementById("tablaCorreoSeleccionados");
+  tbody.innerHTML = "";
+  const seleccionados = inventario.filter(i => i.abastecer === true);
+
+  if(seleccionados.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#666;padding:15px;">No hay equipos marcados para abastecer en este momento.</td></tr>`;
+    return;
+  }
+
+  seleccionados.forEach(i => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${escapeHTML(i.nombre)}</strong></td>
+      <td>${escapeHTML(i.ubicacion)}</td>
+      <td style="background:#ffeb00;font-weight:bold;">${escapeHTML(i.nivel)}</td>
+      <td><span class="badge-abastecer">POR ABASTECER</span></td>
+      <td>${escapeHTML(i.fechaAbastecimiento)}</td>`;
+    tbody.appendChild(tr);
   });
 }
 
@@ -563,7 +643,7 @@ function obtenerSaludo(){
 
 async function enviarCorreoOutlook(){
   const seleccionados = inventario.filter(item => item.abastecer === true);
-  if(seleccionados.length === 0){ alert("No hay Power Packs seleccionados."); return; }
+  if(seleccionados.length === 0){ alert("No hay Power Packs seleccionados para abastecer."); return; }
   const para = document.getElementById("correosPara").value.trim();
   const cc = document.getElementById("correosCC").value.trim();
   const paraArray = para.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="");
