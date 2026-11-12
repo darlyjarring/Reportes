@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Integral de Power Packs (PPk)</title>
+<style>
+:root{--primary:#003b7a;--secondary:#0066cc;--accent:#ffeb00;--danger:#dc3545;--success:#198754;--bg:#f4f6f9}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);margin:0;padding:10px;color:#333}
+
+/* Login */
+#loginScreen{max-width:100%;width:100%;margin:40px auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,.15);text-align:center}
+#loginScreen h2{color:var(--primary);margin-bottom:20px}
+.login-form{display:flex;flex-direction:column;gap:12px;text-align:left}
+
+/* Contenedor Principal */
+.container{max-width:100%;width:100%;margin:auto;background:#fff;padding:15px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.12);display:none}
+.header-top{display:flex;flex-direction:column;gap:10px;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--secondary);padding-bottom:10px;margin-bottom:15px}
+@media(min-width:600px){.header-top{flex-direction:row;align-items:center}}
+
+h2{color:var(--primary);margin:0;font-size:1.3rem}
+h3{color:var(--primary);margin-bottom:10px;font-size:1.1rem}
+
+/* Resumen Rápido / Contadores (Dashboard Metrics) */
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.metric-card{background:#eef2f7;padding:12px;border-radius:6px;text-align:center;border-top:4px solid var(--secondary)}
+.metric-card h5{margin:0 0 5px 0;font-size:0.75rem;color:#555;text-transform:uppercase}
+.metric-card span{font-size:1.3rem;font-weight:bold;color:var(--primary)}
+.metric-fuera{border-top-color:var(--danger)!important}
+.metric-abastecer{border-top-color:#e0a800!important}
+
+/* Tarjetas del Menú Principal */
+.dashboard-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:20px}
+@media(min-width:600px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){.dashboard-grid{grid-template-columns:repeat(3,1fr)}}
+
+.dash-card{background:#eef2f7;border-left:5px solid var(--secondary);padding:15px;border-radius:8px;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;text-align:left}
+.dash-card:active{background:#d5e2f3}
+.dash-card h4{margin:0 0 6px 0;color:var(--primary);font-size:1.05rem}
+.dash-card p{margin:0;font-size:0.82rem;color:#555}
+
+/* Vistas / Secciones */
+.section-view{display:none}
+.section-view.active{display:block}
+.btn-volver{background:#6c757d;color:#fff;margin-bottom:15px;width:100%}
+@media(min-width:600px){.btn-volver{width:auto}}
+
+.form-grid{display:grid;grid-template-columns:1fr;gap:12px;background:#eef2f7;padding:12px;border-radius:6px;margin-bottom:15px}
+@media(min-width:600px){.form-grid{grid-template-columns:repeat(2,1fr)}}
+
+.form-group{display:flex;flex-direction:column}
+label{font-weight:600;margin-bottom:5px;font-size:0.88rem}
+input,select,textarea{padding:10px;border:1px solid #ccc;border-radius:4px;font-size:1rem;font-family:inherit;width:100%}
+textarea{min-height:80px;resize:vertical}
+input:disabled{background:#e9ecef}
+
+.email-container{margin:15px 0}
+.email-panel{background:#eef2f7;padding:12px;border-radius:6px;margin-top:10px;display:none;border-left:4px solid var(--secondary)}
+.email-grid{display:grid;grid-template-columns:1fr;gap:12px}
+
+.btn-container{display:flex;gap:10px;flex-direction:column;margin:15px 0}
+@media(min-width:600px){.btn-container{flex-direction:row;flex-wrap:wrap}}
+
+button{padding:12px 16px;border:0;border-radius:4px;cursor:pointer;font-weight:bold;font-size:0.95rem;width:100%}
+@media(min-width:600px){button{width:auto}}
+.btn-primary{background:var(--secondary);color:#fff}.btn-primary:active{background:var(--primary)}
+.btn-outlook{background:#0078d4;color:#fff}
+.btn-danger{background:#dc3545;color:#fff}
+.btn-secondary{background:#6c757d;color:#fff}
+
+/* Tablas responsivas */
+.table-responsive{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px;border:1px solid #ccc;border-radius:6px}
+table{width:100%;border-collapse:collapse;min-width:750px}
+th,td{border:1px solid #ddd;padding:10px 8px;text-align:center;font-size:0.85rem}
+th{background:var(--primary);color:#fff;white-space:nowrap}
+tr:nth-child(even){background:#f8f8f8}
+
+/* Estados Visuales */
+.badge-ok{background:#d4edda;color:#198754;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-abastecer{background:#ffeb00;color:#000;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-fuera{background:#f8d7da;color:#b02a37;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-salida{background:#cce5ff;color:#004085;font-weight:bold;padding:3px 6px;border-radius:4px}
+
+tr.row-abastecer { background-color: #fff9c4 !important; }
+.actions-cell button{padding:6px 10px;font-size:0.75rem;margin:2px;width:auto}
+.info{background:#e8f1ff;border-left:4px solid #0066cc;padding:10px;margin-bottom:15px;font-size:0.85rem}
+.editable-cell{cursor:pointer;position:relative}
+.editable-cell:hover{background-color:#fff3cd}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+<h2>🔑 Iniciar Sesión</h2>
+<div class="login-form">
+<div class="form-group"><label>Usuario:</label><input type="text" id="loginUser" placeholder="Ej: operador / supervisor"></div>
+<div class="form-group"><label>Contraseña:</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+<button class="btn-primary" onclick="realizarLogin()">Ingresar al Sistema</button>
+</div>
+</div>
+
+<!-- CONTENEDOR PRINCIPAL -->
+<div class="container" id="appContainer">
+<div class="header-top">
+<h2>⚡ Control Power Packs</h2>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+<span id="lblUsuario" style="font-weight:600;font-size:0.85rem;"></span>
+<button class="btn-danger" style="padding:6px 10px;font-size:0.75rem;width:auto;" onclick="cerrarSesion()">Salir</button>
+</div>
+</div>
+
+<!-- DASHBOARD DE TARJETAS -->
+<div id="vistaDashboard" class="section-view active">
+<h3>Panel Principal</h3>
+<p style="color:#666;margin-bottom:15px;font-size:0.9rem;">Resumen general de la flota en tiempo real:</p>
+
+<!-- CONTADORES / MÉTRICAS -->
+<div class="metrics-grid">
+<div class="metric-card">
+<h5>Operativos</h5>
+<span id="metricOp">0</span>
+</div>
+<div class="metric-card metric-abastecer">
+<h5>Por Abastecer</h5>
+<span id="metricAbast">0</span>
+</div>
+<div class="metric-card metric-fuera">
+<h5>Fuera de Servicio</h5>
+<span id="metricFS">0</span>
+</div>
+</div>
+
+<div class="dashboard-grid">
+<div class="dash-card" onclick="mostrarSeccion('secAgregar')">
+<h4>➕ Registrar Power Pack</h4>
+<p>Dar de alta equipos nuevos en el sistema.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secAbastecerEstado')">
+<h4>🟡 Control de Abastecimiento</h4>
+<p>Marcar equipos que requieren combustible (Amarillo persistente).</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secEnviarCorreo')">
+<h4>📧 Enviar Correo de Abastecimiento</h4>
+<p>Generar reporte y tabla directa para Outlook.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secReportes')">
+<h4>🚨 Reportar F/S o Salida Terminal</h4>
+<p>Registrar daños, fallas técnicas o edición de novedades.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secInventario')">
+<h4>📋 Inventario General</h4>
+<p>Operativos primero y no operativos después con edición táctil.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secAuditoria')">
+<h4>📊 Auditoría y Trazabilidad</h4>
+<p>Historial completo con filtros por rango de fechas.</p>
+</div>
+</div>
+</div>
+
+<!-- 1. REGISTRAR POWER PACK -->
+<div id="secAgregar" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>Registrar Nuevo Power Pack</h3>
+<div class="form-grid">
+<div class="form-group"><label>Nombre / Código PPk:</label><input type="text" id="newNombre" placeholder="Ej: #15 VERDE"></div>
+<div class="form-group"><label>Ubicación / Bloque:</label><input type="text" id="newUbicacion" placeholder="Ej: 1K12"></div>
+<div class="form-group"><label>Nivel combustible:</label><input type="text" id="newNivel" placeholder="Ej: 80% o 150 GLS"></div>
+<div class="form-group"><label>Estado Inicial:</label>
+<select id="newEstado"><option value="OPERATIVO">OPERATIVO</option><option value="FUERA DE SERVICIO">FUERA DE SERVICIO</option></select>
+</div>
+</div>
+<button class="btn-primary" onclick="guardarNuevoPPk()">Guardar Power Pack</button>
+</div>
+
+<!-- 2. CONTROL DE ABASTECIMIENTO -->
+<div id="secAbastecerEstado" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>🟡 Control de Estado "Por Abastecer"</h3>
+<div class="info">Selecciona el visto en los equipos que requieran combustible. Al marcarse, se pintarán de <strong>amarillo persistente</strong>.</div>
+<div class="btn-container">
+<button class="btn-secondary" onclick="marcarSugeridosAbastecer()">⚡ Marcar sugeridos (&lt;=30% o &lt;=150 GLS)</button>
+</div>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>POR ABASTECER?</th>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL ACTUAL</th>
+<th>ESTADO</th>
+<th>FECHA SOLICITUD ABASTECIMIENTO</th>
+</tr>
+</thead>
+<tbody id="tablaControlAbastecer"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 3. ENVIAR CORREO -->
+<div id="secEnviarCorreo" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📧 Generar y Enviar Correo de Abastecimiento</h3>
+<div class="info">Toma exclusivamente los equipos marcados como <strong>"Por Abastecer"</strong> para Outlook.</div>
+<div class="btn-container">
+<button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Enviar Correo Outlook (Copiar Tabla)</button>
+<button class="btn-secondary" onclick="togglePanelCorreos()">⚙️ Configurar Destinatarios</button>
+</div>
+
+<div class="email-container" id="panelCorreos" class="email-panel" style="display:none; background:#eef2f7; padding:12px; border-radius:6px; margin-bottom:15px;">
+<div class="email-grid">
+<div class="form-group"><label>Para:</label><textarea id="correosPara" placeholder="Separados por ;"></textarea></div>
+<div class="form-group"><label>CC:</label><textarea id="correosCC" placeholder="Separados por ;"></textarea></div>
+</div>
+<button class="btn-primary" style="margin-top:10px;" onclick="guardarCorreos()">💾 Guardar Correos</button>
+</div>
+
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL</th>
+<th>ESTADO</th>
+<th>FECHA SOLICITUD</th>
+</tr>
+</thead>
+<tbody id="tablaCorreoSeleccionados"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 4. REPORTAR F/S, EDICIÓN Y SALIDA TERMINAL -->
+<div id="secReportes" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>🚨 Reportar y Gestionar Novedades (F/S o Salida Terminal)</h3>
+<div class="form-grid">
+<div class="form-group"><label>Seleccionar Power Pack:</label><select id="selectPpkFalla" onchange="cargarDatosPpkSeleccionado()"></select></div>
+<div class="form-group"><label>Estado / Acción:</label>
+<select id="fallaEstado" onchange="cambiarTipoReporteForm()">
+<option value="FUERA DE SERVICIO">FUERA DE SERVICIO (Daño / Falla / Sin combustible)</option>
+<option value="DEVUELTO TERMINAL">DEVUELTO (Salida Terminal Portuaria - Fin)</option>
+<option value="OPERATIVO">OPERATIVO (Solucionado)</option>
+</select>
+</div>
+<div class="form-group" id="grupoMotivo" style="grid-column: 1/-1;">
+<label>Motivo de la Novedad / Problema Técnico:</label>
+<textarea id="fallaMotivo" placeholder="Describa el motivo detallado..."></textarea>
+</div>
+</div>
+<button class="btn-primary" onclick="guardarReporteFalla()">Guardar / Actualizar Novedad</button>
+
+<h3 style="margin-top:20px;">Novedades Activas</h3>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NOVEDAD / MOTIVO</th>
+<th>FECHA REPORTE</th>
+<th>ACCIONES</th>
+</tr>
+</thead>
+<tbody id="tablaReportesActivos"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 5. INVENTARIO GENERAL -->
+<div id="secInventario" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📋 Inventario General (Operativos primero)</h3>
+<div class="info"><strong>💡 Tip:</strong> Toca cualquier celda para editarla directamente.</div>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL COMBUSTIBLE</th>
+<th>ESTADO OPERATIVO</th>
+<th>ESTADO ABASTECIMIENTO</th>
+<th>DETALLE / NOVEDAD</th>
+<th>ACCIONES</th>
+</tr>
+</thead>
+<tbody id="tablaInventario"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 6. AUDITORÍA Y TRAZABILIDAD CON FILTRO DE FECHAS -->
+<div id="secAuditoria" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📊 Auditoría y Trazabilidad Completa</h3>
+<div class="form-grid" style="margin-bottom:15px;">
+<div class="form-group"><label>Desde fecha:</label><input type="date" id="filtroDesde" onchange="renderizarTablas()"></div>
+<div class="form-group"><label>Hasta fecha:</label><input type="date" id="filtroHasta" onchange="renderizarTablas()"></div>
+</div>
+<button class="btn-secondary" style="margin-bottom:15px;" onclick="limpiarFiltrosFechas()">🔄 Ver Todo el Historial</button>
+
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>ESTADO ACTUAL</th>
+<th>FECHA CREACIÓN</th>
+<th>FECHA SOLICITUD ABASTECIMIENTO</th>
+<th>FECHA REPORTE FALLA (F/S)</th>
+<th>FECHA SOLUCIÓN</th>
+<th>FECHA SALIDA TERMINAL</th>
+</tr>
+</thead>
+<tbody id="tablaAuditoria"></tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby_Es21g_TxPNMvMBIAJldikTlqpioCFgeQHOJNwmirnrTBPkLf1_CYjOgMff7kXps-0Q/exec"; 
+
+let inventario = JSON.parse(localStorage.getItem("inventario_ppk")) || [];
+
+const usuariosPermitidos = [
+  { user: "operador", pass: "op1234" },
+  { user: "supervisor", pass: "sup2026" },
+  { user: "jose", pass: "admin123" }
+];
+
+function realizarLogin(){
+  const user = document.getElementById("loginUser").value.trim().toLowerCase();
+  const pass = document.getElementById("loginPass").value.trim();
+  const encontrado = usuariosPermitidos.find(u => u.user === user && u.pass === pass);
+
+  if(!encontrado){
+    alert("❌ Usuario o contraseña incorrectos.");
+    return;
+  }
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appContainer").style.display = "block";
+  document.getElementById("lblUsuario").innerText = user.toUpperCase();
+  cargarCorreos();
+  cargarDesdeSheets();
+}
+
+function cerrarSesion(){
+  document.getElementById("appContainer").style.display = "none";
+  document.getElementById("loginScreen").style.display = "block";
+  document.getElementById("loginUser").value = "";
+  document.getElementById("loginPass").value = "";
+}
+
+function mostrarSeccion(idSeccion){
+  document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+  document.getElementById(idSeccion).classList.add('active');
+  if(idSeccion === 'secReportes') poblarSelectReportes();
+  if(idSeccion === 'secEnviarCorreo') renderizarTablaCorreoSeleccionados();
+  if(idSeccion === 'secAuditoria') renderizarTablas();
+}
+
+function mostrarDashboard(){
+  document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+  document.getElementById('vistaDashboard').classList.add('active');
+  actualizarTodo();
+}
+
+function togglePanelCorreos(){
+  const panel = document.getElementById("panelCorreos");
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
+
+function guardarCorreos(){
+  localStorage.setItem("ppk_correos_para", document.getElementById("correosPara").value.trim());
+  localStorage.setItem("ppk_correos_cc", document.getElementById("correosCC").value.trim());
+  alert("Correos guardados correctamente.");
+  togglePanelCorreos();
+}
+
+function cargarCorreos(){
+  document.getElementById("correosPara").value = localStorage.getItem("ppk_correos_para") || "";
+  document.getElementById("correosCC").value = localStorage.getItem("ppk_correos_cc") || "";
+}
+
+function escapeHTML(text){
+  return String(text||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+function obtenerFechaHoraActual(){
+  const d = new Date();
+  return d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+function cambiarCheckAbastecer(index, checkbox){
+  inventario[index].abastecer = checkbox.checked;
+  if(checkbox.checked){
+    inventario[index].fechaAbastecimiento = obtenerFechaHoraActual();
+  } else {
+    inventario[index].fechaAbastecimiento = "";
+  }
+  actualizarTodo();
+}
+
+function marcarSugeridosAbastecer(){
+  inventario.forEach(item=>{
+    if(item.estado==="OPERATIVO"){
+      const nivel=String(item.nivel).trim().toUpperCase();
+      let sugerir=false;
+      if(nivel.endsWith("%")){
+        const num=parseFloat(nivel.replace("%","").trim());
+        if(!isNaN(num)&&num<=30) sugerir=true;
+      }else if(nivel.endsWith("GLS")){
+        const num=parseFloat(nivel.replace("GLS","").trim());
+        if(!isNaN(num)&&num<=150) sugerir=true;
+      }
+      if(sugerir){
+        item.abastecer=true;
+        item.fechaAbastecimiento = obtenerFechaHoraActual();
+      }
+    }
+  });
+  actualizarTodo();
+}
+
+function actualizarMetricas(){
+  let op = 0, abast = 0, fs = 0;
+  inventario.forEach(i => {
+    if(i.estado === "FUERA DE SERVICIO") fs++;
+    if(i.abastecer) abast++;
+    if(i.estado === "OPERATIVO") op++;
+  });
+  document.getElementById("metricOp").innerText = op;
+  document.getElementById("metricAbast").innerText = abast;
+  document.getElementById("metricFS").innerText = fs;
+}
+
+function actualizarTodo(){
+  renderizarTablas();
+  actualizarMetricas();
+  localStorage.setItem("inventario_ppk", JSON.stringify(inventario));
+  sincronizarConSheets();
+}
+
+function renderizarTablas(){
+  const tbodyControlAbast = document.getElementById("tablaControlAbastecer");
+  const tbodyInv = document.getElementById("tablaInventario");
+  const tbodyRep = document.getElementById("tablaReportesActivos");
+  const tbodyAudit = document.getElementById("tablaAuditoria");
+
+  tbodyControlAbast.innerHTML = "";
+  tbodyInv.innerHTML = "";
+  tbodyRep.innerHTML = "";
+  tbodyAudit.innerHTML = "";
+
+  let inventarioOrdenado = [...inventario].sort((a, b) => {
+    if (a.estado === "OPERATIVO" && b.estado !== "OPERATIVO") return -1;
+    if (a.estado !== "OPERATIVO" && b.estado === "OPERATIVO") return 1;
+    return 0;
+  });
+
+  inventario.forEach((item)=>{
+    const index = inventario.indexOf(item);
+    
+    // 1. Control Abastecimiento
+    const trAbast = document.createElement("tr");
+    if(item.abastecer) trAbast.className = "row-abastecer";
+    trAbast.innerHTML = `
+      <td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
+      <td><strong>${escapeHTML(item.nombre)}</strong></td>
+      <td>${escapeHTML(item.ubicacion)}</td>
+      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')"><strong>${escapeHTML(item.nivel)}</strong></td>
+      <td>${obtenerBadgeEstado(item.estado)}</td>
+      <td>${escapeHTML(item.fechaAbastecimiento || "Sin solicitud")}</td>`;
+    tbodyControlAbast.appendChild(trAbast);
+  });
+
+  inventarioOrdenado.forEach((item)=>{
+    const index = inventario.indexOf(item);
+    const badgeAbast = item.abastecer ? '<span class="badge-abastecer">POR ABASTECER</span>' : '<span class="badge-ok">ABASTECIDO</span>';
+    const badgeNovedad = item.estado==="FUERA DE SERVICIO" ? escapeHTML(item.novedadManual) : 'OK';
+
+    // 2. Inventario General
+    const trInv = document.createElement("tr");
+    if(item.abastecer) trInv.className = "row-abastecer";
+    trInv.innerHTML = `
+      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')"><strong>${escapeHTML(item.nombre)}</strong></td>
+      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
+      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')">${escapeHTML(item.nivel)}</td>
+      <td>${obtenerBadgeEstado(item.estado)}</td>
+      <td>${badgeAbast}</td>
+      <td>${badgeNovedad}</td>
+      <td class="actions-cell"><button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button></td>`;
+    tbodyInv.appendChild(trInv);
+
+    // 3. Reportes Activos
+    if(item.estado === "FUERA DE SERVICIO" || item.estado === "DEVUELTO TERMINAL"){
+      const trRep = document.createElement("tr");
+      trRep.innerHTML = `
+        <td><strong>${escapeHTML(item.nombre)}</strong></td>
+        <td>${escapeHTML(item.ubicacion)}</td>
+        <td>${escapeHTML(item.novedadManual || item.estado)}</td>
+        <td>${escapeHTML(item.fechaReporte || item.fechaSalidaTerminal)}</td>
+        <td class="actions-cell">
+          <button class="btn-primary" onclick="editarReporte(${index})">Editar</button>
+          <button class="btn-danger" onclick="eliminarReporte(${index})">Limpiar</button>
+        </td>`;
+      tbodyRep.appendChild(trRep);
+    }
+  });
+
+  // 4. Auditoría con Filtro de Fechas
+  const desde = document.getElementById("filtroDesde").value;
+  const hasta = document.getElementById("filtroHasta").value;
+
+  inventario.forEach((item)=>{
+    // Lógica de filtrado por fecha (compara si alguna fecha cae en el rango)
+    if(desde || hasta){
+      let fechaItem = item.fechaCreacion ? item.fechaCreacion.split(" ")[0] : "";
+      if(fechaItem){
+        // Convertir formato dd/mm/yyyy a yyyy-mm-dd para comparar con input date
+        let partes = fechaItem.split("/");
+        if(partes.length === 3){
+          let fechaIso = `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`;
+          if(desde && fechaIso < desde) return;
+          if(hasta && fechaIso > hasta) return;
+        }
+      }
+    }
+
+    const trAudit = document.createElement("tr");
+    trAudit.innerHTML = `
+      <td><strong>${escapeHTML(item.nombre)}</strong></td>
+      <td>${escapeHTML(item.ubicacion)}</td>
+      <td>${obtenerBadgeEstado(item.estado)}</td>
+      <td>${escapeHTML(item.fechaCreacion || "N/A")}</td>
+      <td>${escapeHTML(item.fechaAbastecimiento || "N/A")}</td>
+      <td>${escapeHTML(item.fechaReporte || "N/A")}</td>
+      <td>${escapeHTML(item.fechaSolucion || "N/A")}</td>
+      <td>${escapeHTML(item.fechaSalidaTerminal || "N/A")}</td>`;
+    tbodyAudit.appendChild(trAudit);
+  });
+}
+
+function limpiarFiltrosFechas(){
+  document.getElementById("filtroDesde").value = "";
+  document.getElementById("filtroHasta").value = "";
+  renderizarTablas();
+}
+
+function obtenerBadgeEstado(estado){
+  if(estado === "FUERA DE SERVICIO") return '<span class="badge-fuera">FUERA DE SERVICIO</span>';
+  if(estado === "DEVUELTO TERMINAL") return '<span class="badge-salida">DEVUELTO TERMINAL</span>';
+  return '<span class="badge-ok">OPERATIVO</span>';
+}
+
+function renderizarTablaCorreoSeleccionados(){
+  const tbody = document.getElementById("tablaCorreoSeleccionados");
+  tbody.innerHTML = "";
+  const seleccionados = inventario.filter(i => i.abastecer === true);
+
+  if(seleccionados.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#666;padding:15px;">No hay equipos marcados para abastecer.</td></tr>`;
+    return;
+  }
+
+  seleccionados.forEach(i => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${escapeHTML(i.nombre)}</strong></td>
+      <td>${escapeHTML(i.ubicacion)}</td>
+      <td style="background:#ffeb00;font-weight:bold;">${escapeHTML(i.nivel)}</td>
+      <td><span class="badge-abastecer">POR ABASTECER</span></td>
+      <td>${escapeHTML(i.fechaAbastecimiento)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function guardarNuevoPPk(){
+  const nombre = document.getElementById("newNombre").value.trim();
+  const ubicacion = document.getElementById("newUbicacion").value.trim();
+  const nivel = document.getElementById("newNivel").value.trim();
+  const estado = document.getElementById("newEstado").value;
+
+  if(!nombre || !ubicacion || !nivel){ alert("Complete todos los campos."); return; }
+
+  const fechaStr = obtenerFechaHoraActual();
+  const nuevo = {
+    nombre: nombre,
+    ubicacion: ubicacion,
+    nivel: nivel,
+    estado: estado,
+    novedadManual: estado === "FUERA DE SERVICIO" ? "Registrado con falla" : "",
+    fechaCreacion: fechaStr,
+    fechaAbastecimiento: "",
+    fechaReporte: estado === "FUERA DE SERVICIO" ? fechaStr : "",
+    fechaSolucion: "",
+    fechaSalidaTerminal: "",
+    abastecer: false
+  };
+
+  inventario.push(nuevo);
+  alert("Power Pack registrado con éxito.");
+  document.getElementById("newNombre").value = "";
+  document.getElementById("newUbicacion").value = "";
+  document.getElementById("newNivel").value = "";
+  mostrarDashboard();
+}
+
+function poblarSelectReportes(){
+  const select = document.getElementById("selectPpkFalla");
+  select.innerHTML = "";
+  inventario.forEach((item, index)=>{
+    const opt = document.createElement("option");
+    opt.value = index;
+    opt.text = item.nombre + " (" + item.ubicacion + ") - [" + item.estado + "]";
+    select.appendChild(opt);
+  });
+  cargarDatosPpkSeleccionado();
+}
+
+function cargarDatosPpkSeleccionado(){
+  const index = document.getElementById("selectPpkFalla").value;
+  if(index !== undefined && inventario[index]){
+    const item = inventario[index];
+    document.getElementById("fallaEstado").value = item.estado === "DEVUELTO TERMINAL" ? "DEVUELTO TERMINAL" : item.estado;
+    document.getElementById("fallaMotivo").value = item.novedadManual || "";
+    cambiarTipoReporteForm();
+  }
+}
+
+function cambiarTipoReporteForm(){
+  const estado = document.getElementById("fallaEstado").value;
+  const grupoMotivo = document.getElementById("grupoMotivo");
+  if(estado === "DEVUELTO TERMINAL"){
+    grupoMotivo.style.display = "none";
+  } else {
+    grupoMotivo.style.display = "flex";
+  }
+}
+
+function guardarReporteFalla(){
+  const index = document.getElementById("selectPpkFalla").value;
+  const nuevoEstado = document.getElementById("fallaEstado").value;
+  const motivo = document.getElementById("fallaMotivo").value.trim();
+
+  if(index === "" || !inventario[index]) return;
+  const fechaStr = obtenerFechaHoraActual();
+
+  if(nuevoEstado === "FUERA DE SERVICIO"){
+    if(!motivo){ alert("Debe ingresar el motivo de la falla."); return; }
+    inventario[index].estado = "FUERA DE SERVICIO";
+    inventario[index].novedadManual = motivo;
+    inventario[index].fechaReporte = fechaStr;
+  } else if(nuevoEstado === "DEVUELTO TERMINAL"){
+    inventario[index].estado = "DEVUELTO TERMINAL";
+    inventario[index].novedadManual = "Devuelto / Salida de Terminal";
+    inventario[index].fechaSalidaTerminal = fechaStr;
+  } else {
+    inventario[index].estado = "OPERATIVO";
+    inventario[index].novedadManual = "";
+    inventario[index].fechaSolucion = fechaStr;
+  }
+
+  alert("Novedad registrada correctamente.");
+  mostrarDashboard();
+}
+
+function editarReporte(index){
+  mostrarSeccion('secReportes');
+  document.getElementById("selectPpkFalla").value = index;
+  cargarDatosPpkSeleccionado();
+}
+
+function eliminarReporte(index){
+  if(confirm("¿Desea limpiar la novedad de este equipo y dejarlo Operativo?")){
+    inventario[index].estado = "OPERATIVO";
+    inventario[index].novedadManual = "";
+    inventario[index].fechaSolucion = obtenerFechaHoraActual();
+    actualizarTodo();
+  }
+}
+
+function editarCelda(celda, index, propiedad){
+  if(celda.querySelector("input")) return;
+  const valorActual = inventario[index][propiedad];
+  celda.innerHTML = `<input type="text" value="${escapeHTML(valorActual)}" autofocus style="width:100%;padding:4px">`;
+  const input = celda.querySelector("input");
+  input.onblur = function(){ guardarCambioCelda(index, propiedad, input.value); };
+  input.onkeydown = function(e){ if(e.key === "Enter") guardarCambioCelda(index, propiedad, input.value); };
+}
+
+function guardarCambioCelda(index, propiedad, nuevoValor){
+  if(nuevoValor.trim() !== "") inventario[index][propiedad] = nuevoValor.trim();
+  actualizarTodo();
+}
+
+function eliminarPPk(index){
+  if(confirm("¿Desea eliminar este Power Pack?")){
+    inventario.splice(index, 1);
+    actualizarTodo();
+  }
+}
+
+function obtenerSaludo(){
+  const hora = new Date().getHours();
+  if(hora>=5 && hora<12) return "Estimados buenos días,";
+  if(hora>=12 && hora<19) return "Estimados buenas tardes,";
+  return "Estimados buenas noches,";
+}
+
+async function enviarCorreoOutlook(){
+  const seleccionados = inventario.filter(item => item.abastecer === true);
+  if(seleccionados.length === 0){ alert("No hay Power Packs seleccionados."); return; }
+  const para = document.getElementById("correosPara").value.trim();
+  const cc = document.getElementById("correosCC").value.trim();
+  const paraArray = para.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="");
+
+  if(paraArray.length === 0){ alert("Configure al menos un correo PARA."); return; }
+  guardarCorreos();
+
+  const saludo = obtenerSaludo();
+  let tablaHtml = `<table border="1" cellpadding="5" style="border-collapse:collapse;font-size:12px;text-align:center">
+    <tr style="background:#003b7a;color:#fff"><th>PPK</th><th>UBICACION</th><th>NIVEL</th><th>ESTADO</th></tr>`;
+  seleccionados.forEach(i => {
+    tablaHtml += `<tr><td><b>${escapeHTML(i.nombre)}</b></td><td>${escapeHTML(i.ubicacion)}</td><td style="background:#ffeb00"><b>${escapeHTML(i.nivel)}</b></td><td>POR ABASTECER</td></tr>`;
+  });
+  tablaHtml += `</table>`;
+
+  const textoPlano = `${saludo}\n\nSu ayuda abasteciendo los siguientes Power Packs:\n` + seleccionados.map(x=>x.nombre+" | "+x.ubicacion+" | "+x.nivel).join("\n");
+
+  try{
+    if(navigator.clipboard && window.ClipboardItem){
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([`<div style="font-family:Arial">${saludo}<br><br>${tablaHtml}</div>`], {type: "text/html"}),
+        "text/plain": new Blob([textoPlano], {type: "text/plain"})
+      })]);
+    }
+  }catch(e){ console.error(e); }
+
+  let mailto = "mailto:" + encodeURIComponent(paraArray.join(";")) + "?subject=" + encodeURIComponent("ABASTECIMIENTO DE POWER PACK");
+  if(cc) mailto += "&cc=" + encodeURIComponent(cc);
+  window.location.href = mailto;
+
+  setTimeout(()=>{
+    alert("📧 CORREO PREPARADO:\n1. Outlook abierto.\n2. Tabla copiada al portapapeles.\n👉 Toca el cuerpo del correo en tu app de Outlook y pega (Paste).");
+  }, 600);
+}
+
+async function sincronizarConSheets(){
+  if(!WEB_APP_URL) return;
+  try {
+    await fetch(WEB_APP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(inventario)
+    });
+  } catch (error) {
+    console.error("Error al sincronizar con Sheets:", error);
+  }
+}
+
+async function cargarDesdeSheets(){
+  if(!WEB_APP_URL) return;
+  try {
+    const res = await fetch(WEB_APP_URL);
+    const data = await res.json();
+    if(Array.isArray(data) && data.length > 0){
+      inventario = data;
+      localStorage.setItem("inventario_ppk", JSON.stringify(inventario));
+    }
+  } catch(e){
+    console.error("Usando caché local:", e);
+  }
+  actualizarTodo();
+  mostrarDashboard();
+}
+</script>
+
+</body>
+</html>
