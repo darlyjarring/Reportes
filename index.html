@@ -246,7 +246,7 @@ tr.row-abastecer { background-color: #fff9c4 !important; }
 </div>
 <div class="dash-card" onclick="mostrarSeccion('secAbastecerEstado')">
 <h4>🟡 Control de Abastecimiento</h4>
-<p>Marcar equipos que requieren combustible y editar datos básicos.</p>
+<p>Marcar equipos que requieren combustible y editar ubicación / nivel.</p>
 </div>
 <div class="dash-card" onclick="mostrarSeccion('secEnviarCorreo')">
 <h4>📧 Enviar Correo de Abastecimiento</h4>
@@ -674,7 +674,7 @@ function renderizarTablas(){
   inventario.forEach((item)=>{
     const index = inventario.indexOf(item);
     
-    // 1. Control Abastecimiento (Ahora con Ubicación y Nivel editables)
+    // 1. Control Abastecimiento (Con Ubicación y Nivel editables)
     const trAbast = document.createElement("tr");
     if(item.abastecer) trAbast.className = "row-abastecer";
     trAbast.innerHTML = `
@@ -944,7 +944,7 @@ async function enviarCorreoOutlook(){
       await navigator.clipboard.write([new ClipboardItem({
         "text/html": new Blob([`<div style="font-family:Arial">${saludo}<br><br>${tablaHtml}</div>`], {type: "text/html"}),
         "text/plain": new Blob([textoPlano], {type: "text/plain"})
-      })]);
+      })];
     }
   }catch(e){ console.error(e); }
 
@@ -1192,10 +1192,14 @@ function aplicarConsulta() {
       if (!texto.includes(q)) return false;
     }
     return true;
-  }).sort((a, b) => (parseFechaNave(a.etb) || parseFechaNave(a.ata) || 0) - (parseFechaNave(b.etb) || parseFechaNave(b.ata) || 0));
+  }).sort((a, b) => (parseFechaNave(a.etb) || 0) - (parseFechaNave(b.etb) || 0));
 
   const elTit = document.getElementById('tituloVentana');
   if(elTit) elTit.textContent = `Vessel Schedule (${formatoTituloFecha(ds)}-${formatoTituloFecha(hs)}): ${filtrados.length}`;
+  
+  const elCont = document.getElementById('contadorRegistros');
+  if(elCont) elCont.textContent = `${filtrados.length} registros`;
+
   renderizarTablaNaves(filtrados);
 }
 
@@ -1213,8 +1217,8 @@ function renderizarTablaNaves(lista) {
     const cLin = ESTILO_LINEA[n.linea] || { bg: '#e2e8f0', fg: '#000000' };
     const cSrv = ESTILO_SERVICIO[n.servicio] || { bg: '#f1f5f9', fg: '#000000' };
 
-    const arribo = n.ata ? formatoNavis(n.ata) : formatoNavis(n.etb);
-    const zarpe = n.atd ? formatoNavis(n.atd) : formatoNavis(n.etd);
+    const arribo = formatoNavis(n.etb);
+    const zarpe = formatoNavis(n.etd);
     const cutoff = formatoNavis(n.cutoff);
     const esPrimera = idx === 0 ? 'seleccionada' : '';
 
@@ -1257,4 +1261,4 @@ function limpiarFiltrosNaves() {
 </script>
 
 </body>
-</html>
+</html>8
