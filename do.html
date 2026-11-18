@@ -718,7 +718,10 @@ function obtenerFechaHoraActual(){
 
 function obtenerFechaISOActual(){
   const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const anio = d.getFullYear();
+  const mes = String(d.getMonth()+1).padStart(2,'0');
+  const dia = String(d.getDate()).padStart(2,'0');
+  return `${anio}-${mes}-${dia}`;
 }
 
 /* --- REGISTRO EN BITÁCORA DE AUDITORÍA --- */
