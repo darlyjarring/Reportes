@@ -286,7 +286,7 @@ tr.row-abastecer { background-color: #fff9c4 !important; }
 <button class="btn-primary" onclick="guardarNuevoPPk()">Guardar Power Pack</button>
 </div>
 
-<!-- 2. CONTROL DE ABASTECIMIENTO (CON CELDAS EDITABLES DE UBICACIÓN Y NIVEL) -->
+<!-- 2. CONTROL DE ABASTECIMIENTO -->
 <div id="secAbastecerEstado" class="section-view">
 <button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
 <h3>🟡 Control de Estado "Por Abastecer"</h3>
@@ -405,7 +405,7 @@ tr.row-abastecer { background-color: #fff9c4 !important; }
 </div>
 </div>
 
-<!-- NUEVA SECCIÓN: ITINERARIO NAVES -->
+<!-- SECCIÓN: ITINERARIO NAVES -->
 <div id="secItinerario" class="section-view">
 <button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
 <h3>🚢 Itinerario de Naves (Navis N4)</h3>
@@ -489,7 +489,7 @@ tr.row-abastecer { background-color: #fff9c4 !important; }
   </div>
 
   <div class="n4-pie">
-    <span id="contadorRegistros">0 registros</span>
+    <span id="contadorRegistrosNaves">0 registros</span>
     <span>Módulo Navis N4 Integrado</span>
   </div>
 </div>
@@ -660,10 +660,10 @@ function renderizarTablas(){
   const tbodyRep = document.getElementById("tablaReportesActivos");
   const tbodyAudit = document.getElementById("tablaAuditoria");
 
-  tbodyControlAbast.innerHTML = "";
-  tbodyInv.innerHTML = "";
-  tbodyRep.innerHTML = "";
-  tbodyAudit.innerHTML = "";
+  if(tbodyControlAbast) tbodyControlAbast.innerHTML = "";
+  if(tbodyInv) tbodyInv.innerHTML = "";
+  if(tbodyRep) tbodyRep.innerHTML = "";
+  if(tbodyAudit) tbodyAudit.innerHTML = "";
 
   let inventarioOrdenado = [...inventario].sort((a, b) => {
     if (a.estado === "OPERATIVO" && b.estado !== "OPERATIVO") return -1;
@@ -674,17 +674,19 @@ function renderizarTablas(){
   inventario.forEach((item)=>{
     const index = inventario.indexOf(item);
     
-    // 1. Control Abastecimiento (Con Ubicación y Nivel editables)
-    const trAbast = document.createElement("tr");
-    if(item.abastecer) trAbast.className = "row-abastecer";
-    trAbast.innerHTML = `
-      <td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
-      <td><strong>${escapeHTML(item.nombre)}</strong></td>
-      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
-      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')"><strong>${escapeHTML(item.nivel)}</strong></td>
-      <td>${obtenerBadgeEstado(item.estado)}</td>
-      <td>${escapeHTML(item.fechaAbastecimiento || "Sin solicitud")}</td>`;
-    tbodyControlAbast.appendChild(trAbast);
+    // 1. Control Abastecimiento
+    if(tbodyControlAbast) {
+      const trAbast = document.createElement("tr");
+      if(item.abastecer) trAbast.className = "row-abastecer";
+      trAbast.innerHTML = `
+        <td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
+        <td><strong>${escapeHTML(item.nombre)}</strong></td>
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')"><strong>${escapeHTML(item.nivel)}</strong></td>
+        <td>${obtenerBadgeEstado(item.estado)}</td>
+        <td>${escapeHTML(item.fechaAbastecimiento || "Sin solicitud")}</td>`;
+      tbodyControlAbast.appendChild(trAbast);
+    }
   });
 
   inventarioOrdenado.forEach((item)=>{
@@ -693,20 +695,22 @@ function renderizarTablas(){
     const badgeNovedad = item.estado==="FUERA DE SERVICIO" ? escapeHTML(item.novedadManual) : 'OK';
 
     // 2. Inventario General
-    const trInv = document.createElement("tr");
-    if(item.abastecer) trInv.className = "row-abastecer";
-    trInv.innerHTML = `
-      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')"><strong>${escapeHTML(item.nombre)}</strong></td>
-      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
-      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')">${escapeHTML(item.nivel)}</td>
-      <td>${obtenerBadgeEstado(item.estado)}</td>
-      <td>${badgeAbast}</td>
-      <td>${badgeNovedad}</td>
-      <td class="actions-cell"><button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button></td>`;
-    tbodyInv.appendChild(trInv);
+    if(tbodyInv) {
+      const trInv = document.createElement("tr");
+      if(item.abastecer) trInv.className = "row-abastecer";
+      trInv.innerHTML = `
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')"><strong>${escapeHTML(item.nombre)}</strong></td>
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')">${escapeHTML(item.nivel)}</td>
+        <td>${obtenerBadgeEstado(item.estado)}</td>
+        <td>${badgeAbast}</td>
+        <td>${badgeNovedad}</td>
+        <td class="actions-cell"><button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button></td>`;
+      tbodyInv.appendChild(trInv);
+    }
 
     // 3. Reportes Activos
-    if(item.estado === "FUERA DE SERVICIO" || item.estado === "DEVUELTO TERMINAL"){
+    if(tbodyRep && (item.estado === "FUERA DE SERVICIO" || item.estado === "DEVUELTO TERMINAL")){
       const trRep = document.createElement("tr");
       trRep.innerHTML = `
         <td><strong>${escapeHTML(item.nombre)}</strong></td>
@@ -722,8 +726,10 @@ function renderizarTablas(){
   });
 
   // 4. Auditoría con Filtro de Fechas
-  const desde = document.getElementById("filtroDesde").value;
-  const hasta = document.getElementById("filtroHasta").value;
+  const desdeEl = document.getElementById("filtroDesde");
+  const hastaEl = document.getElementById("filtroHasta");
+  const desde = desdeEl ? desdeEl.value : "";
+  const hasta = hastaEl ? hastaEl.value : "";
 
   inventario.forEach((item)=>{
     if(desde || hasta){
@@ -738,17 +744,19 @@ function renderizarTablas(){
       }
     }
 
-    const trAudit = document.createElement("tr");
-    trAudit.innerHTML = `
-      <td><strong>${escapeHTML(item.nombre)}</strong></td>
-      <td>${escapeHTML(item.ubicacion)}</td>
-      <td>${obtenerBadgeEstado(item.estado)}</td>
-      <td>${escapeHTML(item.fechaCreacion || "N/A")}</td>
-      <td>${escapeHTML(item.fechaAbastecimiento || "N/A")}</td>
-      <td>${escapeHTML(item.fechaReporte || "N/A")}</td>
-      <td>${escapeHTML(item.fechaSolucion || "N/A")}</td>
-      <td>${escapeHTML(item.fechaSalidaTerminal || "N/A")}</td>`;
-    tbodyAudit.appendChild(trAudit);
+    if(tbodyAudit) {
+      const trAudit = document.createElement("tr");
+      trAudit.innerHTML = `
+        <td><strong>${escapeHTML(item.nombre)}</strong></td>
+        <td>${escapeHTML(item.ubicacion)}</td>
+        <td>${obtenerBadgeEstado(item.estado)}</td>
+        <td>${escapeHTML(item.fechaCreacion || "N/A")}</td>
+        <td>${escapeHTML(item.fechaAbastecimiento || "N/A")}</td>
+        <td>${escapeHTML(item.fechaReporte || "N/A")}</td>
+        <td>${escapeHTML(item.fechaSolucion || "N/A")}</td>
+        <td>${escapeHTML(item.fechaSalidaTerminal || "N/A")}</td>`;
+      tbodyAudit.appendChild(trAudit);
+    }
   });
 }
 
@@ -766,6 +774,7 @@ function obtenerBadgeEstado(estado){
 
 function renderizarTablaCorreoSeleccionados(){
   const tbody = document.getElementById("tablaCorreoSeleccionados");
+  if(!tbody) return;
   tbody.innerHTML = "";
   const seleccionados = inventario.filter(i => i.abastecer === true);
 
@@ -819,6 +828,7 @@ function guardarNuevoPPk(){
 
 function poblarSelectReportes(){
   const select = document.getElementById("selectPpkFalla");
+  if(!select) return;
   select.innerHTML = "";
   inventario.forEach((item, index)=>{
     const opt = document.createElement("option");
@@ -830,7 +840,9 @@ function poblarSelectReportes(){
 }
 
 function cargarDatosPpkSeleccionado(){
-  const index = document.getElementById("selectPpkFalla").value;
+  const select = document.getElementById("selectPpkFalla");
+  if(!select) return;
+  const index = select.value;
   if(index !== undefined && inventario[index]){
     const item = inventario[index];
     document.getElementById("fallaEstado").value = item.estado === "DEVUELTO TERMINAL" ? "DEVUELTO TERMINAL" : item.estado;
@@ -842,6 +854,7 @@ function cargarDatosPpkSeleccionado(){
 function cambiarTipoReporteForm(){
   const estado = document.getElementById("fallaEstado").value;
   const grupoMotivo = document.getElementById("grupoMotivo");
+  if(!grupoMotivo) return;
   if(estado === "DEVUELTO TERMINAL"){
     grupoMotivo.style.display = "none";
   } else {
@@ -850,7 +863,9 @@ function cambiarTipoReporteForm(){
 }
 
 function guardarReporteFalla(){
-  const index = document.getElementById("selectPpkFalla").value;
+  const select = document.getElementById("selectPpkFalla");
+  if(!select) return;
+  const index = select.value;
   const nuevoEstado = document.getElementById("fallaEstado").value;
   const motivo = document.getElementById("fallaMotivo").value.trim();
 
@@ -944,7 +959,7 @@ async function enviarCorreoOutlook(){
       await navigator.clipboard.write([new ClipboardItem({
         "text/html": new Blob([`<div style="font-family:Arial">${saludo}<br><br>${tablaHtml}</div>`], {type: "text/html"}),
         "text/plain": new Blob([textoPlano], {type: "text/plain"})
-      })];
+      })]);
     }
   }catch(e){ console.error(e); }
 
@@ -1074,12 +1089,15 @@ function inicializarFechasPorDefecto() {
 }
 
 function marcarPersonalizado() {
-  document.getElementById('selectRango').value = 'personalizado';
+  const selRango = document.getElementById('selectRango');
+  if(selRango) selRango.value = 'personalizado';
   aplicarConsulta();
 }
 
 function cambiarRangoFechas() {
-  const val = document.getElementById('selectRango').value;
+  const selRango = document.getElementById('selectRango');
+  if(!selRango) return;
+  const val = selRango.value;
   if (val === 'personalizado') return;
 
   const hoy = new Date();
@@ -1094,8 +1112,10 @@ function cambiarRangoFechas() {
     fin.setDate(fin.getDate() + dias);
   }
 
-  document.getElementById('fechaInicio').value = fechaLocalInput(inicio);
-  document.getElementById('fechaFin').value = fechaLocalInput(fin);
+  const elIni = document.getElementById('fechaInicio');
+  const elFin = document.getElementById('fechaFin');
+  if(elIni) elIni.value = fechaLocalInput(inicio);
+  if(elFin) elFin.value = fechaLocalInput(fin);
   aplicarConsulta();
 }
 
@@ -1168,10 +1188,16 @@ async function cargarDatosFlotante() {
 }
 
 function aplicarConsulta() {
-  const ds = document.getElementById('fechaInicio').value;
-  const hs = document.getElementById('fechaFin').value;
-  const q = document.getElementById('buscadorTexto').value.toUpperCase().trim();
-  const fase = document.getElementById('filtroFase').value;
+  const elIni = document.getElementById('fechaInicio');
+  const elFin = document.getElementById('fechaFin');
+  const elBuscador = document.getElementById('buscadorTexto');
+  const elFase = document.getElementById('filtroFase');
+
+  if(!elIni || !elFin) return;
+  const ds = elIni.value;
+  const hs = elFin.value;
+  const q = elBuscador ? elBuscador.value.toUpperCase().trim() : "";
+  const fase = elFase ? elFase.value : "";
 
   if (!ds || !hs) return;
   const inicioFiltro = new Date(ds + 'T00:00:00-05:00');
@@ -1197,7 +1223,7 @@ function aplicarConsulta() {
   const elTit = document.getElementById('tituloVentana');
   if(elTit) elTit.textContent = `Vessel Schedule (${formatoTituloFecha(ds)}-${formatoTituloFecha(hs)}): ${filtrados.length}`;
   
-  const elCont = document.getElementById('contadorRegistros');
+  const elCont = document.getElementById('contadorRegistrosNaves');
   if(elCont) elCont.textContent = `${filtrados.length} registros`;
 
   renderizarTablaNaves(filtrados);
@@ -1246,16 +1272,19 @@ function seleccionarFilaNave(tr) {
 function ejecutarAccionN4(sel) {
   const val = sel.value;
   if (val === 'refresh') cargarDatosFlotante();
-  if (val === 'working') { document.getElementById('filtroFase').value = 'Working'; aplicarConsulta(); }
-  if (val === 'inbound') { document.getElementById('filtroFase').value = 'Inbound'; aplicarConsulta(); }
+  if (val === 'working') { const f = document.getElementById('filtroFase'); if(f) f.value = 'Working'; aplicarConsulta(); }
+  if (val === 'inbound') { const f = document.getElementById('filtroFase'); if(f) f.value = 'Inbound'; aplicarConsulta(); }
   if (val === 'clear') limpiarFiltrosNaves();
   sel.value = '';
 }
 
 function limpiarFiltrosNaves() {
-  document.getElementById('buscadorTexto').value = '';
-  document.getElementById('filtroFase').value = '';
-  document.getElementById('selectRango').value = '7';
+  const b = document.getElementById('buscadorTexto');
+  const f = document.getElementById('filtroFase');
+  const r = document.getElementById('selectRango');
+  if(b) b.value = '';
+  if(f) f.value = '';
+  if(r) r.value = '7';
   cambiarRangoFechas();
 }
 </script>
