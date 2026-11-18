@@ -559,7 +559,7 @@ tr.row-inhabilitado { background-color: #f1f3f5 !important; color: #6c757d; }
           <th>VLine Op.</th>
           <th>Vessel Service</th>
           <th>Visit Phase</th>
-          <th>P.Origen</th>
+          <th>Viaje</th>
           <th>P.Destino</th>
         </tr>
       </thead>
@@ -1557,7 +1557,7 @@ function renderizarTablaNaves(lista) {
       <td style="background:${cLin.bg};color:${cLin.fg};">${n.linea}</td>
       <td style="background:${cSrv.bg};color:${cSrv.fg};">${n.servicio}</td>
       <td>${phase}</td>
-      <td>${n.origen || '—'}</td>
+      <td>${n.viaje || '—'}</td>
       <td>${n.destino || '—'}</td>
     </tr>`;
   }).join('');
