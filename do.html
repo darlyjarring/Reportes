@@ -1141,9 +1141,12 @@ function mostrarDashboard(){
 function abrirReporteReeferModal(){
   const modal = document.getElementById("modalReporteReefer");
   const iframe = document.getElementById("iframeReporteReefer");
-  const sourceHtml = document.getElementById("reporteHtmlSource").innerHTML;
   
-  iframe.srcdoc = sourceHtml;
+  // Limpiamos y aseguramos la carga correcta mediante blob para evitar bloqueos de scripts anidados
+  const sourceHtml = document.getElementById("reporteHtmlSource").innerHTML.replace(/<\\/g, "<");
+  const blob = new Blob([sourceHtml], { type: 'text/html;charset=utf-8' });
+  
+  iframe.src = URL.createObjectURL(blob);
   modal.style.display = "flex";
 }
 
