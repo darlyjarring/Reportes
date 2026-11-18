@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Control Integral de Power Packs (PPk)</title>
+<style>
+:root{--primary:#003b7a;--secondary:#0066cc;--accent:#ffeb00;--danger:#dc3545;--success:#198754;--bg:#f4f6f9}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);margin:0;padding:10px;color:#333}
+
+/* Login */
+#loginScreen{max-width:420px;width:100%;margin:40px auto;background:#fff;padding:24px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,.15);text-align:center}
+#loginScreen h2{color:var(--primary);margin-bottom:20px}
+.login-form{display:flex;flex-direction:column;gap:12px;text-align:left}
+
+/* Contenedor Principal */
+.container{max-width:1300px;width:100%;margin:auto;background:#fff;padding:15px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.12);display:none}
+.header-top{display:flex;flex-direction:column;gap:10px;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--secondary);padding-bottom:10px;margin-bottom:15px}
+@media(min-width:600px){.header-top{flex-direction:row;align-items:center}}
+
+h2{color:var(--primary);margin:0;font-size:1.3rem}
+h3{color:var(--primary);margin-bottom:10px;font-size:1.1rem}
+
+/* Resumen Rápido / Contadores (Dashboard Metrics) */
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.metric-card{background:#eef2f7;padding:12px;border-radius:6px;text-align:center;border-top:4px solid var(--secondary)}
+.metric-card h5{margin:0 0 5px 0;font-size:0.75rem;color:#555;text-transform:uppercase}
+.metric-card span{font-size:1.3rem;font-weight:bold;color:var(--primary)}
+.metric-fuera{border-top-color:var(--danger)!important}
+.metric-abastecer{border-top-color:#e0a800!important}
+.metric-salida{border-top-color:#6c757d!important}
+
+/* Tarjetas del Menú Principal */
+.dashboard-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:20px}
+@media(min-width:600px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){.dashboard-grid{grid-template-columns:repeat(3,1fr)}}
+
+.dash-card{background:#eef2f7;border-left:5px solid var(--secondary);padding:15px;border-radius:8px;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;text-align:left}
+.dash-card:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.08)}
+.dash-card:active{background:#d5e2f3}
+.dash-card h4{margin:0 0 6px 0;color:var(--primary);font-size:1.05rem}
+.dash-card p{margin:0;font-size:0.82rem;color:#555}
+
+/* Vistas / Secciones */
+.section-view{display:none}
+.section-view.active{display:block}
+.btn-volver{background:#6c757d;color:#fff;margin-bottom:15px;width:100%}
+@media(min-width:600px){.btn-volver{width:auto}}
+
+.form-grid{display:grid;grid-template-columns:1fr;gap:12px;background:#eef2f7;padding:12px;border-radius:6px;margin-bottom:15px}
+@media(min-width:600px){.form-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){.form-grid.cols-3{grid-template-columns:repeat(3,1fr)}}
+
+.form-group{display:flex;flex-direction:column}
+label{font-weight:600;margin-bottom:5px;font-size:0.88rem}
+input,select,textarea{padding:10px;border:1px solid #ccc;border-radius:4px;font-size:1rem;font-family:inherit;width:100%}
+textarea{min-height:80px;resize:vertical}
+input:disabled{background:#e9ecef}
+
+.btn-container{display:flex;gap:10px;flex-direction:column;margin:15px 0}
+@media(min-width:600px){.btn-container{flex-direction:row;flex-wrap:wrap}}
+
+button{padding:12px 16px;border:0;border-radius:4px;cursor:pointer;font-weight:bold;font-size:0.95rem;width:100%}
+@media(min-width:600px){button{width:auto}}
+.btn-primary{background:var(--secondary);color:#fff}.btn-primary:active{background:var(--primary)}
+.btn-success{background:var(--success);color:#fff}
+.btn-outlook{background:#0078d4;color:#fff}
+.btn-danger{background:#dc3545;color:#fff}
+.btn-secondary{background:#6c757d;color:#fff}
+
+/* Tablas responsivas */
+.table-responsive{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px;border:1px solid #ccc;border-radius:6px}
+table{width:100%;border-collapse:collapse;min-width:750px}
+th,td{border:1px solid #ddd;padding:10px 8px;text-align:center;font-size:0.85rem}
+th{background:var(--primary);color:#fff;white-space:nowrap}
+tr:nth-child(even){background:#f8f8f8}
+
+/* Estados Visuales */
+.badge-ok{background:#d4edda;color:#198754;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-abastecer{background:#ffeb00;color:#000;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-fuera{background:#f8d7da;color:#b02a37;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-salida{background:#e2e3e5;color:#383d41;font-weight:bold;padding:3px 6px;border-radius:4px;border:1px solid #b8b9bb}
+.badge-retorno{background:#cff4fc;color:#055160;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-alta{background:#e0cffc;color:#3d0a91;font-weight:bold;padding:3px 6px;border-radius:4px}
+
+tr.row-abastecer { background-color: #fff9c4 !important; }
+tr.row-inhabilitado { background-color: #f1f3f5 !important; color: #6c757d; }
+.actions-cell button{padding:6px 10px;font-size:0.75rem;margin:2px;width:auto}
+.info{background:#e8f1ff;border-left:4px solid #0066cc;padding:10px;margin-bottom:15px;font-size:0.85rem}
+.warn-box{background:#fff3cd;border-left:4px solid #ffc107;padding:12px;margin-bottom:15px;border-radius:4px}
+.editable-cell{cursor:pointer;position:relative}
+.editable-cell:hover{background-color:#fff3cd}
+
+/* Modal Integrado para Reporte.html */
+#modalReporteReefer {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.6);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+#modalReporteReeferContent {
+  background: #fff;
+  width: 100%;
+  max-width: 1150px;
+  height: 92vh;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+}
+
+/* --- ESTILOS MÓDULO ITINERARIO NAVES (Navis N4 style) --- */
+.n4-module-wrap {
+  background: #d4d0c8;
+  border: 2px solid #5a7fa6;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.n4-barra-titulo {
+  background: linear-gradient(180deg, #b8d3ee 0%, #8eb4dc 50%, #7da7d4 100%);
+  border-bottom: 1px solid #5981ab;
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.n4-barra-titulo .n4-titulo-texto {
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.n4-navis-toolbar {
+  background: #ece9d8;
+  border-bottom: 1px solid #aca899;
+  padding: 6px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.n4-navis-select, .n4-navis-input {
+  height: 26px;
+  padding: 1px 6px;
+  border: 1px solid #7f9db9;
+  border-radius: 2px;
+  font-size: 11px;
+  background: #fff;
+  color: #000;
+}
+.n4-grupo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.n4-grupo label { font-size: 11px; color: #222; }
+.n4-btn {
+  height: 26px;
+  padding: 0 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #dcdad5 100%);
+  color: #000;
+  border: 1px solid #7f9db9;
+  border-radius: 2px;
+  font-size: 11px;
+  cursor: pointer;
+  width: auto;
+}
+.n4-btn:hover { background: linear-gradient(180deg, #fff8e6 0%, #f5deb3 100%); }
+.n4-btn.primario { background: #123b5d; color: #fff; border-color: #092136; font-weight: bold; }
+.n4-tabla-contenedor {
+  overflow: auto;
+  max-height: 55vh;
+  background: #fff;
+}
+.n4-tabla-contenedor table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  white-space: nowrap;
+  min-width: 800px;
+}
+.n4-tabla-contenedor thead th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(180deg, #ffffff 0%, #e4e8f0 55%, #cfd7e6 100%);
+  border-right: 1px solid #b5becd;
+  border-bottom: 1px solid #8e99ad;
+  padding: 5px 8px;
+  text-align: center;
+  font-weight: normal;
+  color: #000;
+  z-index: 3;
+}
+.n4-tabla-contenedor tbody td {
+  padding: 3px 8px;
+  border-right: 1px solid #e6e6e6;
+  border-bottom: 1px solid #ececec;
+  font-family: "Consolas", monospace;
+  font-size: 11.5px;
+  height: 22px;
+  text-align: center;
+}
+.n4-tabla-contenedor tbody tr:hover td { outline: 1px solid #7da2ce; }
+.n4-tabla-contenedor tbody tr.seleccionada td { background-color: #0066cc !important; color: #fff !important; }
+.n4-pie {
+  background: #ece9d8;
+  border-top: 1px solid #aca899;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+<h2>🔑 Iniciar Sesión</h2>
+<div class="login-form">
+<div class="form-group"><label>Usuario:</label><input type="text" id="loginUser" placeholder="Ej: operador / supervisor"></div>
+<div class="form-group"><label>Contraseña:</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+<button class="btn-primary" onclick="realizarLogin()">Ingresar al Sistema</button>
+</div>
+</div>
+
+<!-- CONTENEDOR PRINCIPAL -->
+<div class="container" id="appContainer">
+<div class="header-top">
+<h2>⚡ Control Power Packs</h2>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+<span id="lblUsuario" style="font-weight:600;font-size:0.85rem;"></span>
+<button class="btn-danger" style="padding:6px 10px;font-size:0.75rem;width:auto;" onclick="cerrarSesion()">Salir</button>
+</div>
+</div>
+
+<!-- DASHBOARD DE TARJETAS -->
+<div id="vistaDashboard" class="section-view active">
+<h3>Panel Principal</h3>
+<p style="color:#666;margin-bottom:15px;font-size:0.9rem;">Resumen general de la flota y estadísticas operativas:</p>
+
+<!-- CONTADORES / MÉTRICAS -->
+<div class="metrics-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:10px;">
+<div class="metric-card">
+<h5>Operativos</h5>
+<span id="metricOp">0</span>
+</div>
+<div class="metric-card metric-abastecer">
+<h5>Por Abastecer</h5>
+<span id="metricAbast">0</span>
+</div>
+<div class="metric-card metric-fuera">
+<h5>Fuera de Servicio</h5>
+<span id="metricFS">0</span>
+</div>
+<div class="metric-card metric-salida">
+<h5>Salidas Terminal</h5>
+<span id="metricSalidas">0</span>
+</div>
+</div>
+
+<div class="dashboard-grid">
+<div class="dash-card" onclick="mostrarSeccion('secAgregar')">
+<h4>➕ Ingreso / Retorno Power Pack</h4>
+<p>Dar de alta equipos nuevos o reactivar equipos que retornan.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secAbastecerEstado')">
+<h4>🟡 Control de Abastecimiento</h4>
+<p>Marcar equipos que requieren combustible y editar ubicación / nivel.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secEnviarCorreo')">
+<h4>📧 Enviar Correo de Abastecimiento</h4>
+<p>Generar reporte y tabla directa para Outlook.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secReportes')">
+<h4>🚨 Reportar F/S o Salida Terminal</h4>
+<p>Registrar daños, fallas técnicas o salida (inhabilitar equipo).</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secInventario')">
+<h4>📋 Inventario General</h4>
+<p>Operativos primero, inhabilitados al final con edición táctil.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secEstadisticas')">
+<h4>📊 Dashboard & Rankings Operativos</h4>
+<p>Indicadores de abastecimientos, fallas y salidas por equipo.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secItinerario')">
+<h4>🚢 Itinerario Naves</h4>
+<p>Consulta en tiempo real de recaladas y servicios (Navis N4).</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secAuditoria')">
+<h4>📜 Auditoría e Historial Completo</h4>
+<p>Bitácora de todos los eventos, abastecimientos y novedades.</p>
+</div>
+<div class="dash-card" onclick="abrirReporteReeferModal()" style="border-left-color: #28a745; background: #e8f8ec;">
+<h4>👥 Control Operativo Reefer</h4>
+<p>Abrir aplicación de bloques y equipo de trabajo (Reporte.html).</p>
+</div>
+</div>
+</div>
+
+<!-- 1. REGISTRAR O REACTIVAR POWER PACK -->
+<div id="secAgregar" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+
+<!-- BLOQUE REINGRESO / RETORNO -->
+<div id="bloqueReactivar" class="warn-box" style="display:none;">
+  <h3 style="margin-top:0;color:#664d03;">🔄 Reactivar Power Pack (Retorno a Terminal)</h3>
+  <p style="font-size:0.85rem;margin-bottom:10px;">Seleccione un equipo inhabilitado por <strong>Salida de Terminal</strong> para activarlo nuevamente:</p>
+  <div class="form-grid cols-3" style="background:#fff;margin-bottom:10px;">
+    <div class="form-group">
+      <label>Power Pack Inhabilitado:</label>
+      <select id="selectPpkRetorno"></select>
+    </div>
+    <div class="form-group">
+      <label>Nueva Ubicación / Bloque:</label>
+      <input type="text" id="retUbicacion" placeholder="Ej: 1K15">
+    </div>
+    <div class="form-group">
+      <label>Nivel combustible al retorno:</label>
+      <input type="text" id="retNivel" placeholder="Ej: 100% o 250 GLS">
+    </div>
+  </div>
+  <button class="btn-success" onclick="reactivarPPkRetorno()">✅ Activar Reingreso / Retorno</button>
+</div>
+
+<h3>➕ Registrar Nuevo Power Pack</h3>
+<div class="form-grid">
+<div class="form-group"><label>Nombre / Código PPk:</label><input type="text" id="newNombre" placeholder="Ej: #15 VERDE"></div>
+<div class="form-group"><label>Ubicación / Bloque:</label><input type="text" id="newUbicacion" placeholder="Ej: 1K12"></div>
+<div class="form-group"><label>Nivel combustible:</label><input type="text" id="newNivel" placeholder="Ej: 80% o 150 GLS"></div>
+<div class="form-group"><label>Estado Inicial:</label>
+<select id="newEstado"><option value="OPERATIVO">OPERATIVO</option><option value="FUERA DE SERVICIO">FUERA DE SERVICIO</option></select>
+</div>
+</div>
+<button class="btn-primary" onclick="guardarNuevoPPk()">Guardar Nuevo Power Pack</button>
+</div>
+
+<!-- 2. CONTROL DE ABASTECIMIENTO -->
+<div id="secAbastecerEstado" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>🟡 Control de Estado "Por Abastecer"</h3>
+<div class="info">Selecciona el visto en los equipos que requieran combustible. Haz <strong>clic en Ubicación o Nivel Actual</strong> para editarlos.</div>
+<div class="btn-container">
+<button class="btn-secondary" onclick="marcarSugeridosAbastecer()">⚡ Marcar sugeridos (&lt;=30% o &lt;=150 GLS)</button>
+</div>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>POR ABASTECER?</th>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL ACTUAL</th>
+<th>ESTADO</th>
+<th>ÚLTIMA SOLICITUD</th>
+</tr>
+</thead>
+<tbody id="tablaControlAbastecer"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 3. ENVIAR CORREO -->
+<div id="secEnviarCorreo" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📧 Generar y Enviar Correo de Abastecimiento</h3>
+<div class="info">Toma exclusivamente los equipos marcados como <strong>"Por Abastecer"</strong> para Outlook.</div>
+<div class="btn-container">
+<button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Enviar Correo Outlook (Copiar Tabla)</button>
+<button class="btn-secondary" onclick="togglePanelCorreos()">⚙️ Configurar Destinatarios</button>
+</div>
+
+<div class="email-container" id="panelCorreos" style="display:none; background:#eef2f7; padding:12px; border-radius:6px; margin-bottom:15px;">
+<div class="email-grid">
+<div class="form-group"><label>Para:</label><textarea id="correosPara" placeholder="Separados por ;"></textarea></div>
+<div class="form-group"><label>CC:</label><textarea id="correosCC" placeholder="Separados por ;"></textarea></div>
+</div>
+<button class="btn-primary" style="margin-top:10px;" onclick="guardarCorreos()">💾 Guardar Correos</button>
+</div>
+
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL</th>
+<th>ESTADO</th>
+<th>FECHA SOLICITUD</th>
+</tr>
+</thead>
+<tbody id="tablaCorreoSeleccionados"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 4. REPORTAR F/S, EDICIÓN Y SALIDA TERMINAL -->
+<div id="secReportes" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>🚨 Reportar y Gestionar Novedades (F/S o Salida Terminal)</h3>
+<div class="form-grid">
+<div class="form-group"><label>Seleccionar Power Pack:</label><select id="selectPpkFalla" onchange="cargarDatosPpkSeleccionado()"></select></div>
+<div class="form-group"><label>Estado / Acción:</label>
+<select id="fallaEstado" onchange="cambiarTipoReporteForm()">
+<option value="FUERA DE SERVICIO">FUERA DE SERVICIO (Daño / Falla / Sin combustible)</option>
+<option value="DEVUELTO TERMINAL">SALIDA DE TERMINAL (Inhabilitar equipo hasta retorno)</option>
+<option value="OPERATIVO">OPERATIVO (Falla solucionada)</option>
+</select>
+</div>
+<div class="form-group" id="grupoMotivo" style="grid-column: 1/-1;">
+<label>Motivo de la Novedad / Problema Técnico:</label>
+<textarea id="fallaMotivo" placeholder="Describa el motivo detallado..."></textarea>
+</div>
+</div>
+<button class="btn-primary" onclick="guardarReporteFalla()">Guardar / Registrar Evento</button>
+
+<h3 style="margin-top:20px;">Novedades Activas e Inhabilitados</h3>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>ESTADO</th>
+<th>UBICACIÓN</th>
+<th>NOVEDAD / MOTIVO</th>
+<th>FECHA EVENTO</th>
+<th>ACCIONES</th>
+</tr>
+</thead>
+<tbody id="tablaReportesActivos"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 5. INVENTARIO GENERAL -->
+<div id="secInventario" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📋 Inventario General</h3>
+<div class="info"><strong>💡 Tip:</strong> Toca cualquier celda para editarla directamente.</div>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL COMBUSTIBLE</th>
+<th>ESTADO OPERATIVO</th>
+<th>ESTADO ABASTECIMIENTO</th>
+<th>DETALLE / NOVEDAD</th>
+<th>ACCIONES</th>
+</tr>
+</thead>
+<tbody id="tablaInventario"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 6. ESTADÍSTICAS Y RANKINGS -->
+<div id="secEstadisticas" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📊 Dashboard & Rankings de Rendimiento</h3>
+<div class="info">Resumen estadístico basado en el historial completo de la bitácora de auditoría.</div>
+
+<div class="metrics-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px;">
+  <div class="metric-card metric-abastecer">
+    <h5>Total Abastecimientos</h5>
+    <span id="statTotalAbast">0</span>
+  </div>
+  <div class="metric-card metric-fuera">
+    <h5>Total F/S (Daños)</h5>
+    <span id="statTotalFS">0</span>
+  </div>
+  <div class="metric-card metric-salida">
+    <h5>Total Salidas Terminal</h5>
+    <span id="statTotalSalidas">0</span>
+  </div>
+</div>
+
+<h3>🏆 Ranking de Power Packs más Abastecidos</h3>
+<div class="table-responsive" style="margin-bottom:20px;">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Power Pack</th><th>Veces Abastecido</th></tr>
+    </thead>
+    <tbody id="rankingAbastecimientos"></tbody>
+  </table>
+</div>
+
+<h3>⚠️ Ranking de Equipos con más Fallas (F/S)</h3>
+<div class="table-responsive" style="margin-bottom:20px;">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Power Pack</th><th>Veces Fuera de Servicio</th></tr>
+    </thead>
+    <tbody id="rankingFallas"></tbody>
+  </table>
+</div>
+</div>
+
+<!-- 7. ITINERARIO NAVES -->
+<div id="secItinerario" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>🚢 Itinerario de Naves (Navis N4)</h3>
+<div class="n4-module-wrap">
+  <div class="n4-barra-titulo">
+    <div class="n4-titulo-texto">
+      <span>🚢</span>
+      <span id="tituloVentana">Vessel Schedule: 0</span>
+    </div>
+    <div style="display:flex; gap:4px;">
+      <button type="button" class="n4-btn" title="Actualizar datos.json" onclick="cargarDatosFlotante()">↻ Actualizar</button>
+    </div>
+  </div>
+
+  <div class="n4-navis-toolbar">
+    <div class="n4-grupo">
+      <select class="n4-navis-select" id="selectActions" onchange="ejecutarAccionN4(this)">
+        <option value="">Actions</option>
+        <option value="refresh">Refresh Data (datos.json)</option>
+        <option value="working">Filter: Working Only</option>
+        <option value="inbound">Filter: Inbound Only</option>
+        <option value="clear">Reset All Filters</option>
+      </select>
+    </div>
+    <div class="n4-grupo">
+      <select class="n4-navis-select" id="filtroFase" onchange="aplicarConsulta()">
+        <option value="">Display: All Phases</option>
+        <option value="Working">Display: Working</option>
+        <option value="Inbound">Display: Inbound</option>
+        <option value="Departed">Display: Departed</option>
+      </select>
+    </div>
+    <div class="n4-grupo">
+      <select class="n4-navis-select" id="selectRango" onchange="cambiarRangoFechas()">
+        <option value="7">Next 7 Days</option>
+        <option value="14">Next 14 Days</option>
+        <option value="21">Next 21 Days</option>
+        <option value="-7">Past 7 Days & Next 7</option>
+        <option value="personalizado">Custom Dates</option>
+      </select>
+    </div>
+    <div class="n4-grupo">
+      <label>Desde:</label>
+      <input type="date" class="n4-navis-input" id="fechaInicio" onchange="marcarPersonalizado()">
+    </div>
+    <div class="n4-grupo">
+      <label>Hasta:</label>
+      <input type="date" class="n4-navis-input" id="fechaFin" onchange="marcarPersonalizado()">
+    </div>
+    <div class="n4-grupo" style="flex:1;">
+      <input type="text" class="n4-navis-input" id="buscadorTexto" placeholder="Buscar nave, ref, viaje, origen, destino..." oninput="aplicarConsulta()" style="width:100%;">
+    </div>
+    <div class="n4-grupo">
+      <button type="button" class="n4-btn primario" onclick="cargarDatosFlotante()">CONSULTAR</button>
+      <button type="button" class="n4-btn" onclick="limpiarFiltrosNaves()">LIMPIAR</button>
+    </div>
+    <span style="font-size:11px; color:#444; margin-left:auto;" id="estadoFuente">Conectando a datos.json...</span>
+  </div>
+
+  <div class="n4-tabla-contenedor">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px;">🚢</th>
+          <th>Arribo a muelle</th>
+          <th>Est. Zarpe</th>
+          <th>*Cut-Off*</th>
+          <th>Ship Reference</th>
+          <th>Vessel Name</th>
+          <th>VLine Op.</th>
+          <th>Vessel Service</th>
+          <th>Visit Phase</th>
+          <th>P.Origen</th>
+          <th>P.Destino</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpoTablaNaves">
+        <tr><td colspan="11" style="text-align:center;padding:18px;">Cargando datos.json...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="n4-pie">
+    <span id="contadorRegistrosNaves">0 registros</span>
+    <span>Módulo Navis N4 Integrado</span>
+  </div>
+</div>
+</div>
+
+<!-- 8. AUDITORÍA Y TRAZABILIDAD -->
+<div id="secAuditoria" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📜 Auditoría e Historial Cronológico Completo</h3>
+<div class="form-grid cols-3" style="margin-bottom:15px;">
+  <div class="form-group"><label>Desde fecha:</label><input type="date" id="filtroDesde" onchange="renderizarTablas()"></div>
+  <div class="form-group"><label>Hasta fecha:</label><input type="date" id="filtroHasta" onchange="renderizarTablas()"></div>
+  <div class="form-group"><label>Filtrar por PPk o Evento:</label><input type="text" id="filtroTextoAudit" placeholder="Ej: #15, ABASTECIMIENTO, SALIDA..." oninput="renderizarTablas()"></div>
+</div>
+<div class="btn-container">
+  <button class="btn-secondary" onclick="limpiarFiltrosFechas()">🔄 Ver Todo el Historial</button>
+  <button class="btn-success" onclick="exportarHistorialCSV()">📥 Descargar Historial (Excel / CSV)</button>
+</div>
+
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>FECHA Y HORA</th>
+<th>PPk</th>
+<th>TIPO DE EVENTO</th>
+<th>UBICACIÓN</th>
+<th>NIVEL COMBUSTIBLE</th>
+<th>DETALLE / OBSERVACIÓN</th>
+<th>USUARIO</th>
+</tr>
+</thead>
+<tbody id="tablaAuditoria"></tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<!-- MODAL PARA ABRIR REPORTE.HTML INTEGRADO -->
+<div id="modalReporteReefer">
+  <div id="modalReporteReeferContent">
+    <div style="background:#002060; color:#fff; padding:10px 15px; display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0; color:#fff; font-size:1rem;">Control Operativo Reefer (Reportes)</h3>
+      <button onclick="cerrarReporteReeferModal()" style="background:#dc3545; color:#fff; border:none; padding:6px 12px; border-radius:4px; font-weight:bold; cursor:pointer; width:auto;">✖ Cerrar</button>
+    </div>
+    <div style="flex:1; overflow:hidden;">
+      <iframe id="iframeReporteReefer" style="width:100%; height:100%; border:none;" src="about:blank"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- CONTENIDO EMBEBIDO DE REPORTE.HTML (PARA CARGARLO DINÁMICAMENTE EN EL IFRAME) -->
+<script id="reporteHtmlSource" type="text/html">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control Operativo Reefer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+  <style>
+    :root { --navy-blue: #002060; --header-blue: #5b9bd5; --border-color: #000000; --bg-light: #f4f7f9; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; background-color: var(--bg-light); padding-bottom: 30px; }
+    header { background-color: var(--navy-blue); color: white; padding: 12px 15px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    header h1 { font-size: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .nav-tabs { display: flex; background-color: #ffffff; border-bottom: 2px solid #ccc; position: sticky; top: 43px; z-index: 99; }
+    .tab-btn { flex: 1; padding: 12px 8px; background: none; border: none; font-size: 13px; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; border-bottom: 3px solid transparent; }
+    .tab-btn.active { color: var(--navy-blue); border-bottom-color: var(--navy-blue); background-color: #eef4fc; }
+    .tab-content { display: none; padding: 15px; max-width: 1100px; margin: 0 auto; }
+    .tab-content.active { display: block; }
+    .container { display: flex; flex-wrap: wrap; gap: 20px; }
+    .form-container { flex: 1; min-width: 100%; background: #ffffff; padding: 15px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    .form-group { margin-bottom: 12px; }
+    .form-row { display: flex; gap: 10px; }
+    label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 13px; }
+    input, select, button { width: 100%; padding: 9px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+    button.btn-add { background-color: #28a745; color: white; font-weight: bold; border: none; cursor: pointer; }
+    button.btn-cancel { background-color: #6c757d; color: white; font-weight: bold; border: none; cursor: pointer; }
+    button.btn-clear { background-color: #dc3545; color: white; font-weight: bold; border: none; cursor: pointer; margin-top: 10px; }
+    .action-buttons-container { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+    button.btn-report { background-color: var(--navy-blue); color: white; font-weight: bold; border: none; cursor: pointer; padding: 12px 15px; border-radius: 5px; font-size: 14px; flex: 1; }
+    button.btn-download { background-color: #17a2b8; color: white; font-weight: bold; border: none; cursor: pointer; padding: 12px 15px; border-radius: 5px; font-size: 14px; flex: 1; }
+    .preview-container { flex: 1; min-width: 100%; margin-top: 15px; }
+    .custom-table, .reefer-table { width: 100%; border-collapse: collapse; border: 2px solid var(--border-color); background-color: white; font-size: 12px; }
+    .custom-table th, .reefer-table th.col-header { background-color: var(--navy-blue); color: white; font-weight: bold; text-transform: uppercase; padding: 6px; border: 1px solid var(--border-color); text-align: center; }
+    .reefer-table th.col-header { background-color: var(--header-blue); color: black; }
+    .custom-table td, .reefer-table td { border: 1px solid var(--border-color); text-align: center; padding: 5px; font-weight: bold; }
+    .reefer-table th.main-title { background-color: var(--header-blue); color: black; font-size: 15px; font-weight: bold; text-align: center; padding: 8px; border-bottom: 2px solid var(--border-color); text-transform: uppercase; }
+    .reefer-table td.header-label { font-weight: bold; text-transform: uppercase; padding: 5px 8px; text-align: left; }
+    .reefer-table td.header-val { font-weight: bold; padding: 5px 8px; text-align: left; }
+    .reefer-table td.personal-col { text-align: left; }
+    .reefer-table tr.total-row td { background-color: var(--header-blue); font-weight: bold; color: black; }
+    .section-header { background-color: var(--header-blue); color: black; font-weight: bold; text-align: center; }
+    .highlight-pink { background-color: #fce4d6 !important; }
+    .actions-cell { width: 45px; }
+    .btn-action { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px; }
+    .btn-edit { color: #0056b3; }
+    .btn-delete { color: red; }
+    .fullscreen-report { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #ffffff; z-index: 99999; overflow-y: auto; padding: 10px; box-sizing: border-box; }
+    .fullscreen-report.flex-center { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 15px; }
+    .fullscreen-hint { text-align: center; font-size: 11px; color: #666; margin-bottom: 8px; font-style: italic; }
+    #captureTargetBloques { background: white; padding: 2px; width: 260px; margin: 0 auto; }
+    #captureTargetBloques .custom-table th, #captureTargetBloques .custom-table td { padding: 4px 2px; }
+    #captureTargetReefer { background: white; padding: 5px; width: 100%; max-width: 450px; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <header><h1>Control Operativo Reefer</h1></header>
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="switchTab('tabBloques', this)">📋 Equipos por Bloque</button>
+    <button class="tab-btn" onclick="switchTab('tabReefer', this)">👥 Equipo de Trabajo</button>
+  </nav>
+
+  <div id="tabBloques" class="tab-content active">
+    <div class="action-buttons-container">
+      <button class="btn-report" onclick="mostrarReporteCapturaBloques()">👁️ Modo Captura</button>
+      <button class="btn-download" onclick="descargarImagenBloques()">📷 Descargar PNG</button>
+    </div>
+    <div class="container">
+      <div class="form-container">
+        <h2 id="formBloquesTitle" style="text-align:center; margin-bottom:10px;">Ingresar Registro</h2>
+        <form id="recordFormBloques">
+          <input type="hidden" id="editIdBloques" value="">
+          <div class="form-group"><label>Bloque / Zona:</label><input type="text" id="bloque" placeholder="Ej: 1D, 1F, BUQUE" required></div>
+          <div class="form-group"><label>Técnico(s):</label><input type="text" id="tecnicos" placeholder="Ej: TOCTO, TORRES" required></div>
+          <div class="form-group"><label>Radio(s):</label><input type="text" id="radio" placeholder="Ej: 4028, 1018"></div>
+          <div class="form-group"><label>Tablet(s):</label><input type="text" id="tablets" placeholder="Ej: 1, 11"></div>
+          <div class="btn-group">
+            <button type="submit" class="btn-add" id="btnSubmitBloques">Añadir Registro</button>
+            <button type="button" class="btn-cancel" id="btnCancelBloques" style="display:none;" onclick="cancelarEdicionBloques()">Cancelar</button>
+          </div>
+          <button type="button" class="btn-clear" onclick="limpiarBloques()">Borrar Todos los Datos</button>
+        </form>
+      </div>
+      <div class="preview-container">
+        <h2 style="text-align:center; margin-bottom:10px;">Panel de Edición</h2>
+        <table class="custom-table">
+          <thead><tr><th style="width: 40%;">BLOQUES</th><th style="width: 25%;">RADIO</th><th style="width: 20%;">TABBLE</th><th class="actions-cell">Acción</th></tr></thead>
+          <tbody id="tableBodyBloques"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="tabReefer" class="tab-content">
+    <div class="action-buttons-container">
+      <button class="btn-report" onclick="mostrarReporteCapturaReefer()">👁️ Modo Captura</button>
+      <button class="btn-download" onclick="descargarImagenReefer()">📷 Descargar PNG</button>
+    </div>
+    <div class="container">
+      <div class="form-container">
+        <h2 id="formReeferTitle" style="text-align:center; margin-bottom:10px;">Configuración & Registro</h2>
+        <div class="form-group"><label>Fecha:</label><input type="text" id="fecha" value="5/9/2026"></div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1;"><label>Turno:</label><input type="text" id="turno" value="1"></div>
+          <div class="form-group" style="flex:2;"><label>Team:</label><input type="text" id="team" value="HALCONES"></div>
+        </div>
+        <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ccc;">
+        <form id="recordFormReefer">
+          <input type="hidden" id="editIdReefer" value="">
+          <div class="form-group"><label>Categoría Personal:</label><input type="text" id="personal" required></div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1;"><label>Pedido:</label><input type="number" id="pedido" min="0" required></div>
+            <div class="form-group" style="flex:1;"><label>Asistieron:</label><input type="number" id="asistieron" min="0" required></div>
+          </div>
+          <div class="form-group"><label>Observaciones:</label><input type="text" id="observaciones"></div>
+          <div class="btn-group">
+            <button type="submit" class="btn-add" id="btnSubmitReefer">Añadir / Actualizar Fila</button>
+            <button type="button" class="btn-cancel" id="btnCancelReefer" style="display:none;" onclick="cancelarEdicionReefer()">Cancelar</button>
+          </div>
+          <button type="button" class="btn-clear" onclick="limpiarReefer()">Borrar Todos los Datos</button>
+        </form>
+      </div>
+      <div class="preview-container">
+        <h2 style="text-align:center; margin-bottom:10px;">Panel de Edición</h2>
+        <div id="tablePreviewContainerReefer"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fullscreen-report" id="fullscreenReportBloques" ondblclick="cerrarReportes()">
+    <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
+    <div id="captureTargetBloques">
+      <table class="custom-table">
+        <thead><tr><th style="width: 42%;">BLOQUES</th><th style="width: 30%;">RADIO</th><th style="width: 28%;">TABBLE</th></tr></thead>
+        <tbody id="captureReportBodyBloques"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="fullscreen-report" id="fullscreenReportReefer" ondblclick="cerrarReportes()">
+    <div class="fullscreen-hint">👈 Toca dos veces rápidas para regresar</div>
+    <div id="captureTargetReefer"><div id="tableCaptureContainerReefer"></div></div>
+  </div>
+
+  <script>
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btnElement.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    document.addEventListener("DOMContentLoaded", () => {
+      renderTableBloques();
+      document.getElementById("fecha").addEventListener("input", renderReefer);
+      document.getElementById("turno").addEventListener("input", renderReefer);
+      document.getElementById("team").addEventListener("input", renderReefer);
+      renderReefer();
+    });
+
+    const formBloques = document.getElementById("recordFormBloques");
+    formBloques.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const editId = document.getElementById("editIdBloques").value;
+      const bloque = document.getElementById("bloque").value.trim().toUpperCase();
+      const tecnicosStr = document.getElementById("tecnicos").value.trim();
+      const radioStr = document.getElementById("radio").value.trim();
+      const tabletsStr = document.getElementById("tablets").value.trim();
+      const tecnicos = tecnicosStr.split(',').map(t => t.trim()).filter(t => t !== "");
+      const radios = radioStr ? radioStr.split(',').map(r => r.trim()) : [];
+      const tablets = tabletsStr ? tabletsStr.split(',').map(t => t.trim()) : [];
+      if (tecnicos.length === 0) return;
+      let currentData = getStoredBloques();
+      if (editId) {
+        currentData = currentData.map(item => item.id == editId ? { id: Number(editId), bloque, tecnicos, radios, tablets } : item);
+        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+        cancelarEdicionBloques();
+      } else {
+        currentData.push({ id: Date.now(), bloque, tecnicos, radios, tablets });
+        localStorage.setItem("registros_bloques", JSON.stringify(currentData));
+        formBloques.reset();
+      }
+      renderTableBloques();
+    });
+
+    function getStoredBloques() {
+      const data = localStorage.getItem("registros_bloques");
+      if (data !== null) return JSON.parse(data);
+      const defaultData = [
+        { id: 1, bloque: "1D", tecnicos: ["TOMALA", "CHONILLO"], radios: ["4012"], tablets: ["5", "6"] },
+        { id: 2, bloque: "1E", tecnicos: ["SOLANO", "MESA"], radios: ["4029"], tablets: ["9", "7"] },
+        { id: 3, bloque: "1F", tecnicos: ["TOCTO", "TORRES"], radios: ["4028", "1018"], tablets: ["1", "11"] }
+      ];
+      localStorage.setItem("registros_bloques", JSON.stringify(defaultData));
+      return defaultData;
+    }
+
+    function renderTableBloques() {
+      const data = getStoredBloques();
+      const tbody = document.getElementById("tableBodyBloques");
+      tbody.innerHTML = "";
+      data.forEach(group => {
+        const rowCount = group.tecnicos.length;
+        const hasMultipleRadios = Array.isArray(group.radios) && group.radios.length > 1;
+        const headerRow = document.createElement("tr");
+        headerRow.innerHTML = `<td colspan="4" class="section-header">${group.bloque}</td>`;
+        tbody.appendChild(headerRow);
+        group.tecnicos.forEach((tecnico, index) => {
+          const row = document.createElement("tr");
+          const isPink = (tecnico.toUpperCase().includes("CEDEÑO") || tecnico.toUpperCase().includes("GERRERO"));
+          const pinkClass = isPink ? 'class="highlight-pink"' : '';
+          let html = `<td ${pinkClass}>${tecnico}</td>`;
+          if (hasMultipleRadios) { html += `<td>${group.radios[index] || ""}</td>`; } 
+          else { if (index === 0) html += `<td rowspan="${rowCount}" style="vertical-align: middle;">${group.radios[0] || ""}</td>`; }
+          html += `<td>${group.tablets[index] || ""}</td>`;
+          if (index === 0) {
+            html += `<td rowspan="${rowCount}" class="actions-cell" style="vertical-align: middle;">
+                      <button class="btn-action btn-edit" onclick="cargarEdicionBloques(${group.id})">✏️</button>
+                      <button class="btn-action btn-delete" onclick="deleteEntryBloques(${group.id})">🗑️</button>
+                    </td>`;
+          }
+          row.innerHTML = html;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    function cargarEdicionBloques(id) {
+      const item = getStoredBloques().find(i => i.id == id);
+      if (!item) return;
+      document.getElementById("editIdBloques").value = item.id;
+      document.getElementById("bloque").value = item.bloque;
+      document.getElementById("tecnicos").value = item.tecnicos.join(", ");
+      document.getElementById("radio").value = item.radios.join(", ");
+      document.getElementById("tablets").value = item.tablets.join(", ");
+      document.getElementById("formBloquesTitle").innerText = "Editar Registro";
+      document.getElementById("btnSubmitBloques").innerText = "Guardar Cambios";
+      document.getElementById("btnCancelBloques").style.display = "inline-block";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicionBloques() {
+      document.getElementById("editIdBloques").value = "";
+      formBloques.reset();
+      document.getElementById("formBloquesTitle").innerText = "Ingresar Registro";
+      document.getElementById("btnSubmitBloques").innerText = "Añadir Registro";
+      document.getElementById("btnCancelBloques").style.display = "none";
+    }
+
+    function deleteEntryBloques(id) {
+      if (confirm("¿Eliminar registro?")) {
+        localStorage.setItem("registros_bloques", JSON.stringify(getStoredBloques().filter(i => i.id !== id)));
+        renderTableBloques();
+      }
+    }
+
+    function limpiarBloques() {
+      if (confirm("¿Borrar todos los bloques?")) {
+        localStorage.setItem("registros_bloques", JSON.stringify([]));
+        cancelarEdicionBloques();
+        renderTableBloques();
+      }
+    }
+
+    function buildCleanBloques() {
+      const data = getStoredBloques();
+      const tbody = document.getElementById("captureReportBodyBloques");
+      tbody.innerHTML = "";
+      data.forEach(group => {
+        const rowCount = group.tecnicos.length;
+        const hasMultipleRadios = Array.isArray(group.radios) && group.radios.length > 1;
+        const headerRow = document.createElement("tr");
+        headerRow.innerHTML = `<td colspan="3" class="section-header">${group.bloque}</td>`;
+        tbody.appendChild(headerRow);
+        group.tecnicos.forEach((tecnico, index) => {
+          const row = document.createElement("tr");
+          const isPink = (tecnico.toUpperCase().includes("CEDEÑO") || tecnico.toUpperCase().includes("GERRERO"));
+          const pinkClass = isPink ? 'class="highlight-pink"' : '';
+          let html = `<td ${pinkClass}>${tecnico}</td>`;
+          if (hasMultipleRadios) { html += `<td>${group.radios[index] || ""}</td>`; } 
+          else { if (index === 0) html += `<td rowspan="${rowCount}" style="vertical-align: middle;">${group.radios[0] || ""}</td>`; }
+          html += `<td>${group.tablets[index] || ""}</td>`;
+          row.innerHTML = html;
+          tbody.appendChild(row);
+        });
+      });
+    }
+
+    function mostrarReporteCapturaBloques() {
+      buildCleanBloques();
+      const report = document.getElementById("fullscreenReportBloques");
+      report.classList.add("flex-center");
+      report.style.display = "flex";
+    }
+
+    function descargarImagenBloques() {
+      buildCleanBloques();
+      descargarCanvas(document.getElementById("captureTargetBloques"), document.getElementById("fullscreenReportBloques"), 'Reporte_Equipos_Bloques.png');
+    }
+
+    const formReefer = document.getElementById("recordFormReefer");
+    formReefer.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const editId = document.getElementById("editIdReefer").value;
+      const personal = document.getElementById("personal").value.trim();
+      const pedido = parseInt(document.getElementById("pedido").value) || 0;
+      const asistieron = parseInt(document.getElementById("asistieron").value) || 0;
+      const observaciones = document.getElementById("observaciones").value.trim();
+      let currentData = getStoredReefer();
+      if (editId) {
+        currentData = currentData.map(item => item.id == editId ? { id: Number(editId), personal, pedido, asistieron, observaciones } : item);
+        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
+        cancelarEdicionReefer();
+      } else {
+        currentData.push({ id: Date.now(), personal, pedido, asistieron, observaciones });
+        localStorage.setItem("reefer_team_data", JSON.stringify(currentData));
+        formReefer.reset();
+      }
+      renderReefer();
+    });
+
+    function getStoredReefer() {
+      const data = localStorage.getItem("reefer_team_data");
+      if (data !== null) return JSON.parse(data);
+      const defaultData = [
+        { id: 1, personal: "DPW Ec", pedido: 7, asistieron: 7, observaciones: "" },
+        { id: 2, personal: "Perú (12 hrs)", pedido: 2, asistieron: 2, observaciones: "" }
+      ];
+      localStorage.setItem("reefer_team_data", JSON.stringify(defaultData));
+      return defaultData;
+    }
+
+    function generateTableHTMLReefer(isCaptureMode = false) {
+      const data = getStoredReefer();
+      const fecha = document.getElementById("fecha").value;
+      const turno = document.getElementById("turno").value;
+      const team = document.getElementById("team").value;
+      let totalPedido = 0, totalAsistieron = 0;
+      const colSpan = isCaptureMode ? 4 : 5;
+      let html = `<table class="reefer-table"><thead>
+          <tr><th colspan="${colSpan}" class="main-title">PROGRAMACION DIARIA REEFER</th></tr>
+          <tr><td class="header-label">FECHA:</td><td class="header-val" colspan="${colSpan - 1}">${fecha}</td></tr>
+          <tr><td class="header-label">TURNO:</td><td class="header-val" colspan="${colSpan - 1}">${turno}</td></tr>
+          <tr><td class="header-label">TEAM:</td><td class="header-val" colspan="${colSpan - 1}">${team}</td></tr>
+          <tr>
+            <th class="col-header" style="width: 40%;">PERSONAL</th>
+            <th class="col-header" style="width: 20%;">PEDIDO</th>
+            <th class="col-header" style="width: 20%;">ASISTIERON</th>
+            <th class="col-header" style="width: 20%;">Observaciones</th>
+            ${!isCaptureMode ? '<th class="col-header actions-cell">Acción</th>' : ''}
+          </tr></thead><tbody>`;
+      data.forEach(item => {
+        totalPedido += Number(item.pedido);
+        totalAsistieron += Number(item.asistieron);
+        html += `<tr><td class="personal-col">${item.personal}</td><td>${item.pedido}</td><td>${item.asistieron}</td><td>${item.observaciones}</td>
+          ${!isCaptureMode ? `<td class="actions-cell"><button class="btn-action btn-edit" onclick="cargarEdicionReefer(${item.id})">✏️</button><button class="btn-action btn-delete" onclick="deleteEntryReefer(${item.id})">🗑️</button></td>` : ''}</tr>`;
+      });
+      html += `<tr class="total-row"><td class="personal-col">TOTAL</td><td>${totalPedido}</td><td>${totalAsistieron}</td><td></td>${!isCaptureMode ? '<td></td>' : ''}</tr></tbody></table>`;
+      return html;
+    }
+
+    function renderReefer() {
+      document.getElementById("tablePreviewContainerReefer").innerHTML = generateTableHTMLReefer(false);
+    }
+
+    function cargarEdicionReefer(id) {
+      const item = getStoredReefer().find(i => i.id == id);
+      if (!item) return;
+      document.getElementById("editIdReefer").value = item.id;
+      document.getElementById("personal").value = item.personal;
+      document.getElementById("pedido").value = item.pedido;
+      document.getElementById("asistieron").value = item.asistieron;
+      document.getElementById("observaciones").value = item.observaciones;
+      document.getElementById("formReeferTitle").innerText = "Editar Registro";
+      document.getElementById("btnSubmitReefer").innerText = "Guardar Cambios";
+      document.getElementById("btnCancelReefer").style.display = "inline-block";
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function cancelarEdicionReefer() {
+      document.getElementById("editIdReefer").value = "";
+      formReefer.reset();
+      document.getElementById("formReeferTitle").innerText = "Configuración & Registro";
+      document.getElementById("btnSubmitReefer").innerText = "Añadir / Actualizar Fila";
+      document.getElementById("btnCancelReefer").style.display = "none";
+    }
+
+    function deleteEntryReefer(id) {
+      if (confirm("¿Eliminar fila?")) {
+        localStorage.setItem("reefer_team_data", JSON.stringify(getStoredReefer().filter(i => i.id !== id)));
+        renderReefer();
+      }
+    }
+
+    function limpiarReefer() {
+      if (confirm("¿Borrar todos los datos de equipo?")) {
+        localStorage.setItem("reefer_team_data", JSON.stringify([]));
+        cancelarEdicionReefer();
+        renderReefer();
+      }
+    }
+
+    function mostrarReporteCapturaReefer() {
+      document.getElementById("tableCaptureContainerReefer").innerHTML = generateTableHTMLReefer(true);
+      const report = document.getElementById("fullscreenReportReefer");
+      report.classList.add("flex-center");
+      report.style.display = "flex";
+    }
+
+    function descargarImagenReefer() {
+      document.getElementById("tableCaptureContainerReefer").innerHTML = generateTableHTMLReefer(true);
+      descargarCanvas(document.getElementById("captureTargetReefer"), document.getElementById("fullscreenReportReefer"), 'Programacion_Reefer.png');
+    }
+
+    function cerrarReportes() {
+      const reportBloques = document.getElementById("fullscreenReportBloques");
+      const reportReefer = document.getElementById("fullscreenReportReefer");
+      reportBloques.style.display = "none"; reportBloques.classList.remove("flex-center");
+      reportReefer.style.display = "none"; reportReefer.classList.remove("flex-center");
+    }
+
+    function descargarCanvas(target, parentModal, fileName) {
+      const wasHidden = parentModal.style.display === "none" || parentModal.style.display === "";
+      if (wasHidden) { parentModal.classList.add("flex-center"); parentModal.style.display = "flex"; parentModal.style.opacity = "0"; }
+      html2canvas(target, { scale: 2 }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = fileName; link.href = canvas.toDataURL('image/png'); link.click();
+        if (wasHidden) { parentModal.style.display = "none"; parentModal.classList.remove("flex-center"); parentModal.style.opacity = "1"; }
+      });
+    }
+  </script>
+</script>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWl_Uvv9D94Urfxtr_LPwFoJ6gULYkq-uWx2ecas7ls6cwaDrduhq43DqfGOEsWyYdfw/exec"; 
+
+let inventario = JSON.parse(localStorage.getItem("inventario_ppk")) || [];
+let historialAuditoria = JSON.parse(localStorage.getItem("historial_ppk")) || [];
+let usuarioActivo = "";
+
+const usuariosPermitidos = [
+  { user: "operador", pass: "op1234" },
+  { user: "supervisor", pass: "sup2026" },
+  { user: "jose", pass: "admin123" }
+];
+
+function realizarLogin(){
+  const user = document.getElementById("loginUser").value.trim().toLowerCase();
+  const pass = document.getElementById("loginPass").value.trim();
+  const encontrado = usuariosPermitidos.find(u => u.user === user && u.pass === pass);
+
+  if(!encontrado){
+    alert("❌ Usuario o contraseña incorrectos.");
+    return;
+  }
+  usuarioActivo = user.toUpperCase();
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appContainer").style.display = "block";
+  document.getElementById("lblUsuario").innerText = usuarioActivo;
+  cargarCorreos();
+  cargarDesdeSheets();
+}
+
+function cerrarSesion(){
+  document.getElementById("appContainer").style.display = "none";
+  document.getElementById("loginScreen").style.display = "block";
+  document.getElementById("loginUser").value = "";
+  document.getElementById("loginPass").value = "";
+}
+
+function mostrarSeccion(idSeccion){
+  document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+  document.getElementById(idSeccion).classList.add('active');
+  if(idSeccion === 'secAgregar') poblarSelectRetorno();
+  if(idSeccion === 'secReportes') poblarSelectReportes();
+  if(idSeccion === 'secEnviarCorreo') renderizarTablaCorreoSeleccionados();
+  if(idSeccion === 'secAuditoria') renderizarTablas();
+  if(idSeccion === 'secEstadisticas') calcularYRenderizarEstadisticas();
+  if(idSeccion === 'secItinerario') {
+    inicializarFechasPorDefecto();
+    cargarDatosFlotante();
+  }
+}
+
+function mostrarDashboard(){
+  document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+  document.getElementById('vistaDashboard').classList.add('active');
+  actualizarTodo();
+}
+
+function abrirReporteReeferModal(){
+  const modal = document.getElementById("modalReporteReefer");
+  const iframe = document.getElementById("iframeReporteReefer");
+  const sourceHtml = document.getElementById("reporteHtmlSource").innerHTML;
+  
+  iframe.srcdoc = sourceHtml;
+  modal.style.display = "flex";
+}
+
+function cerrarReporteReeferModal(){
+  document.getElementById("modalReporteReefer").style.display = "none";
+  document.getElementById("iframeReporteReefer").src = "about:blank";
+}
+
+function togglePanelCorreos(){
+  const panel = document.getElementById("panelCorreos");
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
+
+function guardarCorreos(){
+  localStorage.setItem("ppk_correos_para", document.getElementById("correosPara").value.trim());
+  localStorage.setItem("ppk_correos_cc", document.getElementById("correosCC").value.trim());
+  alert("Correos guardados correctamente.");
+  togglePanelCorreos();
+}
+
+function cargarCorreos(){
+  document.getElementById("correosPara").value = localStorage.getItem("ppk_correos_para") || "";
+  document.getElementById("correosCC").value = localStorage.getItem("ppk_correos_cc") || "";
+}
+
+function escapeHTML(text){
+  return String(text||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+function obtenerFechaHoraActual(){
+  const d = new Date();
+  const dia = String(d.getDate()).padStart(2,'0');
+  const mes = String(d.getMonth()+1).padStart(2,'0');
+  const anio = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  return `${dia}/${mes}/${anio} ${hh}:${mm}`;
+}
+
+function obtenerFechaISOActual(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/* --- REGISTRO EN BITÁCORA DE AUDITORÍA --- */
+function registrarEventoHistorial(ppkNombre, tipoEvento, ubicacion, nivel, detalle){
+  const registro = {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    fechaHora: obtenerFechaHoraActual(),
+    fechaIso: obtenerFechaISOActual(),
+    ppk: ppkNombre,
+    evento: tipoEvento,
+    ubicacion: ubicacion || "N/A",
+    nivel: nivel || "N/A",
+    detalle: detalle || "",
+    usuario: usuarioActivo || "SISTEMA"
+  };
+  historialAuditoria.unshift(registro);
+  localStorage.setItem("historial_ppk", JSON.stringify(historialAuditoria));
+}
+
+function cambiarCheckAbastecer(index, checkbox){
+  const item = inventario[index];
+  if(item.estado === "DEVUELTO TERMINAL"){
+    alert("⚠️ Este Power Pack está inhabilitado por Salida de Terminal. Debe reactivarlo primero.");
+    checkbox.checked = false;
+    return;
+  }
+
+  item.abastecer = checkbox.checked;
+  if(checkbox.checked){
+    item.fechaAbastecimiento = obtenerFechaHoraActual();
+    registrarEventoHistorial(item.nombre, "SOLICITUD ABASTECIMIENTO", item.ubicacion, item.nivel, "Marcado para abastecimiento de combustible");
+  } else {
+    item.fechaAbastecimiento = "";
+    registrarEventoHistorial(item.nombre, "ABASTECIMIENTO COMPLETADO / DESMARCADO", item.ubicacion, item.nivel, "Desmarcado de lista por abastecer");
+  }
+  actualizarTodo();
+}
+
+function marcarSugeridosAbastecer(){
+  let marcados = 0;
+  inventario.forEach(item=>{
+    if(item.estado === "OPERATIVO" && !item.abastecer){
+      const nivel = String(item.nivel).trim().toUpperCase();
+      let sugerir = false;
+      if(nivel.endsWith("%")){
+        const num = parseFloat(nivel.replace("%","").trim());
+        if(!isNaN(num) && num <= 30) sugerir = true;
+      }else if(nivel.endsWith("GLS")){
+        const num = parseFloat(nivel.replace("GLS","").trim());
+        if(!isNaN(num) && num <= 150) sugerir = true;
+      }
+      if(sugerir){
+        item.abastecer = true;
+        item.fechaAbastecimiento = obtenerFechaHoraActual();
+        registrarEventoHistorial(item.nombre, "SOLICITUD ABASTECIMIENTO", item.ubicacion, item.nivel, "Marcado automático por nivel bajo");
+        marcados++;
+      }
+    }
+  });
+  if(marcados > 0) alert(`⚡ Se marcaron ${marcados} equipo(s) y se guardaron en el historial.`);
+  actualizarTodo();
+}
+
+function actualizarMetricas(){
+  let op = 0, abast = 0, fs = 0, salidas = 0;
+  inventario.forEach(i => {
+    if(i.estado === "DEVUELTO TERMINAL") { salidas++; return; }
+    if(i.estado === "FUERA DE SERVICIO") fs++;
+    if(i.abastecer) abast++;
+    if(i.estado === "OPERATIVO") op++;
+  });
+  document.getElementById("metricOp").innerText = op;
+  document.getElementById("metricAbast").innerText = abast;
+  document.getElementById("metricFS").innerText = fs;
+  const elSalidas = document.getElementById("metricSalidas");
+  if(elSalidas) elSalidas.innerText = salidas;
+}
+
+function actualizarTodo(){
+  renderizarTablas();
+  actualizarMetricas();
+  localStorage.setItem("inventario_ppk", JSON.stringify(inventario));
+  localStorage.setItem("historial_ppk", JSON.stringify(historialAuditoria));
+  sincronizarConSheets();
+}
+
+function calcularYRenderizarEstadisticas(){
+  let totalAbast = 0;
+  let totalFS = 0;
+  let totalSalidas = 0;
+  let conteoAbast = {};
+  let conteoFS = {};
+
+  historialAuditoria.forEach(reg => {
+    const ev = (reg.evento || "").toUpperCase();
+    if(ev.includes("SOLICITUD ABASTECIMIENTO") || ev.includes("ABASTECIMIENTO")) {
+      totalAbast++;
+      conteoAbast[reg.ppk] = (conteoAbast[reg.ppk] || 0) + 1;
+    }
+    if(ev.includes("FALLA") || ev.includes("FUERA DE SERVICIO") || ev.includes("DAÑO")) {
+      totalFS++;
+      conteoFS[reg.ppk] = (conteoFS[reg.ppk] || 0) + 1;
+    }
+    if(ev.includes("SALIDA DE TERMINAL")) {
+      totalSalidas++;
+    }
+  });
+
+  document.getElementById("statTotalAbast").innerText = totalAbast;
+  document.getElementById("statTotalFS").innerText = totalFS;
+  document.getElementById("statTotalSalidas").innerText = totalSalidas;
+
+  // Renderizar Ranking Abastecimientos
+  const tbodyAbast = document.getElementById("rankingAbastecimientos");
+  const rankAbastArr = Object.keys(conteoAbast).map(k => ({ ppk: k, count: conteoAbast[k] })).sort((a,b) => b.count - a.count);
+  if(rankAbastArr.length === 0){
+    tbodyAbast.innerHTML = `<tr><td colspan="3" style="color:#666;padding:12px;">Sin registros de abastecimiento aún.</td></tr>`;
+  } else {
+    tbodyAbast.innerHTML = rankAbastArr.map((r, i) => `<tr><td><b>#${i+1}</b></td><td><strong>${escapeHTML(r.ppk)}</strong></td><td><span class="badge-abastecer">${r.count} veces</span></td></tr>`).join("");
+  }
+
+  // Renderizar Ranking Fallas
+  const tbodyFS = document.getElementById("rankingFallas");
+  const rankFSArr = Object.keys(conteoFS).map(k => ({ ppk: k, count: conteoFS[k] })).sort((a,b) => b.count - a.count);
+  if(rankFSArr.length === 0){
+    tbodyFS.innerHTML = `<tr><td colspan="3" style="color:#666;padding:12px;">Sin registros de fallas/daños aún.</td></tr>`;
+  } else {
+    tbodyFS.innerHTML = rankFSArr.map((r, i) => `<tr><td><b>#${i+1}</b></td><td><strong>${escapeHTML(r.ppk)}</strong></td><td><span class="badge-fuera">${r.count} veces</span></td></tr>`).join("");
+  }
+}
+
+function renderizarTablas(){
+  const tbodyControlAbast = document.getElementById("tablaControlAbastecer");
+  const tbodyInv = document.getElementById("tablaInventario");
+  const tbodyRep = document.getElementById("tablaReportesActivos");
+  const tbodyAudit = document.getElementById("tablaAuditoria");
+
+  if(tbodyControlAbast) tbodyControlAbast.innerHTML = "";
+  if(tbodyInv) tbodyInv.innerHTML = "";
+  if(tbodyRep) tbodyRep.innerHTML = "";
+  if(tbodyAudit) tbodyAudit.innerHTML = "";
+
+  let inventarioOrdenado = [...inventario].sort((a, b) => {
+    const peso = (est) => est === "OPERATIVO" ? 1 : (est === "FUERA DE SERVICIO" ? 2 : 3);
+    return peso(a.estado) - peso(b.estado);
+  });
+
+  inventario.forEach((item)=>{
+    if(item.estado === "DEVUELTO TERMINAL") return;
+    const index = inventario.indexOf(item);
+    if(tbodyControlAbast) {
+      const trAbast = document.createElement("tr");
+      if(item.abastecer) trAbast.className = "row-abastecer";
+      trAbast.innerHTML = `
+        <td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
+        <td><strong>${escapeHTML(item.nombre)}</strong></td>
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')"><strong>${escapeHTML(item.nivel)}</strong></td>
+        <td>${obtenerBadgeEstado(item.estado)}</td>
+        <td>${escapeHTML(item.fechaAbastecimiento || "Sin solicitud")}</td>`;
+      tbodyControlAbast.appendChild(trAbast);
+    }
+  });
+
+  inventarioOrdenado.forEach((item)=>{
+    const index = inventario.indexOf(item);
+    const esInhabilitado = item.estado === "DEVUELTO TERMINAL";
+    const badgeAbast = esInhabilitado ? '<span class="badge-salida">INHABILITADO</span>' : (item.abastecer ? '<span class="badge-abastecer">POR ABASTECER</span>' : '<span class="badge-ok">ABASTECIDO</span>');
+    const badgeNovedad = (item.estado === "FUERA DE SERVICIO" || esInhabilitado) ? escapeHTML(item.novedadManual) : 'OK';
+
+    if(tbodyInv) {
+      const trInv = document.createElement("tr");
+      if(esInhabilitado) trInv.className = "row-inhabilitado";
+      else if(item.abastecer) trInv.className = "row-abastecer";
+
+      trInv.innerHTML = `
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')"><strong>${escapeHTML(item.nombre)}</strong></td>
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
+        <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')">${escapeHTML(item.nivel)}</td>
+        <td>${obtenerBadgeEstado(item.estado)}</td>
+        <td>${badgeAbast}</td>
+        <td>${badgeNovedad}</td>
+        <td class="actions-cell">
+          ${esInhabilitado ? `<button class="btn-success" onclick="irAReactivar('${escapeHTML(item.nombre)}')">Reactivar</button>` : ''}
+          <button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button>
+        </td>`;
+      tbodyInv.appendChild(trInv);
+    }
+
+    if(tbodyRep && (item.estado === "FUERA DE SERVICIO" || esInhabilitado)){
+      const trRep = document.createElement("tr");
+      trRep.innerHTML = `
+        <td><strong>${escapeHTML(item.nombre)}</strong></td>
+        <td>${obtenerBadgeEstado(item.estado)}</td>
+        <td>${escapeHTML(item.ubicacion)}</td>
+        <td>${escapeHTML(item.novedadManual || item.estado)}</td>
+        <td>${escapeHTML(item.fechaReporte || item.fechaSalidaTerminal)}</td>
+        <td class="actions-cell">
+          ${esInhabilitado 
+            ? `<button class="btn-success" onclick="irAReactivar('${escapeHTML(item.nombre)}')">Reingresar</button>`
+            : `<button class="btn-primary" onclick="editarReporte(${index})">Editar</button>
+               <button class="btn-danger" onclick="eliminarReporte(${index})">Solucionado</button>`
+          }
+        </td>`;
+      tbodyRep.appendChild(trRep);
+    }
+  });
+
+  const desdeEl = document.getElementById("filtroDesde");
+  const hastaEl = document.getElementById("filtroHasta");
+  const textoAuditEl = document.getElementById("filtroTextoAudit");
+  const desde = desdeEl ? desdeEl.value : "";
+  const hasta = hastaEl ? hastaEl.value : "";
+  const qAudit = textoAuditEl ? textoAuditEl.value.toUpperCase().trim() : "";
+
+  if(tbodyAudit){
+    const filtradosAudit = historialAuditoria.filter(reg => {
+      let fIso = reg.fechaIso;
+      if(!fIso && reg.fechaHora){
+        let p = reg.fechaHora.split(" ")[0].split("/");
+        if(p.length === 3) fIso = `${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`;
+      }
+      if(desde && fIso && fIso < desde) return false;
+      if(hasta && fIso && fIso > hasta) return false;
+      if(qAudit){
+        const cadena = `${reg.ppk} ${reg.evento} ${reg.ubicacion} ${reg.detalle} ${reg.usuario}`.toUpperCase();
+        if(!cadena.includes(qAudit)) return false;
+      }
+      return true;
+    });
+
+    if(filtradosAudit.length === 0){
+      tbodyAudit.innerHTML = `<tr><td colspan="7" style="color:#666;padding:15px;">No hay registros históricos para los filtros seleccionados.</td></tr>`;
+    } else {
+      filtradosAudit.forEach(reg => {
+        const trAudit = document.createElement("tr");
+        trAudit.innerHTML = `
+          <td><strong>${escapeHTML(reg.fechaHora)}</strong></td>
+          <td><strong>${escapeHTML(reg.ppk)}</strong></td>
+          <td>${obtenerBadgeEvento(reg.evento)}</td>
+          <td>${escapeHTML(reg.ubicacion)}</td>
+          <td>${escapeHTML(reg.nivel)}</td>
+          <td style="text-align:left;">${escapeHTML(reg.detalle)}</td>
+          <td>${escapeHTML(reg.usuario)}</td>`;
+        tbodyAudit.appendChild(trAudit);
+      });
+    }
+  }
+}
+
+function limpiarFiltrosFechas(){
+  document.getElementById("filtroDesde").value = "";
+  document.getElementById("filtroHasta").value = "";
+  document.getElementById("filtroTextoAudit").value = "";
+  renderizarTablas();
+}
+
+function obtenerBadgeEstado(estado){
+  if(estado === "FUERA DE SERVICIO") return '<span class="badge-fuera">FUERA DE SERVICIO</span>';
+  if(estado === "DEVUELTO TERMINAL") return '<span class="badge-salida">INHABILITADO (SALIDA)</span>';
+  return '<span class="badge-ok">OPERATIVO</span>';
+}
+
+function obtenerBadgeEvento(evento){
+  const ev = String(evento).toUpperCase();
+  if(ev.includes("ABASTECIMIENTO")) return `<span class="badge-abastecer">${escapeHTML(evento)}</span>`;
+  if(ev.includes("FALLA") || ev.includes("FUERA")) return `<span class="badge-fuera">${escapeHTML(evento)}</span>`;
+  if(ev.includes("SALIDA")) return `<span class="badge-salida">${escapeHTML(evento)}</span>`;
+  if(ev.includes("REINGRESO") || ev.includes("RETORNO")) return `<span class="badge-retorno">${escapeHTML(evento)}</span>`;
+  if(ev.includes("SOLUCION")) return `<span class="badge-ok">${escapeHTML(evento)}</span>`;
+  return `<span class="badge-alta">${escapeHTML(evento)}</span>`;
+}
+
+function renderizarTablaCorreoSeleccionados(){
+  const tbody = document.getElementById("tablaCorreoSeleccionados");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  const seleccionados = inventario.filter(i => i.abastecer === true && i.estado !== "DEVUELTO TERMINAL");
+
+  if(seleccionados.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#666;padding:15px;">No hay equipos marcados para abastecer.</td></tr>`;
+    return;
+  }
+
+  seleccionados.forEach(i => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${escapeHTML(i.nombre)}</strong></td>
+      <td>${escapeHTML(i.ubicacion)}</td>
+      <td style="background:#ffeb00;font-weight:bold;">${escapeHTML(i.nivel)}</td>
+      <td><span class="badge-abastecer">POR ABASTECER</span></td>
+      <td>${escapeHTML(i.fechaAbastecimiento)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function poblarSelectRetorno(){
+  const bloque = document.getElementById("bloqueReactivar");
+  const select = document.getElementById("selectPpkRetorno");
+  const inhabilitados = inventario.filter(i => i.estado === "DEVUELTO TERMINAL");
+
+  if(inhabilitados.length === 0){
+    bloque.style.display = "none";
+    return;
+  }
+  bloque.style.display = "block";
+  select.innerHTML = "";
+  inhabilitados.forEach(item => {
+    const idxReal = inventario.indexOf(item);
+    const opt = document.createElement("option");
+    opt.value = idxReal;
+    opt.text = `${item.nombre} (Salida: ${item.fechaSalidaTerminal || 'N/A'})`;
+    select.appendChild(opt);
+  });
+}
+
+function irAReactivar(nombrePpk){
+  mostrarSeccion('secAgregar');
+  const select = document.getElementById("selectPpkRetorno");
+  for(let i = 0; i < select.options.length; i++){
+    if(select.options[i].text.startsWith(nombrePpk)){
+      select.selectedIndex = i;
+      break;
+    }
+  }
+}
+
+function reactivarPPkRetorno(){
+  const idx = document.getElementById("selectPpkRetorno").value;
+  const ubicacion = document.getElementById("retUbicacion").value.trim();
+  const nivel = document.getElementById("retNivel").value.trim();
+
+  if(idx === "" || !inventario[idx]) return;
+  if(!ubicacion || !nivel){
+    alert("Ingrese la nueva ubicación y el nivel de combustible con el que retorna el equipo.");
+    return;
+  }
+
+  const item = inventario[idx];
+  item.estado = "OPERATIVO";
+  item.ubicacion = ubicacion;
+  item.nivel = nivel;
+  item.novedadManual = "";
+  item.abastecer = false;
+  item.fechaSolucion = obtenerFechaHoraActual();
+
+  registrarEventoHistorial(item.nombre, "REINGRESO / RETORNO TERMINAL", ubicacion, nivel, "Equipo reactivado tras retorno a terminal");
+
+  alert(`✅ Power Pack ${item.nombre} reactivado y disponible en inventario.`);
+  document.getElementById("retUbicacion").value = "";
+  document.getElementById("retNivel").value = "";
+  mostrarDashboard();
+}
+
+function guardarNuevoPPk(){
+  const nombre = document.getElementById("newNombre").value.trim();
+  const ubicacion = document.getElementById("newUbicacion").value.trim();
+  const nivel = document.getElementById("newNivel").value.trim();
+  const estado = document.getElementById("newEstado").value;
+
+  if(!nombre || !ubicacion || !nivel){ alert("Complete todos los campos."); return; }
+
+  const existenteIdx = inventario.findIndex(i => i.nombre.toUpperCase() === nombre.toUpperCase());
+  if(existenteIdx !== -1){
+    const existente = inventario[existenteIdx];
+    if(existente.estado === "DEVUELTO TERMINAL"){
+      if(confirm(`El Power Pack "${existente.nombre}" ya existe como INHABILITADO por salida. ¿Desea reactivarlo ahora como retorno?`)){
+        existente.estado = estado;
+        existente.ubicacion = ubicacion;
+        existente.nivel = nivel;
+        existente.novedadManual = estado === "FUERA DE SERVICIO" ? "Retornó con falla" : "";
+        registrarEventoHistorial(existente.nombre, "REINGRESO / RETORNO TERMINAL", ubicacion, nivel, "Reactivado al ingresar código existente");
+        document.getElementById("newNombre").value = "";
+        document.getElementById("newUbicacion").value = "";
+        document.getElementById("newNivel").value = "";
+        mostrarDashboard();
+      }
+    } else {
+      alert(`❌ El Power Pack "${existente.nombre}" ya se encuentra activo en el inventario.`);
+    }
+    return;
+  }
+
+  const fechaStr = obtenerFechaHoraActual();
+  const nuevo = {
+    nombre: nombre,
+    ubicacion: ubicacion,
+    nivel: nivel,
+    estado: estado,
+    novedadManual: estado === "FUERA DE SERVICIO" ? "Registrado con falla" : "",
+    fechaCreacion: fechaStr,
+    fechaAbastecimiento: "",
+    fechaReporte: estado === "FUERA DE SERVICIO" ? fechaStr : "",
+    fechaSolucion: "",
+    fechaSalidaTerminal: "",
+    abastecer: false
+  };
+
+  inventario.push(nuevo);
+  registrarEventoHistorial(nombre, "ALTA / INGRESO AL SISTEMA", ubicacion, nivel, `Registrado con estado inicial: ${estado}`);
+
+  alert("Power Pack registrado con éxito.");
+  document.getElementById("newNombre").value = "";
+  document.getElementById("newUbicacion").value = "";
+  document.getElementById("newNivel").value = "";
+  mostrarDashboard();
+}
+
+function poblarSelectReportes(){
+  const select = document.getElementById("selectPpkFalla");
+  if(!select) return;
+  select.innerHTML = "";
+  inventario.forEach((item, index)=>{
+    const opt = document.createElement("option");
+    opt.value = index;
+    const etiquetaEst = item.estado === "DEVUELTO TERMINAL" ? "INHABILITADO" : item.estado;
+    opt.text = `${item.nombre} (${item.ubicacion}) - [${etiquetaEst}]`;
+    select.appendChild(opt);
+  });
+  cargarDatosPpkSeleccionado();
+}
+
+function cargarDatosPpkSeleccionado(){
+  const select = document.getElementById("selectPpkFalla");
+  if(!select) return;
+  const index = select.value;
+  if(index !== undefined && inventario[index]){
+    const item = inventario[index];
+    document.getElementById("fallaEstado").value = item.estado === "DEVUELTO TERMINAL" ? "DEVUELTO TERMINAL" : item.estado;
+    document.getElementById("fallaMotivo").value = item.novedadManual || "";
+    cambiarTipoReporteForm();
+  }
+}
+
+function cambiarTipoReporteForm(){
+  const grupoMotivo = document.getElementById("grupoMotivo");
+  if(!grupoMotivo) return;
+  grupoMotivo.style.display = "flex";
+}
+
+function guardarReporteFalla(){
+  const select = document.getElementById("selectPpkFalla");
+  if(!select) return;
+  const index = select.value;
+  const nuevoEstado = document.getElementById("fallaEstado").value;
+  const motivo = document.getElementById("fallaMotivo").value.trim();
+
+  if(index === "" || !inventario[index]) return;
+  const item = inventario[index];
+  const fechaStr = obtenerFechaHoraActual();
+
+  if(nuevoEstado === "FUERA DE SERVICIO"){
+    if(!motivo){ alert("Debe ingresar el motivo de la falla o daño."); return; }
+    item.estado = "FUERA DE SERVICIO";
+    item.novedadManual = motivo;
+    item.fechaReporte = fechaStr;
+    registrarEventoHistorial(item.nombre, "REPORTE DAÑO / FUERA DE SERVICIO", item.ubicacion, item.nivel, motivo);
+
+  } else if(nuevoEstado === "DEVUELTO TERMINAL"){
+    const obsSalida = motivo || "Salida de Terminal Portuaria - Equipo inhabilitado";
+    item.estado = "DEVUELTO TERMINAL";
+    item.novedadManual = obsSalida;
+    item.abastecer = false;
+    item.fechaSalidaTerminal = fechaStr;
+    registrarEventoHistorial(item.nombre, "SALIDA DE TERMINAL (INHABILITADO)", item.ubicacion, item.nivel, obsSalida);
+
+  } else {
+    const obsSol = motivo || "Falla solucionada - Equipo operativo nuevamente";
+    item.estado = "OPERATIVO";
+    item.novedadManual = "";
+    item.fechaSolucion = fechaStr;
+    registrarEventoHistorial(item.nombre, "SOLUCIÓN / OPERATIVO", item.ubicacion, item.nivel, obsSol);
+  }
+
+  alert("Evento registrado en el sistema y en la bitácora de auditoría.");
+  mostrarDashboard();
+}
+
+function editarReporte(index){
+  mostrarSeccion('secReportes');
+  document.getElementById("selectPpkFalla").value = index;
+  cargarDatosPpkSeleccionado();
+}
+
+function eliminarReporte(index){
+  if(confirm("¿Desea marcar la falla como solucionada y dejar el equipo Operativo?")){
+    const item = inventario[index];
+    item.estado = "OPERATIVO";
+    item.novedadManual = "";
+    item.fechaSolucion = obtenerFechaHoraActual();
+    registrarEventoHistorial(item.nombre, "SOLUCIÓN / OPERATIVO", item.ubicacion, item.nivel, "Novedad cerrada desde lista activa");
+    actualizarTodo();
+  }
+}
+
+function editarCelda(celda, index, propiedad){
+  if(celda.querySelector("input")) return;
+  const valorActual = inventario[index][propiedad];
+  celda.innerHTML = `<input type="text" value="${escapeHTML(valorActual)}" autofocus style="width:100%;padding:4px">`;
+  const input = celda.querySelector("input");
+  input.onblur = function(){ guardarCambioCelda(index, propiedad, input.value); };
+  input.onkeydown = function(e){ if(e.key === "Enter") guardarCambioCelda(index, propiedad, input.value); };
+}
+
+function guardarCambioCelda(index, propiedad, nuevoValor){
+  const limpio = nuevoValor.trim();
+  const anterior = inventario[index][propiedad];
+  if(limpio !== "" && limpio !== anterior){
+    inventario[index][propiedad] = limpio;
+    registrarEventoHistorial(inventario[index].nombre, "ACTUALIZACIÓN DE DATOS", inventario[index].ubicacion, inventario[index].nivel, `Cambio en ${propiedad.toUpperCase()}: "${anterior}" → "${limpio}"`);
+  }
+  actualizarTodo();
+}
+
+function eliminarPPk(index){
+  const item = inventario[index];
+  if(confirm(`¿Desea eliminar definitivamente el Power Pack ${item.nombre}?`)){
+    registrarEventoHistorial(item.nombre, "ELIMINADO DEL INVENTARIO", item.ubicacion, item.nivel, "Eliminado manualmente del inventario activo");
+    inventario.splice(index, 1);
+    actualizarTodo();
+  }
+}
+
+function exportarHistorialCSV(){
+  if(historialAuditoria.length === 0){ alert("No hay registros en el historial para exportar."); return; }
+  let csv = "\uFEFFFECHA Y HORA;PPK;EVENTO;UBICACION;NIVEL;DETALLE;USUARIO\n";
+  historialAuditoria.forEach(r => {
+    csv += `"${r.fechaHora}";"${r.ppk}";"${r.evento}";"${r.ubicacion}";"${r.nivel}";"${(r.detalle||"").replace(/"/g,'""')}";"${r.usuario}"\n`;
+  });
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `Auditoria_PowerPacks_${obtenerFechaISOActual()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function obtenerSaludo(){
+  const hora = new Date().getHours();
+  if(hora>=5 && hora<12) return "Estimados buenos días,";
+  if(hora>=12 && hora<19) return "Estimados buenas tardes,";
+  return "Estimados buenas noches,";
+}
+
+async function enviarCorreoOutlook(){
+  const seleccionados = inventario.filter(item => item.abastecer === true && item.estado !== "DEVUELTO TERMINAL");
+  if(seleccionados.length === 0){ alert("No hay Power Packs seleccionados."); return; }
+  const para = document.getElementById("correosPara").value.trim();
+  const cc = document.getElementById("correosCC").value.trim();
+  const paraArray = para.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="");
+
+  if(paraArray.length === 0){ alert("Configure al menos un correo PARA."); return; }
+  guardarCorreos();
+
+  const saludo = obtenerSaludo();
+  let tablaHtml = `<table border="1" cellpadding="5" style="border-collapse:collapse;font-size:12px;text-align:center">
+    <tr style="background:#003b7a;color:#fff"><th>PPK</th><th>UBICACION</th><th>NIVEL</th><th>ESTADO</th></tr>`;
+  seleccionados.forEach(i => {
+    tablaHtml += `<tr><td><b>${escapeHTML(i.nombre)}</b></td><td>${escapeHTML(i.ubicacion)}</td><td style="background:#ffeb00"><b>${escapeHTML(i.nivel)}</b></td><td>POR ABASTECER</td></tr>`;
+  });
+  tablaHtml += `</table>`;
+
+  const textoPlano = `${saludo}\n\nSu ayuda abasteciendo los siguientes Power Packs:\n` + seleccionados.map(x=>x.nombre+" | "+x.ubicacion+" | "+x.nivel).join("\n");
+
+  try{
+    if(navigator.clipboard && window.ClipboardItem){
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([`<div style="font-family:Arial">${saludo}<br><br>${tablaHtml}</div>`], {type: "text/html"}),
+        "text/plain": new Blob([textoPlano], {type: "text/plain"})
+      })];
+    }
+  }catch(e){ console.error(e); }
+
+  let mailto = "mailto:" + encodeURIComponent(paraArray.join(";")) + "?subject=" + encodeURIComponent("ABASTECIMIENTO DE POWER PACK");
+  if(cc) mailto += "&cc=" + encodeURIComponent(cc);
+  window.location.href = mailto;
+
+  setTimeout(()=>{
+    alert("📧 CORREO PREPARADO:\n1. Outlook abierto.\n2. Tabla copiada al portapapeles.\n👉 Toca el cuerpo del correo en tu app de Outlook y pega (Paste).");
+  }, 600);
+}
+
+async function sincronizarConSheets(){
+  if(!WEB_APP_URL) return;
+  try {
+    await fetch(WEB_APP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        inventario: inventario,
+        auditoria: historialAuditoria
+      })
+    });
+  } catch (error) {
+    console.error("Error al sincronizar con Sheets:", error);
+  }
+}
+
+async function cargarDesdeSheets(){
+  if(!WEB_APP_URL) return;
+  try {
+    const res = await fetch(WEB_APP_URL);
+    const data = await res.json();
+    if(Array.isArray(data) && data.length > 0){
+      inventario = data;
+      localStorage.setItem("inventario_ppk", JSON.stringify(inventario));
+    } else if(data && Array.isArray(data.inventario)){
+      inventario = data.inventario;
+      localStorage.setItem("inventario_ppk", JSON.stringify(inventario));
+      if(Array.isArray(data.auditoria) && data.auditoria.length > 0){
+        historialAuditoria = data.auditoria;
+        localStorage.setItem("historial_ppk", JSON.stringify(historialAuditoria));
+      }
+    }
+  } catch(e){
+    console.error("Usando caché local:", e);
+  }
+  actualizarTodo();
+  mostrarDashboard();
+}
+
+/* --- JS MÓDULO ITINERARIO NAVES (Navis N4) --- */
+let NAVES_DATA = [];
+const NAVES_RESPALDO = [
+  { "gkey": "1962403010", "referencia": "CMA2026122", "nave": "EDISON", "viaje": "0MH30W1MA", "reefer": "2026-11-13 23:00:00", "linea": "CMA", "etb": "2026-11-13 20:00:00", "etd": "2026-11-15 06:00:00", "ata": "2026-11-13 20:00:00", "atd": "", "status": "IN OPERATION", "origen": "PECLL", "destino": "PECLL", "servicio": "ACSA" },
+  { "gkey": "1962403015", "referencia": "MAE2026131", "nave": "MAERSK FINISTERRE", "viaje": "641W", "reefer": "2026-11-14 17:00:00", "linea": "MAE", "etb": "2026-11-14 20:00:00", "etd": "2026-11-16 03:00:00", "ata": "2026-11-14 20:00:00", "atd": "", "status": "IN OPERATION", "origen": "ECPBO", "destino": "ECPBO", "servicio": "ECUMED" }
+];
+const MESES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const ESTILO_LINEA = { 'CMA': { bg: '#0055ff', fg: '#ffffff' }, 'MAE': { bg: '#ccffff', fg: '#000000' }, 'HLC': { bg: '#ff9900', fg: '#000000' } };
+const ESTILO_SERVICIO = { 'ACSA': { bg: '#ff0000', fg: '#ffffff' }, 'ECUMED': { bg: '#66ffff', fg: '#000000' } };
+
+function parseFechaNave(valor) {
+  if (!valor) return null;
+  let s = String(valor).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (m) return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:00-05:00`);
+  return null;
+}
+
+function formatoNavis(valor) {
+  const d = parseFechaNave(valor);
+  if (!d || isNaN(d.getTime())) return '';
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = MESES[d.getMonth()];
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${dia} ${mes} ${hh}${mm}`;
+}
+
+function formatoTituloFecha(isoStr) {
+  if (!isoStr) return '';
+  const [y, m, d] = isoStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function fechaLocalInput(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function inicializarFechasPorDefecto() {
+  const hoy = new Date();
+  const fin = new Date(hoy);
+  fin.setDate(fin.getDate() + 7);
+  const elIni = document.getElementById('fechaInicio');
+  const elFin = document.getElementById('fechaFin');
+  if(elIni && !elIni.value) elIni.value = fechaLocalInput(hoy);
+  if(elFin && !elFin.value) elFin.value = fechaLocalInput(fin);
+}
+
+function marcarPersonalizado() {
+  const selRango = document.getElementById('selectRango');
+  if(selRango) selRango.value = 'personalizado';
+  aplicarConsulta();
+}
+
+function cambiarRangoFechas() {
+  const selRango = document.getElementById('selectRango');
+  if(!selRango) return;
+  const val = selRango.value;
+  if (val === 'personalizado') return;
+
+  const hoy = new Date();
+  const inicio = new Date(hoy);
+  const fin = new Date(hoy);
+  const dias = parseInt(val, 10);
+
+  if (dias < 0) {
+    inicio.setDate(inicio.getDate() + dias);
+    fin.setDate(fin.getDate() + 7);
+  } else {
+    fin.setDate(fin.getDate() + dias);
+  }
+
+  const elIni = document.getElementById('fechaInicio');
+  const elFin = document.getElementById('fechaFin');
+  if(elIni) elIni.value = fechaLocalInput(inicio);
+  if(elFin) elFin.value = fechaLocalInput(fin);
+  aplicarConsulta();
+}
+
+function normalizarRegistroNave(x) {
+  x = x || {};
+  let ref = String(x.referencia ?? x.REFERENCIA ?? '').trim();
+  let vesselName = String(x.nave ?? x.Nave ?? x.nombre ?? '').trim();
+  const shipRefDisplay = ref ? (ref.includes('.') ? ref : `${ref}.1`) : (x.viaje || '—');
+
+  return {
+    gkey: String(x.gkey ?? ''),
+    referencia: ref,
+    shipRefDisplay,
+    vesselName,
+    viaje: String(x.viaje ?? x.Viaje ?? ''),
+    linea: String(x.linea ?? x.Linea ?? x.LINEA ?? '').toUpperCase().trim(),
+    etb: x.etb ?? x.ETB ?? '',
+    etd: x.etd ?? x.ETD ?? '',
+    ata: x.ata ?? x.ATA ?? '',
+    atd: x.atd ?? x.ATD ?? '',
+    cutoff: x.reefer ?? x['Reefer CutOff'] ?? x.dry ?? x['Dry CutOff'] ?? '',
+    status: String(x.status ?? x.STATUS ?? '').toUpperCase().trim(),
+    origen: String(x.origen ?? x['PTO.ORIGEN'] ?? '').toUpperCase().trim(),
+    destino: String(x.destino ?? x['PTO.DESTINO'] ?? '').toUpperCase().trim(),
+    servicio: String(x.servicio ?? x.SERVICIO ?? '').toUpperCase().trim()
+  };
+}
+
+function obtenerVisitPhase(n) {
+  const s = n.status;
+  const now = new Date();
+  const etb = parseFechaNave(n.etb);
+  if (n.atd || s === 'DEPARTED' || s.includes('SAILED')) return 'Departed';
+  if (s.includes('IN OPERATION') || s.includes('OPERATING') || s === 'WORKING' || (n.ata && !n.atd)) return 'Working';
+  if (etb && now >= etb && !n.atd) return 'Working';
+  return 'Inbound';
+}
+
+function rangoFechasNave(n) {
+  const puntos = [parseFechaNave(n.etb), parseFechaNave(n.etd)].filter(Boolean);
+  if (!puntos.length) return null;
+  const inicio = new Date(Math.min(...puntos.map(x => x.getTime())));
+  let fin = new Date(Math.max(...puntos.map(x => x.getTime())));
+  if (obtenerVisitPhase(n) === 'Working' && !parseFechaNave(n.atd) && fin < new Date()) fin = new Date();
+  return { inicio, fin };
+}
+
+async function cargarDatosFlotante() {
+  const est = document.getElementById('estadoFuente');
+  if(est) est.textContent = 'Leyendo datos.json...';
+  try {
+    const r = await fetch('datos.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const arr = Array.isArray(j) ? j : (j.naves || j.NAVES || j.data || j.datos || []);
+    if (!Array.isArray(arr) || !arr.length) throw new Error('datos.json vacío');
+    NAVES_DATA = arr.map(normalizarRegistroNave);
+    if(est) {
+      est.textContent = `datos.json (${NAVES_DATA.length} naves)`;
+      est.style.color = '#166534';
+    }
+  } catch (e) {
+    NAVES_DATA = NAVES_RESPALDO.map(normalizarRegistroNave);
+    if(est) {
+      est.textContent = 'Modo respaldo (sin datos.json)';
+      est.style.color = '#b91c1c';
+    }
+  }
+  aplicarConsulta();
+}
+
+function aplicarConsulta() {
+  const elIni = document.getElementById('fechaInicio');
+  const elFin = document.getElementById('fechaFin');
+  const elBuscador = document.getElementById('buscadorTexto');
+  const elFase = document.getElementById('filtroFase');
+
+  if(!elIni || !elFin) return;
+  const ds = elIni.value;
+  const hs = elFin.value;
+  const q = elBuscador ? elBuscador.value.toUpperCase().trim() : "";
+  const fase = elFase ? elFase.value : "";
+
+  if (!ds || !hs) return;
+  const inicioFiltro = new Date(ds + 'T00:00:00-05:00');
+  const finFiltro = new Date(hs + 'T23:59:59-05:00');
+
+  const filtrados = NAVES_DATA.filter(n => {
+    const vPhase = obtenerVisitPhase(n);
+    if (fase && vPhase !== fase) return false;
+
+    const rango = rangoFechasNave(n);
+    if (rango) {
+      const seCruza = rango.fin >= inicioFiltro && rango.inicio <= finFiltro;
+      if (!seCruza && vPhase !== 'Working') return false;
+    }
+
+    if (q) {
+      const texto = `${n.referencia} ${n.shipRefDisplay} ${n.vesselName} ${n.viaje} ${n.linea} ${n.servicio} ${n.origen} ${n.destino}`.toUpperCase();
+      if (!texto.includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => (parseFechaNave(a.etb) || 0) - (parseFechaNave(b.etb) || 0));
+
+  const elTit = document.getElementById('tituloVentana');
+  if(elTit) elTit.textContent = `Vessel Schedule (${formatoTituloFecha(ds)}-${formatoTituloFecha(hs)}): ${filtrados.length}`;
+  
+  const elCont = document.getElementById('contadorRegistrosNaves');
+  if(elCont) elCont.textContent = `${filtrados.length} registros`;
+
+  renderizarTablaNaves(filtrados);
+}
+
+function renderizarTablaNaves(lista) {
+  const tbody = document.getElementById('cuerpoTablaNaves');
+  if(!tbody) return;
+
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:18px;color:#555;">No hay naves en el rango consultado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = lista.map((n, idx) => {
+    const phase = obtenerVisitPhase(n);
+    const cLin = ESTILO_LINEA[n.linea] || { bg: '#e2e8f0', fg: '#000000' };
+    const cSrv = ESTILO_SERVICIO[n.servicio] || { bg: '#f1f5f9', fg: '#000000' };
+
+    const arribo = formatoNavis(n.etb);
+    const zarpe = formatoNavis(n.etd);
+    const cutoff = formatoNavis(n.cutoff);
+    const esPrimera = idx === 0 ? 'seleccionada' : '';
+
+    return `<tr class="${esPrimera}" onclick="seleccionarFilaNave(this)">
+      <td>🚢</td>
+      <td>${arribo}</td>
+      <td>${zarpe}</td>
+      <td>${cutoff}</td>
+      <td style="background:${cSrv.bg};color:${cSrv.fg};">${n.shipRefDisplay}</td>
+      <td><b>${n.vesselName}</b></td>
+      <td style="background:${cLin.bg};color:${cLin.fg};">${n.linea}</td>
+      <td style="background:${cSrv.bg};color:${cSrv.fg};">${n.servicio}</td>
+      <td>${phase}</td>
+      <td>${n.origen || '—'}</td>
+      <td>${n.destino || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function seleccionarFilaNave(tr) {
+  document.querySelectorAll('#cuerpoTablaNaves tr').forEach(r => r.classList.remove('seleccionada'));
+  tr.classList.add('seleccionada');
+}
+
+function ejecutarAccionN4(sel) {
+  const val = sel.value;
+  if (val === 'refresh') cargarDatosFlotante();
+  if (val === 'working') { const f = document.getElementById('filtroFase'); if(f) f.value = 'Working'; aplicarConsulta(); }
+  if (val === 'inbound') { const f = document.getElementById('filtroFase'); if(f) f.value = 'Inbound'; aplicarConsulta(); }
+  if (val === 'clear') limpiarFiltrosNaves();
+  sel.value = '';
+}
+
+function limpiarFiltrosNaves() {
+  const b = document.getElementById('buscadorTexto');
+  const f = document.getElementById('filtroFase');
+  const r = document.getElementById('selectRango');
+  if(b) b.value = '';
+  if(f) f.value = '';
+  if(r) r.value = '7';
+  cambiarRangoFechas();
+}
+</script>
+
+</body>
+</html>
