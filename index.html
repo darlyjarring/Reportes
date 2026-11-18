@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Control Integral de Power Packs (PPk)</title>
+<style>
+:root{--primary:#003b7a;--secondary:#0066cc;--accent:#ffeb00;--danger:#dc3545;--success:#198754;--bg:#f4f6f9}
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);margin:0;padding:10px;color:#333}
+
+/* Login */
+#loginScreen{max-width:100%;width:100%;margin:40px auto;background:#fff;padding:20px;border-radius:10px;box-shadow:0 4px 15px rgba(0,0,0,.15);text-align:center}
+#loginScreen h2{color:var(--primary);margin-bottom:20px}
+.login-form{display:flex;flex-direction:column;gap:12px;text-align:left}
+
+/* Contenedor Principal */
+.container{max-width:1300px;width:100%;margin:auto;background:#fff;padding:15px;border-radius:8px;box-shadow:0 4px 15px rgba(0,0,0,.12);display:none}
+.header-top{display:flex;flex-direction:column;gap:10px;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--secondary);padding-bottom:10px;margin-bottom:15px}
+@media(min-width:600px){.header-top{flex-direction:row;align-items:center}}
+
+h2{color:var(--primary);margin:0;font-size:1.3rem}
+h3{color:var(--primary);margin-bottom:10px;font-size:1.1rem}
+
+/* Resumen Rápido / Contadores (Dashboard Metrics) */
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.metric-card{background:#eef2f7;padding:12px;border-radius:6px;text-align:center;border-top:4px solid var(--secondary)}
+.metric-card h5{margin:0 0 5px 0;font-size:0.75rem;color:#555;text-transform:uppercase}
+.metric-card span{font-size:1.3rem;font-weight:bold;color:var(--primary)}
+.metric-fuera{border-top-color:var(--danger)!important}
+.metric-abastecer{border-top-color:#e0a800!important}
+
+/* Tarjetas del Menú Principal */
+.dashboard-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:20px}
+@media(min-width:600px){.dashboard-grid{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:900px){.dashboard-grid{grid-template-columns:repeat(3,1fr)}}
+
+.dash-card{background:#eef2f7;border-left:5px solid var(--secondary);padding:15px;border-radius:8px;cursor:pointer;transition:transform 0.2s, box-shadow 0.2s;text-align:left}
+.dash-card:active{background:#d5e2f3}
+.dash-card h4{margin:0 0 6px 0;color:var(--primary);font-size:1.05rem}
+.dash-card p{margin:0;font-size:0.82rem;color:#555}
+
+/* Vistas / Secciones */
+.section-view{display:none}
+.section-view.active{display:block}
+.btn-volver{background:#6c757d;color:#fff;margin-bottom:15px;width:100%}
+@media(min-width:600px){.btn-volver{width:auto}}
+
+.form-grid{display:grid;grid-template-columns:1fr;gap:12px;background:#eef2f7;padding:12px;border-radius:6px;margin-bottom:15px}
+@media(min-width:600px){.form-grid{grid-template-columns:repeat(2,1fr)}}
+
+.form-group{display:flex;flex-direction:column}
+label{font-weight:600;margin-bottom:5px;font-size:0.88rem}
+input,select,textarea{padding:10px;border:1px solid #ccc;border-radius:4px;font-size:1rem;font-family:inherit;width:100%}
+textarea{min-height:80px;resize:vertical}
+input:disabled{background:#e9ecef}
+
+.email-container{margin:15px 0}
+.email-panel{background:#eef2f7;padding:12px;border-radius:6px;margin-top:10px;display:none;border-left:4px solid var(--secondary)}
+.email-grid{display:grid;grid-template-columns:1fr;gap:12px}
+
+.btn-container{display:flex;gap:10px;flex-direction:column;margin:15px 0}
+@media(min-width:600px){.btn-container{flex-direction:row;flex-wrap:wrap}}
+
+button{padding:12px 16px;border:0;border-radius:4px;cursor:pointer;font-weight:bold;font-size:0.95rem;width:100%}
+@media(min-width:600px){button{width:auto}}
+.btn-primary{background:var(--secondary);color:#fff}.btn-primary:active{background:var(--primary)}
+.btn-outlook{background:#0078d4;color:#fff}
+.btn-danger{background:#dc3545;color:#fff}
+.btn-secondary{background:#6c757d;color:#fff}
+
+/* Tablas responsivas */
+.table-responsive{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:10px;border:1px solid #ccc;border-radius:6px}
+table{width:100%;border-collapse:collapse;min-width:750px}
+th,td{border:1px solid #ddd;padding:10px 8px;text-align:center;font-size:0.85rem}
+th{background:var(--primary);color:#fff;white-space:nowrap}
+tr:nth-child(even){background:#f8f8f8}
+
+/* Estados Visuales */
+.badge-ok{background:#d4edda;color:#198754;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-abastecer{background:#ffeb00;color:#000;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-fuera{background:#f8d7da;color:#b02a37;font-weight:bold;padding:3px 6px;border-radius:4px}
+.badge-salida{background:#cce5ff;color:#004085;font-weight:bold;padding:3px 6px;border-radius:4px}
+
+tr.row-abastecer { background-color: #fff9c4 !important; }
+.actions-cell button{padding:6px 10px;font-size:0.75rem;margin:2px;width:auto}
+.info{background:#e8f1ff;border-left:4px solid #0066cc;padding:10px;margin-bottom:15px;font-size:0.85rem}
+.editable-cell{cursor:pointer;position:relative}
+.editable-cell:hover{background-color:#fff3cd}
+
+/* --- ESTILOS MÓDULO ITINERARIO NAVES (Navis N4 style) --- */
+.n4-module-wrap {
+  background: #d4d0c8;
+  border: 2px solid #5a7fa6;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+.n4-barra-titulo {
+  background: linear-gradient(180deg, #b8d3ee 0%, #8eb4dc 50%, #7da7d4 100%);
+  border-bottom: 1px solid #5981ab;
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.n4-barra-titulo .n4-titulo-texto {
+  font-size: 12px;
+  font-weight: bold;
+  color: #000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.n4-navis-toolbar {
+  background: #ece9d8;
+  border-bottom: 1px solid #aca899;
+  padding: 6px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.n4-navis-select, .n4-navis-input {
+  height: 26px;
+  padding: 1px 6px;
+  border: 1px solid #7f9db9;
+  border-radius: 2px;
+  font-size: 11px;
+  background: #fff;
+  color: #000;
+}
+.n4-grupo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.n4-grupo label { font-size: 11px; color: #222; }
+.n4-btn {
+  height: 26px;
+  padding: 0 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #dcdad5 100%);
+  color: #000;
+  border: 1px solid #7f9db9;
+  border-radius: 2px;
+  font-size: 11px;
+  cursor: pointer;
+  width: auto;
+}
+.n4-btn:hover { background: linear-gradient(180deg, #fff8e6 0%, #f5deb3 100%); }
+.n4-btn.primario { background: #123b5d; color: #fff; border-color: #092136; font-weight: bold; }
+.n4-tabla-contenedor {
+  overflow: auto;
+  max-height: 55vh;
+  background: #fff;
+}
+.n4-tabla-contenedor table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  white-space: nowrap;
+  min-width: 800px;
+}
+.n4-tabla-contenedor thead th {
+  position: sticky;
+  top: 0;
+  background: linear-gradient(180deg, #ffffff 0%, #e4e8f0 55%, #cfd7e6 100%);
+  border-right: 1px solid #b5becd;
+  border-bottom: 1px solid #8e99ad;
+  padding: 5px 8px;
+  text-align: center;
+  font-weight: normal;
+  color: #000;
+  z-index: 3;
+}
+.n4-tabla-contenedor tbody td {
+  padding: 3px 8px;
+  border-right: 1px solid #e6e6e6;
+  border-bottom: 1px solid #ececec;
+  font-family: "Consolas", monospace;
+  font-size: 11.5px;
+  height: 22px;
+  text-align: center;
+}
+.n4-tabla-contenedor tbody tr:hover td { outline: 1px solid #7da2ce; }
+.n4-tabla-contenedor tbody tr.seleccionada td { background-color: #0066cc !important; color: #fff !important; }
+.n4-pie {
+  background: #ece9d8;
+  border-top: 1px solid #aca899;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+<h2>🔑 Iniciar Sesión</h2>
+<div class="login-form">
+<div class="form-group"><label>Usuario:</label><input type="text" id="loginUser" placeholder="Ej: operador / supervisor"></div>
+<div class="form-group"><label>Contraseña:</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+<button class="btn-primary" onclick="realizarLogin()">Ingresar al Sistema</button>
+</div>
+</div>
+
+<!-- CONTENEDOR PRINCIPAL -->
+<div class="container" id="appContainer">
+<div class="header-top">
+<h2>⚡ Control Power Packs</h2>
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+<span id="lblUsuario" style="font-weight:600;font-size:0.85rem;"></span>
+<button class="btn-danger" style="padding:6px 10px;font-size:0.75rem;width:auto;" onclick="cerrarSesion()">Salir</button>
+</div>
+</div>
+
+<!-- DASHBOARD DE TARJETAS -->
+<div id="vistaDashboard" class="section-view active">
+<h3>Panel Principal</h3>
+<p style="color:#666;margin-bottom:15px;font-size:0.9rem;">Resumen general de la flota en tiempo real:</p>
+
+<!-- CONTADORES / MÉTRICAS -->
+<div class="metrics-grid">
+<div class="metric-card">
+<h5>Operativos</h5>
+<span id="metricOp">0</span>
+</div>
+<div class="metric-card metric-abastecer">
+<h5>Por Abastecer</h5>
+<span id="metricAbast">0</span>
+</div>
+<div class="metric-card metric-fuera">
+<h5>Fuera de Servicio</h5>
+<span id="metricFS">0</span>
+</div>
+</div>
+
+<div class="dashboard-grid">
+<div class="dash-card" onclick="mostrarSeccion('secAgregar')">
+<h4>➕ Registrar Power Pack</h4>
+<p>Dar de alta equipos nuevos en el sistema.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secAbastecerEstado')">
+<h4>🟡 Control de Abastecimiento</h4>
+<p>Marcar equipos que requieren combustible y editar datos básicos.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secEnviarCorreo')">
+<h4>📧 Enviar Correo de Abastecimiento</h4>
+<p>Generar reporte y tabla directa para Outlook.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secReportes')">
+<h4>🚨 Reportar F/S o Salida Terminal</h4>
+<p>Registrar daños, fallas técnicas o edición de novedades.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secInventario')">
+<h4>📋 Inventario General</h4>
+<p>Operativos primero y no operativos después con edición táctil.</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secItinerario')">
+<h4>🚢 Itinerario Naves</h4>
+<p>Consulta en tiempo real de recaladas y servicios (Navis N4).</p>
+</div>
+<div class="dash-card" onclick="mostrarSeccion('secAuditoria')">
+<h4>📊 Auditoría y Trazabilidad</h4>
+<p>Historial completo con filtros por rango de fechas.</p>
+</div>
+</div>
+</div>
+
+<!-- 1. REGISTRAR POWER PACK -->
+<div id="secAgregar" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>Registrar Nuevo Power Pack</h3>
+<div class="form-grid">
+<div class="form-group"><label>Nombre / Código PPk:</label><input type="text" id="newNombre" placeholder="Ej: #15 VERDE"></div>
+<div class="form-group"><label>Ubicación / Bloque:</label><input type="text" id="newUbicacion" placeholder="Ej: 1K12"></div>
+<div class="form-group"><label>Nivel combustible:</label><input type="text" id="newNivel" placeholder="Ej: 80% o 150 GLS"></div>
+<div class="form-group"><label>Estado Inicial:</label>
+<select id="newEstado"><option value="OPERATIVO">OPERATIVO</option><option value="FUERA DE SERVICIO">FUERA DE SERVICIO</option></select>
+</div>
+</div>
+<button class="btn-primary" onclick="guardarNuevoPPk()">Guardar Power Pack</button>
+</div>
+
+<!-- 2. CONTROL DE ABASTECIMIENTO (CON CELDAS EDITABLES DE UBICACIÓN Y NIVEL) -->
+<div id="secAbastecerEstado" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>🟡 Control de Estado "Por Abastecer"</h3>
+<div class="info">Selecciona el visto en los equipos que requieran combustible. Además, puedes hacer <strong>clic en las columnas Ubicación y Nivel Actual</strong> para editarlas directamente.</div>
+<div class="btn-container">
+<button class="btn-secondary" onclick="marcarSugeridosAbastecer()">⚡ Marcar sugeridos (&lt;=30% o &lt;=150 GLS)</button>
+</div>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>POR ABASTECER?</th>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL ACTUAL</th>
+<th>ESTADO</th>
+<th>FECHA SOLICITUD ABASTECIMIENTO</th>
+</tr>
+</thead>
+<tbody id="tablaControlAbastecer"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 3. ENVIAR CORREO -->
+<div id="secEnviarCorreo" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📧 Generar y Enviar Correo de Abastecimiento</h3>
+<div class="info">Toma exclusivamente los equipos marcados como <strong>"Por Abastecer"</strong> para Outlook.</div>
+<div class="btn-container">
+<button class="btn-outlook" onclick="enviarCorreoOutlook()">📧 Enviar Correo Outlook (Copiar Tabla)</button>
+<button class="btn-secondary" onclick="togglePanelCorreos()">⚙️ Configurar Destinatarios</button>
+</div>
+
+<div class="email-container" id="panelCorreos" class="email-panel" style="display:none; background:#eef2f7; padding:12px; border-radius:6px; margin-bottom:15px;">
+<div class="email-grid">
+<div class="form-group"><label>Para:</label><textarea id="correosPara" placeholder="Separados por ;"></textarea></div>
+<div class="form-group"><label>CC:</label><textarea id="correosCC" placeholder="Separados por ;"></textarea></div>
+</div>
+<button class="btn-primary" style="margin-top:10px;" onclick="guardarCorreos()">💾 Guardar Correos</button>
+</div>
+
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL</th>
+<th>ESTADO</th>
+<th>FECHA SOLICITUD</th>
+</tr>
+</thead>
+<tbody id="tablaCorreoSeleccionados"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 4. REPORTAR F/S, EDICIÓN Y SALIDA TERMINAL -->
+<div id="secReportes" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>🚨 Reportar y Gestionar Novedades (F/S o Salida Terminal)</h3>
+<div class="form-grid">
+<div class="form-group"><label>Seleccionar Power Pack:</label><select id="selectPpkFalla" onchange="cargarDatosPpkSeleccionado()"></select></div>
+<div class="form-group"><label>Estado / Acción:</label>
+<select id="fallaEstado" onchange="cambiarTipoReporteForm()">
+<option value="FUERA DE SERVICIO">FUERA DE SERVICIO (Daño / Falla / Sin combustible)</option>
+<option value="DEVUELTO TERMINAL">DEVUELTO (Salida Terminal Portuaria - Fin)</option>
+<option value="OPERATIVO">OPERATIVO (Solucionado)</option>
+</select>
+</div>
+<div class="form-group" id="grupoMotivo" style="grid-column: 1/-1;">
+<label>Motivo de la Novedad / Problema Técnico:</label>
+<textarea id="fallaMotivo" placeholder="Describa el motivo detallado..."></textarea>
+</div>
+</div>
+<button class="btn-primary" onclick="guardarReporteFalla()">Guardar / Actualizar Novedad</button>
+
+<h3 style="margin-top:20px;">Novedades Activas</h3>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NOVEDAD / MOTIVO</th>
+<th>FECHA REPORTE</th>
+<th>ACCIONES</th>
+</tr>
+</thead>
+<tbody id="tablaReportesActivos"></tbody>
+</table>
+</div>
+</div>
+
+<!-- 5. INVENTARIO GENERAL -->
+<div id="secInventario" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📋 Inventario General (Operativos primero)</h3>
+<div class="info"><strong>💡 Tip:</strong> Toca cualquier celda para editarla directamente.</div>
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>NIVEL COMBUSTIBLE</th>
+<th>ESTADO OPERATIVO</th>
+<th>ESTADO ABASTECIMIENTO</th>
+<th>DETALLE / NOVEDAD</th>
+<th>ACCIONES</th>
+</tr>
+</thead>
+<tbody id="tablaInventario"></tbody>
+</table>
+</div>
+</div>
+
+<!-- NUEVA SECCIÓN: ITINERARIO NAVES -->
+<div id="secItinerario" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>🚢 Itinerario de Naves (Navis N4)</h3>
+<div class="n4-module-wrap">
+  <div class="n4-barra-titulo">
+    <div class="n4-titulo-texto">
+      <span>🚢</span>
+      <span id="tituloVentana">Vessel Schedule: 0</span>
+    </div>
+    <div style="display:flex; gap:4px;">
+      <button type="button" class="n4-btn" title="Actualizar datos.json" onclick="cargarDatosFlotante()">↻ Actualizar</button>
+    </div>
+  </div>
+
+  <div class="n4-navis-toolbar">
+    <div class="n4-grupo">
+      <select class="n4-navis-select" id="selectActions" onchange="ejecutarAccionN4(this)">
+        <option value="">Actions</option>
+        <option value="refresh">Refresh Data (datos.json)</option>
+        <option value="working">Filter: Working Only</option>
+        <option value="inbound">Filter: Inbound Only</option>
+        <option value="clear">Reset All Filters</option>
+      </select>
+    </div>
+    <div class="n4-grupo">
+      <select class="n4-navis-select" id="filtroFase" onchange="aplicarConsulta()">
+        <option value="">Display: All Phases</option>
+        <option value="Working">Display: Working</option>
+        <option value="Inbound">Display: Inbound</option>
+        <option value="Departed">Display: Departed</option>
+      </select>
+    </div>
+    <div class="n4-grupo">
+      <select class="n4-navis-select" id="selectRango" onchange="cambiarRangoFechas()">
+        <option value="7">Next 7 Days</option>
+        <option value="14">Next 14 Days</option>
+        <option value="21">Next 21 Days</option>
+        <option value="-7">Past 7 Days & Next 7</option>
+        <option value="personalizado">Custom Dates</option>
+      </select>
+    </div>
+    <div class="n4-grupo">
+      <label>Desde:</label>
+      <input type="date" class="n4-navis-input" id="fechaInicio" onchange="marcarPersonalizado()">
+    </div>
+    <div class="n4-grupo">
+      <label>Hasta:</label>
+      <input type="date" class="n4-navis-input" id="fechaFin" onchange="marcarPersonalizado()">
+    </div>
+    <div class="n4-grupo" style="flex:1;">
+      <input type="text" class="n4-navis-input" id="buscadorTexto" placeholder="Buscar nave, ref, viaje, origen, destino..." oninput="aplicarConsulta()" style="width:100%;">
+    </div>
+    <div class="n4-grupo">
+      <button type="button" class="n4-btn primario" onclick="cargarDatosFlotante()">CONSULTAR</button>
+      <button type="button" class="n4-btn" onclick="limpiarFiltrosNaves()">LIMPIAR</button>
+    </div>
+    <span style="font-size:11px; color:#444; margin-left:auto;" id="estadoFuente">Conectando a datos.json...</span>
+  </div>
+
+  <div class="n4-tabla-contenedor">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:28px;">🚢</th>
+          <th>Arribo a muelle</th>
+          <th>Est. Zarpe</th>
+          <th>*Cut-Off*</th>
+          <th>Ship Reference</th>
+          <th>Vessel Name</th>
+          <th>VLine Op.</th>
+          <th>Vessel Service</th>
+          <th>Visit Phase</th>
+          <th>P.Origen</th>
+          <th>P.Destino</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpoTablaNaves">
+        <tr><td colspan="11" style="text-align:center;padding:18px;">Cargando datos.json...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="n4-pie">
+    <span id="contadorRegistros">0 registros</span>
+    <span>Módulo Navis N4 Integrado</span>
+  </div>
+</div>
+</div>
+
+<!-- 6. AUDITORÍA Y TRAZABILIDAD -->
+<div id="secAuditoria" class="section-view">
+<button class="btn btn-volver" onclick="mostrarDashboard()">⬅ Volver al Menú</button>
+<h3>📊 Auditoría y Trazabilidad Completa</h3>
+<div class="form-grid" style="margin-bottom:15px;">
+<div class="form-group"><label>Desde fecha:</label><input type="date" id="filtroDesde" onchange="renderizarTablas()"></div>
+<div class="form-group"><label>Hasta fecha:</label><input type="date" id="filtroHasta" onchange="renderizarTablas()"></div>
+</div>
+<button class="btn-secondary" style="margin-bottom:15px;" onclick="limpiarFiltrosFechas()">🔄 Ver Todo el Historial</button>
+
+<div class="table-responsive">
+<table>
+<thead>
+<tr>
+<th>PPk</th>
+<th>UBICACIÓN</th>
+<th>ESTADO ACTUAL</th>
+<th>FECHA CREACIÓN</th>
+<th>FECHA SOLICITUD ABASTECIMIENTO</th>
+<th>FECHA REPORTE FALLA (F/S)</th>
+<th>FECHA SOLUCIÓN</th>
+<th>FECHA SALIDA TERMINAL</th>
+</tr>
+</thead>
+<tbody id="tablaAuditoria"></tbody>
+</table>
+</div>
+</div>
+
+</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxWl_Uvv9D94Urfxtr_LPwFoJ6gULYkq-uWx2ecas7ls6cwaDrduhq43DqfGOEsWyYdfw/exec"; 
+
+let inventario = JSON.parse(localStorage.getItem("inventario_ppk")) || [];
+
+const usuariosPermitidos = [
+  { user: "operador", pass: "op1234" },
+  { user: "supervisor", pass: "sup2026" },
+  { user: "jose", pass: "admin123" }
+];
+
+function realizarLogin(){
+  const user = document.getElementById("loginUser").value.trim().toLowerCase();
+  const pass = document.getElementById("loginPass").value.trim();
+  const encontrado = usuariosPermitidos.find(u => u.user === user && u.pass === pass);
+
+  if(!encontrado){
+    alert("❌ Usuario o contraseña incorrectos.");
+    return;
+  }
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("appContainer").style.display = "block";
+  document.getElementById("lblUsuario").innerText = user.toUpperCase();
+  cargarCorreos();
+  cargarDesdeSheets();
+}
+
+function cerrarSesion(){
+  document.getElementById("appContainer").style.display = "none";
+  document.getElementById("loginScreen").style.display = "block";
+  document.getElementById("loginUser").value = "";
+  document.getElementById("loginPass").value = "";
+}
+
+function mostrarSeccion(idSeccion){
+  document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+  document.getElementById(idSeccion).classList.add('active');
+  if(idSeccion === 'secReportes') poblarSelectReportes();
+  if(idSeccion === 'secEnviarCorreo') renderizarTablaCorreoSeleccionados();
+  if(idSeccion === 'secAuditoria') renderizarTablas();
+  if(idSeccion === 'secItinerario') {
+    inicializarFechasPorDefecto();
+    cargarDatosFlotante();
+  }
+}
+
+function mostrarDashboard(){
+  document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+  document.getElementById('vistaDashboard').classList.add('active');
+  actualizarTodo();
+}
+
+function togglePanelCorreos(){
+  const panel = document.getElementById("panelCorreos");
+  panel.style.display = panel.style.display === "block" ? "none" : "block";
+}
+
+function guardarCorreos(){
+  localStorage.setItem("ppk_correos_para", document.getElementById("correosPara").value.trim());
+  localStorage.setItem("ppk_correos_cc", document.getElementById("correosCC").value.trim());
+  alert("Correos guardados correctamente.");
+  togglePanelCorreos();
+}
+
+function cargarCorreos(){
+  document.getElementById("correosPara").value = localStorage.getItem("ppk_correos_para") || "";
+  document.getElementById("correosCC").value = localStorage.getItem("ppk_correos_cc") || "";
+}
+
+function escapeHTML(text){
+  return String(text||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+
+function obtenerFechaHoraActual(){
+  const d = new Date();
+  return d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+}
+
+function cambiarCheckAbastecer(index, checkbox){
+  inventario[index].abastecer = checkbox.checked;
+  if(checkbox.checked){
+    inventario[index].fechaAbastecimiento = obtenerFechaHoraActual();
+  } else {
+    inventario[index].fechaAbastecimiento = "";
+  }
+  actualizarTodo();
+}
+
+function marcarSugeridosAbastecer(){
+  inventario.forEach(item=>{
+    if(item.estado==="OPERATIVO"){
+      const nivel=String(item.nivel).trim().toUpperCase();
+      let sugerir=false;
+      if(nivel.endsWith("%")){
+        const num=parseFloat(nivel.replace("%","").trim());
+        if(!isNaN(num)&&num<=30) sugerir=true;
+      }else if(nivel.endsWith("GLS")){
+        const num=parseFloat(nivel.replace("GLS","").trim());
+        if(!isNaN(num)&&num<=150) sugerir=true;
+      }
+      if(sugerir){
+        item.abastecer=true;
+        item.fechaAbastecimiento = obtenerFechaHoraActual();
+      }
+    }
+  });
+  actualizarTodo();
+}
+
+function actualizarMetricas(){
+  let op = 0, abast = 0, fs = 0;
+  inventario.forEach(i => {
+    if(i.estado === "FUERA DE SERVICIO") fs++;
+    if(i.abastecer) abast++;
+    if(i.estado === "OPERATIVO") op++;
+  });
+  document.getElementById("metricOp").innerText = op;
+  document.getElementById("metricAbast").innerText = abast;
+  document.getElementById("metricFS").innerText = fs;
+}
+
+function actualizarTodo(){
+  renderizarTablas();
+  actualizarMetricas();
+  localStorage.setItem("inventario_ppk", JSON.stringify(inventario));
+  sincronizarConSheets();
+}
+
+function renderizarTablas(){
+  const tbodyControlAbast = document.getElementById("tablaControlAbastecer");
+  const tbodyInv = document.getElementById("tablaInventario");
+  const tbodyRep = document.getElementById("tablaReportesActivos");
+  const tbodyAudit = document.getElementById("tablaAuditoria");
+
+  tbodyControlAbast.innerHTML = "";
+  tbodyInv.innerHTML = "";
+  tbodyRep.innerHTML = "";
+  tbodyAudit.innerHTML = "";
+
+  let inventarioOrdenado = [...inventario].sort((a, b) => {
+    if (a.estado === "OPERATIVO" && b.estado !== "OPERATIVO") return -1;
+    if (a.estado !== "OPERATIVO" && b.estado === "OPERATIVO") return 1;
+    return 0;
+  });
+
+  inventario.forEach((item)=>{
+    const index = inventario.indexOf(item);
+    
+    // 1. Control Abastecimiento (Ahora con Ubicación y Nivel editables)
+    const trAbast = document.createElement("tr");
+    if(item.abastecer) trAbast.className = "row-abastecer";
+    trAbast.innerHTML = `
+      <td><input type="checkbox" ${item.abastecer?'checked':''} onchange="cambiarCheckAbastecer(${index}, this)"></td>
+      <td><strong>${escapeHTML(item.nombre)}</strong></td>
+      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
+      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')"><strong>${escapeHTML(item.nivel)}</strong></td>
+      <td>${obtenerBadgeEstado(item.estado)}</td>
+      <td>${escapeHTML(item.fechaAbastecimiento || "Sin solicitud")}</td>`;
+    tbodyControlAbast.appendChild(trAbast);
+  });
+
+  inventarioOrdenado.forEach((item)=>{
+    const index = inventario.indexOf(item);
+    const badgeAbast = item.abastecer ? '<span class="badge-abastecer">POR ABASTECER</span>' : '<span class="badge-ok">ABASTECIDO</span>';
+    const badgeNovedad = item.estado==="FUERA DE SERVICIO" ? escapeHTML(item.novedadManual) : 'OK';
+
+    // 2. Inventario General
+    const trInv = document.createElement("tr");
+    if(item.abastecer) trInv.className = "row-abastecer";
+    trInv.innerHTML = `
+      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nombre')"><strong>${escapeHTML(item.nombre)}</strong></td>
+      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'ubicacion')">${escapeHTML(item.ubicacion)}</td>
+      <td class="editable-cell" onclick="editarCelda(this, ${index}, 'nivel')">${escapeHTML(item.nivel)}</td>
+      <td>${obtenerBadgeEstado(item.estado)}</td>
+      <td>${badgeAbast}</td>
+      <td>${badgeNovedad}</td>
+      <td class="actions-cell"><button class="btn-danger" onclick="eliminarPPk(${index})">Eliminar</button></td>`;
+    tbodyInv.appendChild(trInv);
+
+    // 3. Reportes Activos
+    if(item.estado === "FUERA DE SERVICIO" || item.estado === "DEVUELTO TERMINAL"){
+      const trRep = document.createElement("tr");
+      trRep.innerHTML = `
+        <td><strong>${escapeHTML(item.nombre)}</strong></td>
+        <td>${escapeHTML(item.ubicacion)}</td>
+        <td>${escapeHTML(item.novedadManual || item.estado)}</td>
+        <td>${escapeHTML(item.fechaReporte || item.fechaSalidaTerminal)}</td>
+        <td class="actions-cell">
+          <button class="btn-primary" onclick="editarReporte(${index})">Editar</button>
+          <button class="btn-danger" onclick="eliminarReporte(${index})">Limpiar</button>
+        </td>`;
+      tbodyRep.appendChild(trRep);
+    }
+  });
+
+  // 4. Auditoría con Filtro de Fechas
+  const desde = document.getElementById("filtroDesde").value;
+  const hasta = document.getElementById("filtroHasta").value;
+
+  inventario.forEach((item)=>{
+    if(desde || hasta){
+      let fechaItem = item.fechaCreacion ? item.fechaCreacion.split(" ")[0] : "";
+      if(fechaItem){
+        let partes = fechaItem.split("/");
+        if(partes.length === 3){
+          let fechaIso = `${partes[2]}-${partes[1].padStart(2,'0')}-${partes[0].padStart(2,'0')}`;
+          if(desde && fechaIso < desde) return;
+          if(hasta && fechaIso > hasta) return;
+        }
+      }
+    }
+
+    const trAudit = document.createElement("tr");
+    trAudit.innerHTML = `
+      <td><strong>${escapeHTML(item.nombre)}</strong></td>
+      <td>${escapeHTML(item.ubicacion)}</td>
+      <td>${obtenerBadgeEstado(item.estado)}</td>
+      <td>${escapeHTML(item.fechaCreacion || "N/A")}</td>
+      <td>${escapeHTML(item.fechaAbastecimiento || "N/A")}</td>
+      <td>${escapeHTML(item.fechaReporte || "N/A")}</td>
+      <td>${escapeHTML(item.fechaSolucion || "N/A")}</td>
+      <td>${escapeHTML(item.fechaSalidaTerminal || "N/A")}</td>`;
+    tbodyAudit.appendChild(trAudit);
+  });
+}
+
+function limpiarFiltrosFechas(){
+  document.getElementById("filtroDesde").value = "";
+  document.getElementById("filtroHasta").value = "";
+  renderizarTablas();
+}
+
+function obtenerBadgeEstado(estado){
+  if(estado === "FUERA DE SERVICIO") return '<span class="badge-fuera">FUERA DE SERVICIO</span>';
+  if(estado === "DEVUELTO TERMINAL") return '<span class="badge-salida">DEVUELTO TERMINAL</span>';
+  return '<span class="badge-ok">OPERATIVO</span>';
+}
+
+function renderizarTablaCorreoSeleccionados(){
+  const tbody = document.getElementById("tablaCorreoSeleccionados");
+  tbody.innerHTML = "";
+  const seleccionados = inventario.filter(i => i.abastecer === true);
+
+  if(seleccionados.length === 0){
+    tbody.innerHTML = `<tr><td colspan="5" style="color:#666;padding:15px;">No hay equipos marcados para abastecer.</td></tr>`;
+    return;
+  }
+
+  seleccionados.forEach(i => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${escapeHTML(i.nombre)}</strong></td>
+      <td>${escapeHTML(i.ubicacion)}</td>
+      <td style="background:#ffeb00;font-weight:bold;">${escapeHTML(i.nivel)}</td>
+      <td><span class="badge-abastecer">POR ABASTECER</span></td>
+      <td>${escapeHTML(i.fechaAbastecimiento)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function guardarNuevoPPk(){
+  const nombre = document.getElementById("newNombre").value.trim();
+  const ubicacion = document.getElementById("newUbicacion").value.trim();
+  const nivel = document.getElementById("newNivel").value.trim();
+  const estado = document.getElementById("newEstado").value;
+
+  if(!nombre || !ubicacion || !nivel){ alert("Complete todos los campos."); return; }
+
+  const fechaStr = obtenerFechaHoraActual();
+  const nuevo = {
+    nombre: nombre,
+    ubicacion: ubicacion,
+    nivel: nivel,
+    estado: estado,
+    novedadManual: estado === "FUERA DE SERVICIO" ? "Registrado con falla" : "",
+    fechaCreacion: fechaStr,
+    fechaAbastecimiento: "",
+    fechaReporte: estado === "FUERA DE SERVICIO" ? fechaStr : "",
+    fechaSolucion: "",
+    fechaSalidaTerminal: "",
+    abastecer: false
+  };
+
+  inventario.push(nuevo);
+  alert("Power Pack registrado con éxito.");
+  document.getElementById("newNombre").value = "";
+  document.getElementById("newUbicacion").value = "";
+  document.getElementById("newNivel").value = "";
+  mostrarDashboard();
+}
+
+function poblarSelectReportes(){
+  const select = document.getElementById("selectPpkFalla");
+  select.innerHTML = "";
+  inventario.forEach((item, index)=>{
+    const opt = document.createElement("option");
+    opt.value = index;
+    opt.text = item.nombre + " (" + item.ubicacion + ") - [" + item.estado + "]";
+    select.appendChild(opt);
+  });
+  cargarDatosPpkSeleccionado();
+}
+
+function cargarDatosPpkSeleccionado(){
+  const index = document.getElementById("selectPpkFalla").value;
+  if(index !== undefined && inventario[index]){
+    const item = inventario[index];
+    document.getElementById("fallaEstado").value = item.estado === "DEVUELTO TERMINAL" ? "DEVUELTO TERMINAL" : item.estado;
+    document.getElementById("fallaMotivo").value = item.novedadManual || "";
+    cambiarTipoReporteForm();
+  }
+}
+
+function cambiarTipoReporteForm(){
+  const estado = document.getElementById("fallaEstado").value;
+  const grupoMotivo = document.getElementById("grupoMotivo");
+  if(estado === "DEVUELTO TERMINAL"){
+    grupoMotivo.style.display = "none";
+  } else {
+    grupoMotivo.style.display = "flex";
+  }
+}
+
+function guardarReporteFalla(){
+  const index = document.getElementById("selectPpkFalla").value;
+  const nuevoEstado = document.getElementById("fallaEstado").value;
+  const motivo = document.getElementById("fallaMotivo").value.trim();
+
+  if(index === "" || !inventario[index]) return;
+  const fechaStr = obtenerFechaHoraActual();
+
+  if(nuevoEstado === "FUERA DE SERVICIO"){
+    if(!motivo){ alert("Debe ingresar el motivo de la falla."); return; }
+    inventario[index].estado = "FUERA DE SERVICIO";
+    inventario[index].novedadManual = motivo;
+    inventario[index].fechaReporte = fechaStr;
+  } else if(nuevoEstado === "DEVUELTO TERMINAL"){
+    inventario[index].estado = "DEVUELTO TERMINAL";
+    inventario[index].novedadManual = "Devuelto / Salida de Terminal";
+    inventario[index].fechaSalidaTerminal = fechaStr;
+  } else {
+    inventario[index].estado = "OPERATIVO";
+    inventario[index].novedadManual = "";
+    inventario[index].fechaSolucion = fechaStr;
+  }
+
+  alert("Novedad registrada correctamente.");
+  mostrarDashboard();
+}
+
+function editarReporte(index){
+  mostrarSeccion('secReportes');
+  document.getElementById("selectPpkFalla").value = index;
+  cargarDatosPpkSeleccionado();
+}
+
+function eliminarReporte(index){
+  if(confirm("¿Desea limpiar la novedad de este equipo y dejarlo Operativo?")){
+    inventario[index].estado = "OPERATIVO";
+    inventario[index].novedadManual = "";
+    inventario[index].fechaSolucion = obtenerFechaHoraActual();
+    actualizarTodo();
+  }
+}
+
+function editarCelda(celda, index, propiedad){
+  if(celda.querySelector("input")) return;
+  const valorActual = inventario[index][propiedad];
+  celda.innerHTML = `<input type="text" value="${escapeHTML(valorActual)}" autofocus style="width:100%;padding:4px">`;
+  const input = celda.querySelector("input");
+  input.onblur = function(){ guardarCambioCelda(index, propiedad, input.value); };
+  input.onkeydown = function(e){ if(e.key === "Enter") guardarCambioCelda(index, propiedad, input.value); };
+}
+
+function guardarCambioCelda(index, propiedad, nuevoValor){
+  if(nuevoValor.trim() !== "") inventario[index][propiedad] = nuevoValor.trim();
+  actualizarTodo();
+}
+
+function eliminarPPk(index){
+  if(confirm("¿Desea eliminar este Power Pack?")){
+    inventario.splice(index, 1);
+    actualizarTodo();
+  }
+}
+
+function obtenerSaludo(){
+  const hora = new Date().getHours();
+  if(hora>=5 && hora<12) return "Estimados buenos días,";
+  if(hora>=12 && hora<19) return "Estimados buenas tardes,";
+  return "Estimados buenas noches,";
+}
+
+async function enviarCorreoOutlook(){
+  const seleccionados = inventario.filter(item => item.abastecer === true);
+  if(seleccionados.length === 0){ alert("No hay Power Packs seleccionados."); return; }
+  const para = document.getElementById("correosPara").value.trim();
+  const cc = document.getElementById("correosCC").value.trim();
+  const paraArray = para.split(/[;\n,]+/).map(c=>c.trim()).filter(c=>c!=="");
+
+  if(paraArray.length === 0){ alert("Configure al menos un correo PARA."); return; }
+  guardarCorreos();
+
+  const saludo = obtenerSaludo();
+  let tablaHtml = `<table border="1" cellpadding="5" style="border-collapse:collapse;font-size:12px;text-align:center">
+    <tr style="background:#003b7a;color:#fff"><th>PPK</th><th>UBICACION</th><th>NIVEL</th><th>ESTADO</th></tr>`;
+  seleccionados.forEach(i => {
+    tablaHtml += `<tr><td><b>${escapeHTML(i.nombre)}</b></td><td>${escapeHTML(i.ubicacion)}</td><td style="background:#ffeb00"><b>${escapeHTML(i.nivel)}</b></td><td>POR ABASTECER</td></tr>`;
+  });
+  tablaHtml += `</table>`;
+
+  const textoPlano = `${saludo}\n\nSu ayuda abasteciendo los siguientes Power Packs:\n` + seleccionados.map(x=>x.nombre+" | "+x.ubicacion+" | "+x.nivel).join("\n");
+
+  try{
+    if(navigator.clipboard && window.ClipboardItem){
+      await navigator.clipboard.write([new ClipboardItem({
+        "text/html": new Blob([`<div style="font-family:Arial">${saludo}<br><br>${tablaHtml}</div>`], {type: "text/html"}),
+        "text/plain": new Blob([textoPlano], {type: "text/plain"})
+      })]);
+    }
+  }catch(e){ console.error(e); }
+
+  let mailto = "mailto:" + encodeURIComponent(paraArray.join(";")) + "?subject=" + encodeURIComponent("ABASTECIMIENTO DE POWER PACK");
+  if(cc) mailto += "&cc=" + encodeURIComponent(cc);
+  window.location.href = mailto;
+
+  setTimeout(()=>{
+    alert("📧 CORREO PREPARADO:\n1. Outlook abierto.\n2. Tabla copiada al portapapeles.\n👉 Toca el cuerpo del correo en tu app de Outlook y pega (Paste).");
+  }, 600);
+}
+
+async function sincronizarConSheets(){
+  if(!WEB_APP_URL) return;
+  try {
+    await fetch(WEB_APP_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(inventario)
+    });
+  } catch (error) {
+    console.error("Error al sincronizar con Sheets:", error);
+  }
+}
+
+async function cargarDesdeSheets(){
+  if(!WEB_APP_URL) return;
+  try {
+    const res = await fetch(WEB_APP_URL);
+    const data = await res.json();
+    if(Array.isArray(data) && data.length > 0){
+      inventario = data;
+      localStorage.setItem("inventario_ppk", JSON.stringify(inventario));
+    }
+  } catch(e){
+    console.error("Usando caché local:", e);
+  }
+  actualizarTodo();
+  mostrarDashboard();
+}
+
+/* --- JS MÓDULO ITINERARIO NAVES (Navis N4) --- */
+let NAVES_DATA = [];
+
+const NAVES_RESPALDO = [
+  {
+    "gkey": "1962403010",
+    "referencia": "CMA2026122",
+    "nave": "EDISON",
+    "viaje": "0MH30W1MA",
+    "reefer": "2026-11-13 23:00:00",
+    "linea": "CMA",
+    "etb": "2026-11-13 20:00:00",
+    "etd": "2026-11-15 06:00:00",
+    "ata": "2026-11-13 20:00:00",
+    "atd": "",
+    "status": "IN OPERATION",
+    "origen": "PECLL",
+    "destino": "PECLL",
+    "servicio": "ACSA"
+  },
+  {
+    "gkey": "1962403015",
+    "referencia": "MAE2026131",
+    "nave": "MAERSK FINISTERRE",
+    "viaje": "641W",
+    "reefer": "2026-11-14 17:00:00",
+    "linea": "MAE",
+    "etb": "2026-11-14 20:00:00",
+    "etd": "2026-11-16 03:00:00",
+    "ata": "2026-11-14 20:00:00",
+    "atd": "",
+    "status": "IN OPERATION",
+    "origen": "ECPBO",
+    "destino": "ECPBO",
+    "servicio": "ECUMED"
+  }
+];
+
+const MESES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const ESTILO_LINEA = {
+  'CMA': { bg: '#0055ff', fg: '#ffffff' },
+  'MAE': { bg: '#ccffff', fg: '#000000' },
+  'HLC': { bg: '#ff9900', fg: '#000000' }
+};
+const ESTILO_SERVICIO = {
+  'ACSA': { bg: '#ff0000', fg: '#ffffff' },
+  'ECUMED': { bg: '#66ffff', fg: '#000000' }
+};
+
+function parseFechaNave(valor) {
+  if (!valor) return null;
+  let s = String(valor).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  if (m) return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:00-05:00`);
+  return null;
+}
+
+function formatoNavis(valor) {
+  const d = parseFechaNave(valor);
+  if (!d || isNaN(d.getTime())) return '';
+  const dia = String(d.getDate()).padStart(2, '0');
+  const mes = MESES[d.getMonth()];
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${dia} ${mes} ${hh}${mm}`;
+}
+
+function formatoTituloFecha(isoStr) {
+  if (!isoStr) return '';
+  const [y, m, d] = isoStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+function fechaLocalInput(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function inicializarFechasPorDefecto() {
+  const hoy = new Date();
+  const fin = new Date(hoy);
+  fin.setDate(fin.getDate() + 7);
+  const elIni = document.getElementById('fechaInicio');
+  const elFin = document.getElementById('fechaFin');
+  if(elIni && !elIni.value) elIni.value = fechaLocalInput(hoy);
+  if(elFin && !elFin.value) elFin.value = fechaLocalInput(fin);
+}
+
+function marcarPersonalizado() {
+  document.getElementById('selectRango').value = 'personalizado';
+  aplicarConsulta();
+}
+
+function cambiarRangoFechas() {
+  const val = document.getElementById('selectRango').value;
+  if (val === 'personalizado') return;
+
+  const hoy = new Date();
+  const inicio = new Date(hoy);
+  const fin = new Date(hoy);
+  const dias = parseInt(val, 10);
+
+  if (dias < 0) {
+    inicio.setDate(inicio.getDate() + dias);
+    fin.setDate(fin.getDate() + 7);
+  } else {
+    fin.setDate(fin.getDate() + dias);
+  }
+
+  document.getElementById('fechaInicio').value = fechaLocalInput(inicio);
+  document.getElementById('fechaFin').value = fechaLocalInput(fin);
+  aplicarConsulta();
+}
+
+function normalizarRegistroNave(x) {
+  x = x || {};
+  let ref = String(x.referencia ?? x.REFERENCIA ?? '').trim();
+  let vesselName = String(x.nave ?? x.Nave ?? x.nombre ?? '').trim();
+  const shipRefDisplay = ref ? (ref.includes('.') ? ref : `${ref}.1`) : (x.viaje || '—');
+
+  return {
+    gkey: String(x.gkey ?? ''),
+    referencia: ref,
+    shipRefDisplay,
+    vesselName,
+    viaje: String(x.viaje ?? x.Viaje ?? ''),
+    linea: String(x.linea ?? x.Linea ?? x.LINEA ?? '').toUpperCase().trim(),
+    etb: x.etb ?? x.ETB ?? '',
+    etd: x.etd ?? x.ETD ?? '',
+    ata: x.ata ?? x.ATA ?? '',
+    atd: x.atd ?? x.ATD ?? '',
+    cutoff: x.reefer ?? x['Reefer CutOff'] ?? x.dry ?? x['Dry CutOff'] ?? '',
+    status: String(x.status ?? x.STATUS ?? '').toUpperCase().trim(),
+    origen: String(x.origen ?? x['PTO.ORIGEN'] ?? '').toUpperCase().trim(),
+    destino: String(x.destino ?? x['PTO.DESTINO'] ?? '').toUpperCase().trim(),
+    servicio: String(x.servicio ?? x.SERVICIO ?? '').toUpperCase().trim()
+  };
+}
+
+function obtenerVisitPhase(n) {
+  const s = n.status;
+  const now = new Date();
+  const etb = parseFechaNave(n.etb);
+  if (n.atd || s === 'DEPARTED' || s.includes('SAILED')) return 'Departed';
+  if (s.includes('IN OPERATION') || s.includes('OPERATING') || s === 'WORKING' || (n.ata && !n.atd)) return 'Working';
+  if (etb && now >= etb && !n.atd) return 'Working';
+  return 'Inbound';
+}
+
+function rangoFechasNave(n) {
+  const puntos = [parseFechaNave(n.etb), parseFechaNave(n.ata), parseFechaNave(n.etd), parseFechaNave(n.atd)].filter(Boolean);
+  if (!puntos.length) return null;
+  const inicio = new Date(Math.min(...puntos.map(x => x.getTime())));
+  let fin = new Date(Math.max(...puntos.map(x => x.getTime())));
+  if (obtenerVisitPhase(n) === 'Working' && !parseFechaNave(n.atd) && fin < new Date()) fin = new Date();
+  return { inicio, fin };
+}
+
+async function cargarDatosFlotante() {
+  const est = document.getElementById('estadoFuente');
+  if(est) est.textContent = 'Leyendo datos.json...';
+  try {
+    const r = await fetch('datos.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    const arr = Array.isArray(j) ? j : (j.naves || j.NAVES || j.data || j.datos || []);
+    if (!Array.isArray(arr) || !arr.length) throw new Error('datos.json vacío');
+    NAVES_DATA = arr.map(normalizarRegistroNave);
+    if(est) {
+      est.textContent = `datos.json (${NAVES_DATA.length} naves)`;
+      est.style.color = '#166534';
+    }
+  } catch (e) {
+    NAVES_DATA = NAVES_RESPALDO.map(normalizarRegistroNave);
+    if(est) {
+      est.textContent = 'Modo respaldo (sin datos.json)';
+      est.style.color = '#b91c1c';
+    }
+  }
+  aplicarConsulta();
+}
+
+function aplicarConsulta() {
+  const ds = document.getElementById('fechaInicio').value;
+  const hs = document.getElementById('fechaFin').value;
+  const q = document.getElementById('buscadorTexto').value.toUpperCase().trim();
+  const fase = document.getElementById('filtroFase').value;
+
+  if (!ds || !hs) return;
+  const inicioFiltro = new Date(ds + 'T00:00:00-05:00');
+  const finFiltro = new Date(hs + 'T23:59:59-05:00');
+
+  const filtrados = NAVES_DATA.filter(n => {
+    const vPhase = obtenerVisitPhase(n);
+    if (fase && vPhase !== fase) return false;
+
+    const rango = rangoFechasNave(n);
+    if (rango) {
+      const seCruza = rango.fin >= inicioFiltro && rango.inicio <= finFiltro;
+      if (!seCruza && vPhase !== 'Working') return false;
+    }
+
+    if (q) {
+      const texto = `${n.referencia} ${n.shipRefDisplay} ${n.vesselName} ${n.viaje} ${n.linea} ${n.servicio} ${n.origen} ${n.destino}`.toUpperCase();
+      if (!texto.includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => (parseFechaNave(a.etb) || parseFechaNave(a.ata) || 0) - (parseFechaNave(b.etb) || parseFechaNave(b.ata) || 0));
+
+  const elTit = document.getElementById('tituloVentana');
+  if(elTit) elTit.textContent = `Vessel Schedule (${formatoTituloFecha(ds)}-${formatoTituloFecha(hs)}): ${filtrados.length}`;
+  renderizarTablaNaves(filtrados);
+}
+
+function renderizarTablaNaves(lista) {
+  const tbody = document.getElementById('cuerpoTablaNaves');
+  if(!tbody) return;
+
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:18px;color:#555;">No hay naves en el rango consultado.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = lista.map((n, idx) => {
+    const phase = obtenerVisitPhase(n);
+    const cLin = ESTILO_LINEA[n.linea] || { bg: '#e2e8f0', fg: '#000000' };
+    const cSrv = ESTILO_SERVICIO[n.servicio] || { bg: '#f1f5f9', fg: '#000000' };
+
+    const arribo = n.ata ? formatoNavis(n.ata) : formatoNavis(n.etb);
+    const zarpe = n.atd ? formatoNavis(n.atd) : formatoNavis(n.etd);
+    const cutoff = formatoNavis(n.cutoff);
+    const esPrimera = idx === 0 ? 'seleccionada' : '';
+
+    return `<tr class="${esPrimera}" onclick="seleccionarFilaNave(this)">
+      <td>🚢</td>
+      <td>${arribo}</td>
+      <td>${zarpe}</td>
+      <td>${cutoff}</td>
+      <td style="background:${cSrv.bg};color:${cSrv.fg};">${n.shipRefDisplay}</td>
+      <td><b>${n.vesselName}</b></td>
+      <td style="background:${cLin.bg};color:${cLin.fg};">${n.linea}</td>
+      <td style="background:${cSrv.bg};color:${cSrv.fg};">${n.servicio}</td>
+      <td>${phase}</td>
+      <td>${n.origen || '—'}</td>
+      <td>${n.destino || '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function seleccionarFilaNave(tr) {
+  document.querySelectorAll('#cuerpoTablaNaves tr').forEach(r => r.classList.remove('seleccionada'));
+  tr.classList.add('seleccionada');
+}
+
+function ejecutarAccionN4(sel) {
+  const val = sel.value;
+  if (val === 'refresh') cargarDatosFlotante();
+  if (val === 'working') { document.getElementById('filtroFase').value = 'Working'; aplicarConsulta(); }
+  if (val === 'inbound') { document.getElementById('filtroFase').value = 'Inbound'; aplicarConsulta(); }
+  if (val === 'clear') limpiarFiltrosNaves();
+  sel.value = '';
+}
+
+function limpiarFiltrosNaves() {
+  document.getElementById('buscadorTexto').value = '';
+  document.getElementById('filtroFase').value = '';
+  document.getElementById('selectRango').value = '7';
+  cambiarRangoFechas();
+}
+</script>
+
+</body>
+</html>
