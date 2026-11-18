@@ -706,13 +706,23 @@ function escapeHTML(text){
   return String(text||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 }
 
-function obtenerFechaHoraActual(){
-  const d = new Date();
+
+
+function obtenerFechaHoraActual(fechaInput = null){
+  const d = fechaInput ? new Date(fechaInput) : new Date();
+  
+  // Si por alguna razón la fecha no es válida, devolvemos la actual formateada
+  if(isNaN(d.getTime())){
+    const ahora = new Date();
+    return `${String(ahora.getDate()).padStart(2,'0')}/${String(ahora.getMonth()+1).padStart(2,'0')}/${ahora.getFullYear()} ${String(ahora.getHours()).padStart(2,'0')}:${String(ahora.getMinutes()).padStart(2,'0')}`;
+  }
+
   const dia = String(d.getDate()).padStart(2,'0');
   const mes = String(d.getMonth()+1).padStart(2,'0');
   const anio = d.getFullYear();
   const hh = String(d.getHours()).padStart(2,'0');
   const mm = String(d.getMinutes()).padStart(2,'0');
+  
   return `${dia}/${mes}/${anio} ${hh}:${mm}`;
 }
 
@@ -955,9 +965,15 @@ function renderizarTablas(){
       tbodyAudit.innerHTML = `<tr><td colspan="7" style="color:#666;padding:15px;">No hay registros históricos para los filtros seleccionados.</td></tr>`;
     } else {
       filtradosAudit.forEach(reg => {
+        // Limpiamos la fecha si viene en formato largo antiguo de JavaScript
+        let fechaFormateada = reg.fechaHora;
+        if(fechaFormateada && fechaFormateada.includes("GMT")) {
+          fechaFormateada = obtenerFechaHoraActual(fechaFormateada);
+        }
+
         const trAudit = document.createElement("tr");
         trAudit.innerHTML = `
-          <td><strong>${escapeHTML(reg.fechaHora)}</strong></td>
+          <td><strong>${escapeHTML(fechaFormateada)}</strong></td>
           <td><strong>${escapeHTML(reg.ppk)}</strong></td>
           <td>${obtenerBadgeEvento(reg.evento)}</td>
           <td>${escapeHTML(reg.ubicacion)}</td>
