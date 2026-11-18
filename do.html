@@ -227,12 +227,12 @@ tr.row-inhabilitado { background-color: #f1f3f5 !important; color: #6c757d; }
 
 <!-- LOGIN -->
 <div id="loginScreen">
-<h2>🔑 Iniciar Sesión</h2>
-<div class="login-form">
-<div class="form-group"><label>Usuario:</label><input type="text" id="loginUser" placeholder="Ej: operador / supervisor"></div>
-<div class="form-group"><label>Contraseña:</label><input type="password" id="loginPass" placeholder="••••••••"></div>
-<button class="btn-primary" onclick="realizarLogin()">Ingresar al Sistema</button>
-</div>
+  <h2>🔑 Iniciar Sesión</h2>
+  <div class="login-form">
+    <div class="form-group"><label>Usuario:</label><input type="text" id="loginUser" placeholder="Ej: operador / supervisor"></div>
+    <div class="form-group"><label>Contraseña:</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+    <button class="btn-primary" onclick="realizarLogin()">Ingresar al Sistema</button>
+  </div>
 </div>
 
 <!-- CONTENEDOR PRINCIPAL -->
@@ -646,7 +646,7 @@ tr.row-inhabilitado { background-color: #f1f3f5 !important; color: #6c757d; }
   </div>
 </div>
 
-<!-- CONTENIDO EMBEBIDO DE REPORTE.HTML (PARA CARGARLO DINÁMICAMENTE EN EL IFRAME) -->
+<!-- CONTENIDO EMBEBIDO DE REPORTE.HTML -->
 <script id="reporteHtmlSource" type="text/html">
 <!DOCTYPE html>
 <html lang="es">
@@ -1298,7 +1298,6 @@ function calcularYRenderizarEstadisticas(){
   document.getElementById("statTotalFS").innerText = totalFS;
   document.getElementById("statTotalSalidas").innerText = totalSalidas;
 
-  // Renderizar Ranking Abastecimientos
   const tbodyAbast = document.getElementById("rankingAbastecimientos");
   const rankAbastArr = Object.keys(conteoAbast).map(k => ({ ppk: k, count: conteoAbast[k] })).sort((a,b) => b.count - a.count);
   if(rankAbastArr.length === 0){
@@ -1307,7 +1306,6 @@ function calcularYRenderizarEstadisticas(){
     tbodyAbast.innerHTML = rankAbastArr.map((r, i) => `<tr><td><b>#${i+1}</b></td><td><strong>${escapeHTML(r.ppk)}</strong></td><td><span class="badge-abastecer">${r.count} veces</span></td></tr>`).join("");
   }
 
-  // Renderizar Ranking Fallas
   const tbodyFS = document.getElementById("rankingFallas");
   const rankFSArr = Object.keys(conteoFS).map(k => ({ ppk: k, count: conteoFS[k] })).sort((a,b) => b.count - a.count);
   if(rankFSArr.length === 0){
@@ -1756,7 +1754,7 @@ async function enviarCorreoOutlook(){
       await navigator.clipboard.write([new ClipboardItem({
         "text/html": new Blob([`<div style="font-family:Arial">${saludo}<br><br>${tablaHtml}</div>`], {type: "text/html"}),
         "text/plain": new Blob([textoPlano], {type: "text/plain"})
-      })];
+      })]);
     }
   }catch(e){ console.error(e); }
 
