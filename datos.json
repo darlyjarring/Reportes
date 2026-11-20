@@ -1,8 +1,8 @@
 {
   "fuente": "https://dponline.dpworldposorja.ec/ItinerarioNaves/data",
-  "actualizado_utc": "2026-11-19T21:02:19.253091+00:00",
-  "actualizado_ec": "2026-11-19 16:02:19",
-  "total": 51,
+  "actualizado_utc": "2026-11-20T02:18:21.471206+00:00",
+  "actualizado_ec": "2026-11-19 21:18:21",
+  "total": 52,
   "naves": [
     {
       "gkey": "1973740321",
@@ -21,6 +21,24 @@
       "origen": "PEPAI",
       "destino": "PEPAI",
       "servicio": "MEDCAR"
+    },
+    {
+      "gkey": "1974026228",
+      "referencia": "HLC2026111",
+      "nave": "CAPE SABLE",
+      "viaje": "649N",
+      "viaje_salida": "649N",
+      "reefer": "",
+      "dry": "",
+      "linea": "HLC",
+      "etb": "2026-12-01 05:00:00",
+      "etd": "2026-12-02 08:00:00",
+      "ata": "",
+      "atd": "",
+      "status": "TO ARRIVE",
+      "origen": "PEPAI",
+      "destino": "PEPAI",
+      "servicio": "MSW"
     },
     {
       "gkey": "1962403031",
@@ -249,9 +267,9 @@
       "linea": "CMA",
       "etb": "2026-11-19 18:00:00",
       "etd": "2026-11-20 20:30:00",
-      "ata": "",
+      "ata": "2026-11-19 17:25:00",
       "atd": "",
-      "status": "TO ARRIVE",
+      "status": "IN OPERATION",
       "origen": "PECLL",
       "destino": "PECLL",
       "servicio": "SWX_NB"
@@ -265,8 +283,8 @@
       "reefer": "2026-11-18 19:00:00",
       "dry": "2026-11-18 19:00:00",
       "linea": "CMA",
-      "etb": "2026-11-19 06:00:00",
-      "etd": "2026-11-19 17:00:00",
+      "etb": "2026-11-19 07:00:00",
+      "etd": "2026-11-20 02:00:00",
       "ata": "2026-11-19 06:55:00",
       "atd": "",
       "status": "IN OPERATION",
