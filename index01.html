@@ -101,71 +101,95 @@ tr.row-inhabilitado { background-color: #f1f3f5 !important; color: #6c757d; }
   position: fixed;
   top: 0; left: 0;
   width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.65);
+  background: rgba(0,0,0,0.75);
   z-index: 9999;
   justify-content: center;
-  align-items: center;
-  padding: 12px;
+  align-items: flex-start;
+  padding: 10px;
   overflow-y: auto;
+  touch-action: manipulation;
 }
 .modal-box {
   background: #ffffff;
   border-radius: 8px;
-  max-width: 480px;
+  max-width: 400px;
   width: 100%;
-  max-height: 92vh;
+  margin: auto;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
   overflow: hidden;
 }
 .modal-header {
   background: #123b5d;
   color: #fff;
-  padding: 12px 15px;
+  padding: 10px 14px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.modal-header h4 { margin: 0; font-size: 1rem; }
+.modal-header h4 { margin: 0; font-size: 0.95rem; }
 .modal-close {
   background: #dc3545;
   color: #fff;
   border: none;
   padding: 5px 10px;
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   cursor: pointer;
   width: auto;
 }
 .modal-actions {
   background: #eef2f7;
-  padding: 10px;
+  padding: 8px;
   display: flex;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
   flex-wrap: wrap;
   border-bottom: 1px solid #ccc;
 }
 .modal-actions button {
-  padding: 8px 12px;
-  font-size: 0.82rem;
+  padding: 8px 10px;
+  font-size: 0.8rem;
   width: auto;
+  flex: 1;
+}
+.modal-hint {
+  text-align: center;
+  font-size: 11px;
+  color: #555;
+  background: #fff3cd;
+  padding: 4px;
+  border-bottom: 1px solid #ffeeba;
 }
 .modal-body {
-  padding: 15px;
-  overflow-y: auto;
+  padding: 10px;
   display: flex;
   justify-content: center;
-  background: #f8f9fa;
+  background: #ffffff;
 }
 
-/* ESTILO EXACTO DE LA TABLA DE RESUMEN (COMO LA IMAGEN) */
+/* MODO PANTALLA COMPLETA LIMPIA PARA CAPTURA MÓVIL */
+.fullscreen-summary-mobile {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: #ffffff;
+  z-index: 99999;
+  overflow-y: auto;
+  padding: 10px;
+  flex-direction: column;
+  align-items: center;
+  touch-action: manipulation;
+}
+
+/* ESTILO EXACTO Y COMPACTO DE LA TABLA DE RESUMEN (A LA MEDIDA MÓVIL) */
 #resumenCaptureArea {
   background: #ffffff;
-  padding: 3px;
-  width: 100%;
-  max-width: 390px;
+  padding: 2px;
+  width: 330px; /* Ancho exacto y compacto como la imagen de referencia */
+  margin: 0 auto;
 }
 .summary-table {
   width: 100%;
@@ -177,42 +201,43 @@ tr.row-inhabilitado { background-color: #f1f3f5 !important; color: #6c757d; }
 .summary-table th.main-banner {
   background-color: #164863;
   color: #ffffff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: bold;
   text-transform: uppercase;
-  padding: 6px;
+  padding: 5px;
   border: 1.5px solid #000000;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
 }
 .summary-table th.sub-header {
   background-color: #164863;
   color: #ffffff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
   text-transform: uppercase;
-  padding: 5px 8px;
+  padding: 4px 6px;
   border: 1.5px solid #000000;
 }
 .summary-table td {
   border: 1.5px solid #000000;
-  padding: 5px 8px;
-  font-size: 15px;
+  padding: 4px 6px;
+  font-size: 13.5px;
   font-weight: bold;
   color: #000000;
   background-color: #ffffff;
+  line-height: 1.15;
 }
 .summary-table td.col-equipo {
   text-align: left;
-  width: 42%;
+  width: 43%;
 }
 .summary-table td.col-zona {
   text-align: center;
   background-color: #ffffcc;
-  width: 24%;
+  width: 22%;
 }
 .summary-table td.col-condicion {
   text-align: left;
-  width: 34%;
+  width: 35%;
 }
 .summary-table td.zona-alerta {
   background-color: #ff0000 !important;
@@ -222,18 +247,17 @@ tr.row-inhabilitado { background-color: #f1f3f5 !important; color: #6c757d; }
   background-color: #ff0000 !important;
   color: #ffffff !important;
   text-transform: uppercase;
-  font-size: 13.5px;
+  font-size: 12.5px;
 }
 .summary-table td.section-divider {
   background-color: #164863 !important;
   color: #ffffff !important;
   text-align: left;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: bold;
-  padding: 5px 8px;
+  padding: 4px 6px;
   text-transform: uppercase;
 }
-
 /* --- ESTILOS MÓDULO ITINERARIO NAVES (Navis N4 style) --- */
 .n4-module-wrap {
   background: #d4d0c8;
@@ -761,17 +785,19 @@ tr.row-inhabilitado { background-color: #f1f3f5 !important; color: #6c757d; }
 </div>
 
 <!-- MODAL EMERGENTE: RESUMEN EJECUTIVO DE POWER PACKS -->
-<div id="modalResumenInventario" class="modal-overlay" onclick="if(event.target===this) cerrarModalResumen()">
-  <div class="modal-box">
+<div id="modalResumenInventario" class="modal-overlay" ondblclick="cerrarModalResumen()">
+  <div class="modal-box" ondblclick="event.stopPropagation(); cerrarModalResumen();">
     <div class="modal-header">
-      <h4>📊 Resumen Operativo Power Packs</h4>
+      <h4>📊 Resumen Operativo PPk</h4>
       <button class="modal-close" onclick="cerrarModalResumen()">✖ Cerrar</button>
     </div>
     <div class="modal-actions">
-      <button class="btn-success" onclick="descargarResumenPNG()">📷 Descargar PNG</button>
-      <button class="btn-primary" onclick="copiarTablaResumen()">📋 Copiar Tabla</button>
+      <button class="btn-info-dark" onclick="event.stopPropagation(); activarModoCapturaResumen()">👁️ Pantalla Completa</button>
+      <button class="btn-success" onclick="event.stopPropagation(); descargarResumenPNG()">📷 Descargar PNG</button>
+      <button class="btn-primary" onclick="event.stopPropagation(); copiarTablaResumen()">📋 Copiar</button>
     </div>
-    <div class="modal-body">
+    <div class="modal-hint">👈 Toca dos veces rápidas sobre la tabla para salir</div>
+    <div class="modal-body" id="modalResumenBody">
       <div id="resumenCaptureArea">
         <table class="summary-table" id="tablaResumenEjecutivo">
           <thead>
@@ -791,6 +817,11 @@ tr.row-inhabilitado { background-color: #f1f3f5 !important; color: #6c757d; }
   </div>
 </div>
 
+<!-- VISTA PANTALLA COMPLETA LIMPIA (DOBLE TOQUE PARA SALIR) -->
+<div id="fullscreenSummaryView" class="fullscreen-summary-mobile" ondblclick="cerrarModoCapturaResumen()">
+  <div style="font-size:11px; color:#666; margin-bottom:6px; font-style:italic;">👈 Toca dos veces rápidas para regresar</div>
+  <div id="fullscreenSummaryTarget"></div>
+</div>
 <script>
 const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby_Es21g_TxPNMvMBIAJldikTlqpioCFgeQHOJNwmirnrTBPkLf1_CYjOgMff7kXps-0Q/exec"; 
 
@@ -936,13 +967,62 @@ function obtenerInventarioOrdenado(){
 /* --- FUNCIONES DE VENTANA EMERGENTE (RESUMEN EJECUTIVO TIPO IMAGEN) --- */
 function abrirModalResumen(){
   construirTablaResumen();
-  document.getElementById("modalResumenInventario").style.display = "flex";
+  const modal = document.getElementById("modalResumenInventario");
+  modal.style.display = "flex";
+  modal.scrollTop = 0;
 }
 
 function cerrarModalResumen(){
   document.getElementById("modalResumenInventario").style.display = "none";
+  cerrarModoCapturaResumen();
 }
 
+  function activarModoCapturaResumen(){
+  construirTablaResumen();
+  const origen = document.getElementById("resumenCaptureArea").cloneNode(true);
+  const destino = document.getElementById("fullscreenSummaryTarget");
+  destino.innerHTML = "";
+  destino.appendChild(origen);
+  document.getElementById("fullscreenSummaryView").style.display = "flex";
+}
+
+function cerrarModoCapturaResumen(){
+  document.getElementById("fullscreenSummaryView").style.display = "none";
+}
+
+function descargarResumenPNG(){
+  construirTablaResumen();
+  const original = document.getElementById("resumenCaptureArea");
+  
+  // Clonamos fuera de pantalla sin límites de altura ni scroll para capturar el 100% de la tabla
+  const clon = original.cloneNode(true);
+  clon.style.position = "fixed";
+  clon.style.left = "-9999px";
+  clon.style.top = "0";
+  clon.style.width = "330px";
+  clon.style.height = "auto";
+  clon.style.overflow = "visible";
+  document.body.appendChild(clon);
+
+  html2canvas(clon, {
+    scale: 3, // Alta nitidez para enviar por WhatsApp en móvil
+    backgroundColor: "#ffffff",
+    width: clon.offsetWidth,
+    height: clon.scrollHeight,
+    windowWidth: clon.offsetWidth,
+    windowHeight: clon.scrollHeight
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = `Resumen_PowerPacks_${obtenerFechaISOActual()}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    document.body.removeChild(clon);
+  }).catch(err => {
+    console.error(err);
+    document.body.removeChild(clon);
+  });
+}
+  
 function construirTablaResumen(){
   const d = new Date();
   const dia = String(d.getDate()).padStart(2, '0');
@@ -1025,32 +1105,7 @@ function construirTablaResumen(){
   }
 }
 
-function descargarResumenPNG(){
-  const target = document.getElementById("resumenCaptureArea");
-  html2canvas(target, { scale: 2, backgroundColor: "#ffffff" }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = `Resumen_PowerPacks_${obtenerFechaISOActual()}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  });
-}
 
-async function copiarTablaResumen(){
-  const tabla = document.getElementById("tablaResumenEjecutivo");
-  try {
-    const htmlStr = tabla.outerHTML;
-    const textStr = tabla.innerText;
-    if(navigator.clipboard && window.ClipboardItem){
-      await navigator.clipboard.write([new ClipboardItem({
-        "text/html": new Blob([htmlStr], { type: "text/html" }),
-        "text/plain": new Blob([textStr], { type: "text/plain" })
-      })]);
-      alert("📋 Tabla de resumen copiada. Ya puedes pegarla en WhatsApp Web o Correo.");
-    }
-  } catch(e){
-    alert("Usa el botón 'Descargar PNG' para compartir la imagen directamente.");
-  }
-}
 
 /* --- REGISTRO EN BITÁCORA DE AUDITORÍA --- */
 function registrarEventoHistorial(ppkNombre, tipoEvento, ubicacion, nivel, detalle){
