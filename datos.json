@@ -1,9 +1,27 @@
 {
   "fuente": "https://dponline.dpworldposorja.ec/ItinerarioNaves/data",
-  "actualizado_utc": "2026-11-24T00:05:04.910188+00:00",
-  "actualizado_ec": "2026-11-23 19:05:04",
+  "actualizado_utc": "2026-11-24T09:50:04.264107+00:00",
+  "actualizado_ec": "2026-11-24 04:50:04",
   "total": 53,
   "naves": [
+    {
+      "gkey": "1978646500",
+      "referencia": "HLC2026114",
+      "nave": "PUERTO LIMON EXPRESS",
+      "viaje": "650N",
+      "viaje_salida": "650N",
+      "reefer": "",
+      "dry": "",
+      "linea": "HLC",
+      "etb": "2026-12-08 16:00:00",
+      "etd": "2026-12-09 00:00:00",
+      "ata": "",
+      "atd": "",
+      "status": "TO ARRIVE",
+      "origen": "PEPAI",
+      "destino": "PEPAI",
+      "servicio": "MSW"
+    },
     {
       "gkey": "1978629888",
       "referencia": "HLC2026112",
@@ -284,10 +302,10 @@
       "dry": "2026-11-23 07:00:00",
       "linea": "CMA",
       "etb": "2026-11-23 23:00:00",
-      "etd": "2026-11-24 14:00:00",
-      "ata": "",
+      "etd": "2026-11-24 15:00:00",
+      "ata": "2026-11-23 22:25:00",
       "atd": "",
-      "status": "TO ARRIVE",
+      "status": "IN OPERATION",
       "origen": "COCTG",
       "destino": "COCTG",
       "servicio": "SWX_SB"
@@ -939,24 +957,6 @@
       "origen": "COBUN",
       "destino": "COBUN",
       "servicio": "SWX_SB"
-    },
-    {
-      "gkey": "1900949619",
-      "referencia": "MAE2026123",
-      "nave": "LEDA MAERSK",
-      "viaje": "638W",
-      "viaje_salida": "643E",
-      "reefer": "2026-10-24 17:00:00",
-      "dry": "2026-10-24 17:00:00",
-      "linea": "MAE",
-      "etb": "2026-10-24 18:30:00",
-      "etd": "2026-10-26 11:00:00",
-      "ata": "2026-10-24 18:25:00",
-      "atd": "2026-10-26 10:45:00",
-      "status": "DEPARTED",
-      "origen": "ECPBO",
-      "destino": "ECPBO",
-      "servicio": "ECUMED"
     }
   ]
 }
