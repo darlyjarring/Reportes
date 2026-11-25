@@ -1,7 +1,7 @@
 {
   "fuente": "https://dponline.dpworldposorja.ec/ItinerarioNaves/data",
-  "actualizado_utc": "2026-11-24T20:28:11.781006+00:00",
-  "actualizado_ec": "2026-11-24 15:28:11",
+  "actualizado_utc": "2026-11-25T03:42:24.185477+00:00",
+  "actualizado_ec": "2026-11-24 22:42:24",
   "total": 54,
   "naves": [
     {
@@ -284,7 +284,7 @@
       "dry": "2026-11-23 16:00:00",
       "linea": "HLC",
       "etb": "2026-11-24 23:30:00",
-      "etd": "2026-11-25 09:00:00",
+      "etd": "2026-11-25 12:00:00",
       "ata": "",
       "atd": "",
       "status": "TO ARRIVE",
@@ -322,7 +322,7 @@
       "etb": "2026-11-23 23:00:00",
       "etd": "2026-11-24 16:00:00",
       "ata": "2026-11-23 22:25:00",
-      "atd": "",
+      "atd": "2026-11-24 18:05:00",
       "status": "IN OPERATION",
       "origen": "COCTG",
       "destino": "COCTG",
@@ -359,7 +359,7 @@
       "etd": "2026-11-23 12:00:00",
       "ata": "2026-11-22 02:20:00",
       "atd": "2026-11-23 12:50:00",
-      "status": "IN OPERATION",
+      "status": "DEPARTED",
       "origen": "PABLB",
       "destino": "PABLB",
       "servicio": "WCSA-SHTL"
