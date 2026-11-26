@@ -1,7 +1,7 @@
 {
   "fuente": "https://dponline.dpworldposorja.ec/ItinerarioNaves/data",
-  "actualizado_utc": "2026-11-25T22:48:58.722260+00:00",
-  "actualizado_ec": "2026-11-25 17:48:58",
+  "actualizado_utc": "2026-11-26T04:37:10.545326+00:00",
+  "actualizado_ec": "2026-11-25 23:37:10",
   "total": 55,
   "naves": [
     {
@@ -283,8 +283,8 @@
       "reefer": "2026-11-25 19:00:00",
       "dry": "2026-11-25 19:00:00",
       "linea": "CMA",
-      "etb": "2026-11-26 07:00:00",
-      "etd": "2026-11-26 21:00:00",
+      "etb": "2026-11-26 06:00:00",
+      "etd": "2026-11-26 17:00:00",
       "ata": "",
       "atd": "",
       "status": "TO ARRIVE",
